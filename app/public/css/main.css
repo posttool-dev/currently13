@@ -1,0 +1,121 @@
+@import url(http://fonts.googleapis.com/css?family=Source+Code+Pro:400);
+/* Style tweaks */
+html {
+  overflow-x: hidden; /* Prevent scroll on narrow devices */
+}
+body {
+    background-color: #fff;
+    padding:40px 20px 40px 10px;
+}
+
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+ font-family: 'Source Code Pro', sans-serif;
+    font-size:14px;
+    color:#777;
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+
+input {
+    border: 1px solid #aaa;
+    padding: 5px;
+    font-size: 19px;
+}
+
+h1 {
+    font-size:48px;
+    font-weight: normal;
+    margin: 0;
+}
+
+
+
+
+.padded {
+    padding: 10px;
+}
+
+
+a {
+    color:#5383cc;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+ul { list-style-type: none; }
+
+
+
+label {
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-weight: normal;
+
+    padding: 26px 8px 8px 0;
+    display:block;
+}
+
+
+
+#tool-bar {
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:30px;
+    background-color: #fff;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    z-index: 100000;
+}
+.options {
+    padding: 6px 0 0 20px;
+}
+.user {
+    position: fixed;
+    top: 6px;
+    right: 28px;
+}
+
+
+
+
+
+
+
+button, .btn {
+	-moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+	box-shadow:inset 0px 1px 0px 0px #ffffff;
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #dfdfdf) );
+	background:-moz-linear-gradient( center top, #ededed 5%, #dfdfdf 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#dfdfdf');
+	background-color:#ededed;
+	text-indent:0;
+	border:0;
+	display:inline-block;
+	color:#777777;
+	font-size:15px;
+	font-weight:bold;
+	font-style:normal;
+	text-decoration:none;
+	text-align:center;
+	text-shadow:1px 1px 0px #ffffff;
+    padding:6px;
+}
+button:hover, .btn:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #dfdfdf), color-stop(1, #ededed) );
+	background:-moz-linear-gradient( center top, #dfdfdf 5%, #ededed 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#dfdfdf', endColorstr='#ededed');
+	background-color:#dfdfdf;
+    text-decoration: none;
+}button:active, .btn:active {
+	position:relative;
+	top:1px;
+}

@@ -1,0 +1,15 @@
+<% include ../head %>
+<% include ../head1 %>
+<% include ../nav %>
+
+<div class="list">
+
+<% for(var p in models) { %>
+<a href='/cms/browse/<%=p%>'><%= p %></a><br>
+<% } %>
+
+</div>
+
+<% include ../foot %>
+
+

@@ -1,0 +1,48 @@
+<% include ../head %>
+
+<script src="/js/add_remove.js"></script>
+<script src="/js/form_fields.js"></script>
+<script src="/js/indicated_field.js"></script>
+<script src="/js/form_form.js"></script>
+<link  href="/css/form_workspace.css" rel="stylesheet">
+<script src="/js/lib/ck/ckeditor.js"></script>
+<script src="/js/lib/codemirror.js"></script>
+<link  href="/css/codemirror.css" rel="stylesheet">
+<style>
+    .big { font-size: 36px; }
+</style>
+<% include ../head1 %>
+<% include ../nav %>
+
+<div class="padded">
+    <button id="save">SAVE</button>
+    <button id="delete">DELETE</button>
+   <div id="workspace-root">
+        <form method="post">
+        <div id="workspace" class="group root"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(document).ready(function(){
+    var f = new FormForm(<%- JSON.stringify(schema.info) %>);
+    f.data(<%- JSON.stringify(instance) %>);
+    $("#save").click(function(){
+        console.log(f.data());
+        $.ajax({
+            data: { val: JSON.stringify(f.data()) },
+            method: 'post',
+            success: function(o){
+                if (location.pathname != o)
+                    location.href = o;
+            },
+            error: function(o){
+                console.error(o);
+            }
+        })
+    });
+});
+</script>
+
+<% include ../foot %>

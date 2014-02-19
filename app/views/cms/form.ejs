@@ -1,0 +1,28 @@
+<% include ../head %>
+<script>
+    var form = <%- JSON.stringify(form) %>;
+    var obj = <%- JSON.stringify(object) %>;
+    $(document).ready(function(){
+        var $form = $("form");
+        var $p = $form;
+        for (var i=0; i<form.length; i++)
+        {
+            $p.append(get_component(form[i]))
+        }
+    });
+    function get_component(d)
+    {
+        return $("<div><label>"+ d.name+"</label><input name='"+ d.name+"'></div>");
+    }
+</script>
+<% include ../head1 %>
+<% include ../nav %>
+
+<h1></h1>
+<form>
+
+</form>
+
+<% include ../foot %>
+
+
