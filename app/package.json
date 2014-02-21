@@ -4,10 +4,10 @@
     "version": "0.0.1",
     "private": true,
     "dependencies": {
-        "express": "3.4.6",
+        "express": "3.4.7",
         "mongoose": "3.8.7",
         "ejs": "0.8.5",
-        "gridfs-stream": "0.4.0",
+        "gridfs-stream": "0.4.1",
         "node-uuid": "1.4.1"
     }
 }

@@ -14,7 +14,7 @@ var Resource = null;
 
 exports.init = function(meta, resource_class_name, user_class_name)
 {
-    gfs = new Grid(mongoose.connection, mongoose.mongo);
+    gfs = new Grid(mongoose.connection.db, mongoose.mongo);
     Meta = meta;
     for (var p in  meta)
     {
@@ -169,17 +169,11 @@ exports.upload = function(req, res) {
     var tempfile    = req.files.file.path;
     var origname    = req.files.file.name;
     var writestream = gfs.createWriteStream({ filename: tempfile });
-     writestream.on('open', function (d) {
-      console.log("000", d);
+    writestream.on('error', function(e) {
+        console.log("xxxaa", e);
+        res.send('ERR');
     });
-     writestream.on('progress', function (d) {
-      console.log("111", d);
-    });
-    writestream.on('close', function (file) {
-      // do something with `file`
-      console.log("AAA", file.filename);
-    });
-   console.log(req.files.file);
+
     var rs = fs.createReadStream(tempfile);
     rs.on('open', function(){
         console.log("PIPING")
@@ -191,6 +185,7 @@ exports.upload = function(req, res) {
         // create a resource with path & return id
         var r = new Resource();
         r.path = origname;
+        r.size = req.files.file.size;
         r.creator = req.session.user._id;
         r.save(function(err,s) {
             utils.process_err(err);

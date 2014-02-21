@@ -7,6 +7,7 @@ exports.models = {
             caption:       String,
             description:   String,
             path:          String,
+            size:          Number,
             mimetype:      String
         },
         browse: [
