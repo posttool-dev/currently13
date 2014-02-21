@@ -1,3 +1,6 @@
+var upload_url = "";
+var delete_url = "";
+
 function form_form($el, meta_data)
 {
     var self = this;
@@ -52,12 +55,14 @@ function form_form($el, meta_data)
 function indicated_field(name, label, type)//, settings_callback)
 {
     var self = this;
-    var $el = field_components.create(self, null, 'item');
+    var $el = form_field_create(self, null, 'item');
     self.$el = function() { return $el; }
 
     var $label = $('<label></label>').addClass('info').text(label);
-    var field = field_factory(type);
-    make_listener(self, field);
+    if (!form_fields[type+"_field"])
+        throw Error("no field for "+type);
+    var field = new form_fields[type+"_field"]();
+    form_make_listener(self, field);
     $el.append($label, field.$el());
 
     Object.defineProperty(this, "data", {
@@ -106,15 +111,7 @@ function indicated_field(name, label, type)//, settings_callback)
 
 
 
-function field_factory(type)
-{
-    if (!field_components[type+"_field"])
-        throw Error("no field for "+type);
-    var f = new field_components[type+"_field"]();
-    return f;
-}
-
-function make_listener(c, f)
+function form_make_listener(c, f)
 {
     var listeners = [];
     c.add_listener = function(callback)
@@ -132,27 +129,25 @@ function make_listener(c, f)
     }
 }
 
-
-
-
-var field_components = {
-
-    create: function(self, $el, tag_name, clz)
-    {
-        if (typeof $el != 'undefined' && $el != null)
-            return $el;
-        tag_name = tag_name || "div";
-        $el = $("<"+tag_name+"/>");
-        $el.data('__obj__', self);
-        if (clz)
-            $el.addClass(clz);
+function form_field_create(self, $el, tag_name, clz)
+{
+    if (typeof $el != 'undefined' && $el != null)
         return $el;
-    },
+    tag_name = tag_name || "div";
+    $el = $("<"+tag_name+"/>");
+    $el.data('__obj__', self);
+    if (clz)
+        $el.addClass(clz);
+    return $el;
+}
+
+
+var form_fields = {
 
     boolean_field : function ($el)
     {
         var self = this;
-        $el = field_components.create(self, $el, 'field boolean');
+        $el = form_field_create(self, $el, 'div', 'field boolean');
         self.$el = function() { return $el; }
 
         var $c = $("<i class='fa fa-check-square-o'></i>");
@@ -188,7 +183,7 @@ var field_components = {
     number_field : function ($el)
     {
         var self = this;
-        $el = field_components.create(self, $el, 'field number');
+        $el = form_field_create(self, $el, 'div', 'field number');
         this.$el = function() { return $el; }
 
         var $c = $("<input type='number'/>").addClass("form-control");
@@ -221,7 +216,7 @@ var field_components = {
     input_field : function ($el)
     {
         var self = this;
-        $el = field_components.create(self, $el, 'field string');
+        $el = form_field_create(self, $el, 'div', 'field string');
         this.$el = function() { return $el; }
 
         var $c = $("<input type='text'/>").addClass("form-control");
@@ -256,7 +251,7 @@ var field_components = {
     {
         // super
         var self = this;
-        $el = field_components.create(self, $el, 'field code');
+        $el = form_field_create(self, $el, 'div', 'field code');
         self.$el = function() { return $el; }
         // widget
         var $w = $("<textarea></textarea>").addClass("form-control");
@@ -291,7 +286,7 @@ var field_components = {
     rich_text_field : function ($el, props)
     {
         var self = this;
-        $el = field_components.create(self, $el, 'field rich-text');
+        $el = form_field_create(self, $el, 'div', 'field rich-text');
         self.$el = function() { return $el; }
 
         var $w = $("<textarea></textarea>");
@@ -327,7 +322,8 @@ var field_components = {
 
     date_field : function ($el)
     {
-        $el = field_components.create(self, $el, 'field date');
+        var self = this;
+        $el = form_field_create(self, $el, 'div', 'field date');
         this.$el = function() { return $el; }
 
         var $c = $("<input type='date'/>").addClass("form-control");
@@ -351,12 +347,18 @@ var field_components = {
 
     upload_field : function ($el)
     {
-        $el = field_components.create(self, $el);
-        $el.addClass('field resource');
-
-        var $c = $("<input type='file'/>").addClass("form-control");
-        $el.append($c);
+        var self = this;
+        $el = form_field_create(self, $el, 'div', 'field resource');
         this.$el = function() { return $el; }
+
+        var $progress = $$('progress progress-striped active');
+        var $progressbar = $$('bar', { css: { width: '0%' }, parent: $progress });
+        var $info = $$('multi-drop-area file-input-drop');
+        var $btn = $$('btn btn-small file-input-button', { children: [ $('<span><i class="icon-upload"></i> Browse...</span>') ] });
+        var $fileupload = $$('multi_upload', { el: 'input', parent: $btn,
+                             data: { url: upload_url },
+                             attributes: { type: 'file', name: 'file', multiple: 'multiple' }});
+        $el.append($progress, $info, $btn);
 
         var _d = null;
         Object.defineProperty(this, "data", {
@@ -364,11 +366,39 @@ var field_components = {
             set: function(n) { _d = n; update_ui(); }
         });
         function update_ui(){}
+
+
+//        $fileupload.fileupload({
+//            dataType: 'json',
+//            dropZone: view.$el,
+//            add: function (e, edata)
+//            {
+//                if (data.valid && !edata.files[0].name.match(data.valid))
+//                    return;
+//                view.$progress.show();
+//                view.$upload_btn.hide();
+//                edata.submit();
+//            },
+//            progressall: function (e, edata)
+//            {
+//                var progress = parseInt(edata.loaded / edata.total * 100, 10);
+//                view.$progress.show();
+//                view.$upload_btn.hide();
+//                view.$info.show();
+//                view.$progressbar.css('width', progress + '%');
+//            },
+//            done: function (e, edata)
+//            {
+//                view.$progress.hide();
+//                view.$upload_btn.show();
+//                view.$info.append(get_upload_row(data.name, edata.result[0], on_delete_multi).$el);
+//                $el.dirty();
+//            }
     },
 
     model_field: function($el)
     {
-        $el = field_components.create(self, $el, 'span');
+        $el = form_field_create(self, $el, 'span');
         this.$el = function() { return $el; }
 
         var _d = null;
@@ -384,7 +414,7 @@ var field_components = {
 
     choose_create_field : function ($el)
     {
-        $el = field_components.create(self, $el);
+        $el = form_field_create(self, $el);
         var f = new field_components.add_remove($el, field_components.model_field);
         $el.append(f.$el());
         this.$el = function() { return $el; }
@@ -398,7 +428,7 @@ var field_components = {
 
     many_reference_field : function ($el)
     {
-        $el = field_components.create(self, $el);
+        $el = form_field_create(self, $el);
         var f = new field_components.add_remove($el, field_components.model_field);
         $el.append(f.$el());
         this.$el = function() { return $el; }
@@ -412,7 +442,7 @@ var field_components = {
     add_remove: function ($el, clazz, options)
     {
         var self = this;
-        $el = field_components.create(self, $el);
+        $el = form_field_create(self, $el);
         this.$el = function() { return $el; }
         var $list = $("<div></div>");
         options = $.extend({add:true, browse:true}, options);
