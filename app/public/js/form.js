@@ -403,7 +403,8 @@ var form_fields = {
                 $info.show();
                 $btn.show();
                 $info.append(JSON.stringify(edata.result));
-                //$el.dirty();
+                _d = edata.result._id;
+                self.fire_change();
             },
             error: function(e)
             {

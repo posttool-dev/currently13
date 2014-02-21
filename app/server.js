@@ -23,7 +23,9 @@ function init_app()
     app.use(express.logger('dev'));
     app.use(express.cookieParser());
     app.use(express.session({secret: 'nfuds9543ythhfgjghf$WH*#IRF5euyhtfgxkj'}));
-    app.use(express.bodyParser({limit: '1099mb'}));
+    app.use(express.urlencoded());
+    app.use(express.json());
+    app.use(express.multipart({limit: '1099mb'}));
     app.use(express.methodOverride());
     app.use(express.static(__dirname + '/public'));
 
@@ -35,6 +37,7 @@ function init_app()
         res.locals.message = req.session.message;
         delete req.session.message;
         res.locals.user = req.session.user;
+        res.user = req.session.user;
         next();
     });
 
@@ -59,10 +62,10 @@ function init_app()
 
     app.all ('/cms', [utils.has_user, cms.a], cms.show_dashboard);
     app.all ('/cms/browse/:type', [utils.has_user, cms.a, cms.b], cms.browse);
-    app.all ('/cms/create/:type', [/*utils.has_user, */cms.a, cms.b], cms.form.get);
+    app.all ('/cms/create/:type', [utils.has_user, cms.a, cms.b], cms.form.get);
 //    app.get ('/cms/edit/:type/:uuid', [utils.has_user, a, b, c], cms.form.get);
 //    app.post('/cms/edit/:type/:uuid', [utils.has_user, a, b, c], cms.form.post);
-    app.post('/cms/upload', [/*utils.has_user*/], cms.upload);
+    app.post('/cms/upload', [utils.has_user], cms.upload);
 
     app.listen(3000);
     console.log('App started on port 3000');

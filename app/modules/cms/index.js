@@ -1,7 +1,8 @@
 var mongoose = require('mongoose'),
     Grid = require('gridfs-stream'), gfs = null,
     fs = require('fs'),
-    uuid = require('node-uuid');
+    uuid = require('node-uuid'),
+    utils = require('../utils');
 
 Grid.mongo = mongoose.mongo;
 
@@ -13,7 +14,7 @@ var Resource = null;
 
 exports.init = function(meta, resource_class_name, user_class_name)
 {
-    gfs = new Grid(mongoose.connection);
+    gfs = new Grid(mongoose.connection, mongoose.mongo);
     Meta = meta;
     for (var p in  meta)
     {
@@ -37,23 +38,21 @@ add_fields_and_methods = function(schema, user_ref)
     if (!user_ref)
         user_ref = 'User';
     schema.add({
-        'creator': [{type: mongoose.Schema.Types.ObjectId, ref: user_ref}],
+        'creator': {type: mongoose.Schema.Types.ObjectId, ref: user_ref},
         'created': Date,
         'modified': Date,
-        'uuid': String,
+//        'uuid': String,
         'state': Number
     });
     schema.method('url', function(){
         return this.modelName.toLowerCase() + '/' + this.uuid;
     });
-    schema.pre('save', function (next, user, callback) {
-        console.log(user_ref, user)
-        this.creator = user;
-        this.uuid = uuid.v1();
+    schema.pre('save', function (next) {
+//        this.uuid = uuid.v1();
         this.modified = new Date();
         if (!this.created)
             this.created = new Date();
-        next(callback);
+        next();
     });
 }
 
@@ -169,23 +168,40 @@ exports.form =
 exports.upload = function(req, res) {
     var tempfile    = req.files.file.path;
     var origname    = req.files.file.name;
-    var writestream = gfs.createWriteStream({ filename: origname });
-    // open a stream to the temporary file created by Express...
-    fs.createReadStream(tempfile)
-        .on('end', function()
-        {
-            // create a resource with path & return id
-            var r = new Resource();
-            r.path = origname;
-            r.save(function(err,s) {
-//                utils.process_err(err);
-                res.json(s);
-            });
-        })
-        .on('error', function() {
-            res.send('ERR');
-        })
-        .pipe(writestream);
+    var writestream = gfs.createWriteStream({ filename: tempfile });
+     writestream.on('open', function (d) {
+      console.log("000", d);
+    });
+     writestream.on('progress', function (d) {
+      console.log("111", d);
+    });
+    writestream.on('close', function (file) {
+      // do something with `file`
+      console.log("AAA", file.filename);
+    });
+   console.log(req.files.file);
+    var rs = fs.createReadStream(tempfile);
+    rs.on('open', function(){
+        console.log("PIPING")
+        rs.pipe(writestream);
+    });
+    rs.on('end', function()
+    {
+        console.log("HERE")
+        // create a resource with path & return id
+        var r = new Resource();
+        r.path = origname;
+        r.creator = req.session.user._id;
+        r.save(function(err,s) {
+            utils.process_err(err);
+            res.json(s);
+        });
+    });
+    rs.on('error', function(e) {
+        console.log("XXXXXXXXX", e);
+        res.send('ERR');
+    });
+
 };
 
 
