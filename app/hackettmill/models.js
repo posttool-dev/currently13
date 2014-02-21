@@ -1,28 +1,11 @@
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Schema.Types.ObjectId;
+var cms = require('../modules/cms/models');
+var user = require('../modules/user/model');
 
 exports.models = {
 
-    /* for images */
-    Resource: {
-        schema: {
-            title:         String,
-            caption:       String,
-            description:   String,
-            path:          String
-        },
-        browse: [
-            {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
-            {name: "caption", cell: "char", filters: ["icontains", "equals"]},
-            {name: "path", cell: "image", filters: ["icontains", "equals"], order: "asc,desc"},
-        ],
-        form: [
-            {name: "title", widget: "input"},
-            {name: "path", widget: "upload", options: {types: ["jpeg", "jpg"]}},
-            {name: "caption", widget: "input"},
-            {name: "description", widget: "rich_text"},
-        ]
-    },
+    Resource: cms.models.Resource,
 
     /* hackett mill calls their catalog of art "inventory" */
     Inventory: {

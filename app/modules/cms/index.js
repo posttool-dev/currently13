@@ -1,8 +1,38 @@
 var mongoose = require('mongoose'),
+    Grid = require('gridfs-stream'), gfs = null,
+    fs = require('fs'),
     uuid = require('node-uuid');
-;
 
-exports.add_fields_and_methods = function(schema, user_ref)
+Grid.mongo = mongoose.mongo;
+
+
+
+var Meta = null;
+//var User = null;
+var Resource = null;
+
+exports.init = function(meta, resource_class_name, user_class_name)
+{
+    gfs = new Grid(mongoose.connection);
+    Meta = meta;
+    for (var p in  meta)
+    {
+        console.log(p);
+        var schema_data = meta[p].schema;
+        var schema = mongoose.Schema(schema_data);
+        add_fields_and_methods(schema);
+        meta[p].schema = schema;
+//        var d = create_form_from_schema(schema);
+//        console.log(d);
+    }
+    Resource = mongoose.model(resource_class_name, Meta[resource_class_name].schema);
+//    User = mongoose.model(user_class_name, Meta[user_class_name].schema);
+}
+
+
+
+
+add_fields_and_methods = function(schema, user_ref)
 {
     if (!user_ref)
         user_ref = 'User';
@@ -27,7 +57,7 @@ exports.add_fields_and_methods = function(schema, user_ref)
     });
 }
 
-exports.create_form_from_schema = function(schema)
+create_form_from_schema = function(schema)
 {
     var d = {};
     schema.eachPath(function(path, type){
@@ -92,6 +122,30 @@ exports.browse = function(req, res, next)
 }
 
 
+exports.a = function(req, res, next){
+    req.models = Meta;
+    next();
+};
+
+exports.b = function(req, res, next){
+    req.browser = Meta[req.params.type]['browse'];
+    req.form = Meta[req.params.type]['form'];
+    next();
+};
+
+exports.c = function(req, res, next){
+    req.browser = Meta[req.params.type]['browse'];
+    req.form = Meta[req.params.type]['form'];
+    var q = model.findOne({uuid: req.params.uuid});
+    q.exec(function(err, m)
+    {
+        exports.process_err(err);
+        req.object = m;
+        next();
+    });
+};
+
+
 exports.form =
 {
     get: function(req, res)
@@ -109,4 +163,35 @@ exports.form =
             res.redirect(s.url());
         });
     }
+};
+
+
+exports.upload = function(req, res) {
+    var tempfile    = req.files.file.path;
+    var origname    = req.files.file.name;
+    var writestream = gfs.createWriteStream({ filename: origname });
+    // open a stream to the temporary file created by Express...
+    fs.createReadStream(tempfile)
+        .on('end', function()
+        {
+            // create a resource with path & return id
+            var r = new Resource();
+            r.path = origname;
+            r.save(function(err,s) {
+//                utils.process_err(err);
+                res.json(s);
+            });
+        })
+        .on('error', function() {
+            res.send('ERR');
+        })
+        .pipe(writestream);
+};
+
+
+exports.download = function(req, res) {
+    // TODO: set proper mime type + filename, handle errors, etc...
+    gfs
+      .createReadStream({ filename: req.param('filename') })
+      .pipe(res);
 };

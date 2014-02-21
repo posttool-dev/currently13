@@ -1,5 +1,5 @@
-var upload_url = "";
-var delete_url = "";
+var upload_url = "/cms/upload";
+var delete_url = "/cms/delete";
 
 function form_form($el, meta_data)
 {
@@ -319,7 +319,6 @@ var form_fields = {
 
     },
 
-
     date_field : function ($el)
     {
         var self = this;
@@ -351,10 +350,10 @@ var form_fields = {
         $el = form_field_create(self, $el, 'div', 'field resource');
         this.$el = function() { return $el; }
 
-        var $progress = $$('progress progress-striped active');
+        var $progress = $$('progress');
         var $progressbar = $$('bar', { css: { width: '0%' }, parent: $progress });
         var $info = $$('multi-drop-area file-input-drop');
-        var $btn = $$('btn btn-small file-input-button', { children: [ $('<span><i class="icon-upload"></i> Browse...</span>') ] });
+        var $btn = $$('btn btn-small file-input-button', { children: [ $('<span><i class="fa fa-arrow-circle-o-up"></i> Browse...</span>') ] });
         var $fileupload = $$('multi_upload', { el: 'input', parent: $btn,
                              data: { url: upload_url },
                              attributes: { type: 'file', name: 'file', multiple: 'multiple' }});
@@ -365,35 +364,53 @@ var form_fields = {
             get: function() {return _d; },
             set: function(n) { _d = n; update_ui(); }
         });
-        function update_ui(){}
+        function update_ui()
+        {
+        }
+        function get_upload_row()
+        {
+        }
+        function on_delete()
+        {
+        }
 
 
-//        $fileupload.fileupload({
-//            dataType: 'json',
-//            dropZone: view.$el,
-//            add: function (e, edata)
-//            {
+        $fileupload.fileupload({
+            dataType: 'json',
+            dropZone: $el,
+            add: function (e, edata)
+            {
 //                if (data.valid && !edata.files[0].name.match(data.valid))
 //                    return;
-//                view.$progress.show();
-//                view.$upload_btn.hide();
-//                edata.submit();
-//            },
-//            progressall: function (e, edata)
-//            {
-//                var progress = parseInt(edata.loaded / edata.total * 100, 10);
-//                view.$progress.show();
-//                view.$upload_btn.hide();
-//                view.$info.show();
-//                view.$progressbar.css('width', progress + '%');
-//            },
-//            done: function (e, edata)
-//            {
-//                view.$progress.hide();
-//                view.$upload_btn.show();
-//                view.$info.append(get_upload_row(data.name, edata.result[0], on_delete_multi).$el);
-//                $el.dirty();
-//            }
+                $progress.show();
+                $info.hide();
+                $btn.hide();
+                edata.submit();
+            },
+            progressall: function (e, edata)
+            {
+                var progress = parseInt(edata.loaded / edata.total * 100, 10);
+                console.log(progress);
+                $progress.show();
+                $info.hide();
+                $btn.hide();
+                $progressbar.css('width', progress + '%');
+            },
+            done: function (e, edata)
+            {
+                console.log(e, edata);
+                $progress.hide();
+                $info.show();
+                $btn.show();
+                $info.append(JSON.stringify(edata.result));
+                //$el.dirty();
+            },
+            error: function(e)
+            {
+                console.log("ERR", e);
+            }
+        });
+        console.log($fileupload);
     },
 
     model_field: function($el)
@@ -415,7 +432,7 @@ var form_fields = {
     choose_create_field : function ($el)
     {
         $el = form_field_create(self, $el);
-        var f = new field_components.add_remove($el, field_components.model_field);
+        var f = new form_fields.add_remove($el, form_fields.model_field);
         $el.append(f.$el());
         this.$el = function() { return $el; }
 
@@ -429,7 +446,7 @@ var form_fields = {
     many_reference_field : function ($el)
     {
         $el = form_field_create(self, $el);
-        var f = new field_components.add_remove($el, field_components.model_field);
+        var f = new form_fields.add_remove($el, form_fields.model_field);
         $el.append(f.$el());
         this.$el = function() { return $el; }
 
@@ -482,7 +499,7 @@ var form_fields = {
 
         function add_one(data)
         {
-            var d = new field_components.deletable_row(clazz);
+            var d = new form_fields.deletable_row(clazz);
             d.data = data;
             d.add_listener(self.fire_change);
             return d;
