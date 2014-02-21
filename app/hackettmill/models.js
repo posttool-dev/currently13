@@ -14,13 +14,13 @@ exports.models = {
         browse: [
             {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
             {name: "caption", cell: "char", filters: ["icontains", "equals"]},
-            {name: "path", cell: "image", filters: ["icontains", "equals"], order: "asc,desc"}
+            {name: "path", cell: "image", filters: ["icontains", "equals"], order: "asc,desc"},
         ],
         form: [
-            {name: "title", widget: "input-large"},
-            {name: "path", widget: "upload-single", options: {types: ["jpeg", "jpg"]}},
+            {name: "title", widget: "input"},
+            {name: "path", widget: "upload", options: {types: ["jpeg", "jpg"]}},
             {name: "caption", widget: "input"},
-            {name: "description", widget: "rich-text"}
+            {name: "description", widget: "rich_text"},
         ]
     },
 
@@ -42,24 +42,25 @@ exports.models = {
             {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc"},
             {name: "code", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
             {name: "resource", cell: "image"},
-            {name: "year", cell: "int", filters: ["gt","lt","gte","lte"], order: "asc,desc"}
+            {name: "year", cell: "int", filters: ["gt","lt","gte","lte"], order: "asc,desc"},
         ],
         form: [
-            {_row: [
-                {name: "title", widget: "input-large", options: {width: "80%"}},
-                {name: "code", widget: "input-large", options: {width: "20%"}}
-            ]},
-            {_row: [
-                {name: "resource", widget: "choose-create", options: {type: "Resource"}},
-                {name: "views", widget: "choose-create", options: {type: "Resource", array: true}}
-            ]},
-            {name: "description", widget: "rich-text"},
-            {_section: "Details"},
-            {name: "use", widget: "input", help: "More details about the use."},
-            {name: "alignment", widget: "input"},
-            {name: "year", widget: "input"},
-            {name: "materials", widget: "input"},
-            {name: "dimensions", widget: "input"}
+            {begin: "row"},
+                {name: "title", widget: "input", options: {className:"large", width: "80%"}},
+                {name: "code", widget: "input", options: {className:"large", width: "20%"}},
+            {end: "row" },
+            {begin: "row"},
+                {name: "resource", widget: "choose_create", options: {type: "Resource"}},
+                {name: "views", widget: "choose_create", options: {type: "Resource", array: true}},
+            {end: "row" },
+            {name: "description", widget: "rich_text"},
+            {begin: "section"},
+                {name: "use", widget: "input", help: "More details about the use."},
+                {name: "alignment", widget: "input"},
+                {name: "year", widget: "input"},
+                {name: "materials", widget: "input"},
+                {name: "dimensions", widget: "input"},
+            {end: "section"}
         ]
     },
 
@@ -78,8 +79,8 @@ exports.models = {
         form: [
             {name: "first_name", widget: "input"},
             {name: "last_name", widget: "input"},
-            {name: "description", widget: "rich-text"},
-            {name: "works", widget: "choose-create", options: {type:"Inventory", array: true}}
+            {name: "description", widget: "rich_text"},
+            {name: "works", widget: "choose_create", options: {type:"Inventory", array: true}}
         ]
     },
 
@@ -98,8 +99,8 @@ exports.models = {
         form: [
             {name: "title", widget: "input"},
             {name: "subtitle", widget: "input"},
-            {name: "body", widget: "rich-text"},
-            {name: "pages", widget: "choose-create", options: {type:"Pages", array: true}}
+            {name: "body", widget: "rich_text"},
+            {name: "pages", widget: "choose_create", options: {type:"Pages", array: true}}
         ]
     },
 
@@ -118,8 +119,8 @@ exports.models = {
         form: [
             {name: "title", widget: "input"},
             {name: "subtitle", widget: "input"},
-            {name: "body", widget: "rich-text"},
-            {name: "release_date", widget: "date-time"}
+            {name: "body", widget: "rich_text"},
+            {name: "release_date", widget: "date"}
         ]
     },
 

@@ -1,28 +1,66 @@
 <% include ../head %>
-<script>
-    var form = <%- JSON.stringify(form) %>;
-    var obj = <%- JSON.stringify(object) %>;
-    $(document).ready(function(){
-        var $form = $("form");
-        var $p = $form;
-        for (var i=0; i<form.length; i++)
-        {
-            $p.append(get_component(form[i]))
-        }
-    });
-    function get_component(d)
-    {
-        return $("<div><label>"+ d.name+"</label><input name='"+ d.name+"'></div>");
-    }
-</script>
+
+<script src="/js/util.js"></script>
+<script src="/js/form.js"></script>
+<link  href="/css/form_workspace.css" rel="stylesheet">
+<script src="/js/lib/ck/ckeditor.js"></script>
+<script src="/js/lib/codemirror.js"></script>
+<link  href="/css/codemirror.css" rel="stylesheet">
+<style>
+    .big { font-size: 36px; }
+</style>
+
+            '/static/assets/js/fileupload/csrf.js',
+            '/static/assets/js/fileupload/jquery.ui.widget.js',
+            '/static/assets/js/fileupload/jquery.iframe-transport.js',
+            '/static/assets/js/fileupload/jquery.fileupload.js',
+            '/static/assets/js/fileupload/jquery.fileupload-ui.js',
+            '/static/assets/js/upload.js',
+
+
+
 <% include ../head1 %>
 <% include ../nav %>
 
-<h1></h1>
-<form>
+<div class="padded">
+    <button id="save">SAVE</button>
+    <button id="delete">DELETE</button>
+   <div id="workspace-root">
+        <form method="post">
+        <div id="workspace" class="group root"></div>
+        </form>
+    </div>
+</div>
 
-</form>
+<script>
+$(document).ready(function(){
+    var form = new form_form( $("#workspace"), <%- JSON.stringify(form) %> );
+   // form.data(<%- JSON.stringify(object) %>);
+    $("#save").click(function(){
+        console.log(f.data());
+        $.ajax({
+            data: { val: JSON.stringify(f.data()) },
+            method: 'post',
+            success: function(o){
+                if (location.pathname != o)
+                    location.href = o;
+            },
+            error: function(o){
+                console.error(o);
+            }
+        })
+    });
+});
+</script>
 
 <% include ../foot %>
+
+
+
+
+
+
+
+
 
 
