@@ -73,7 +73,6 @@ exports.create_form_from_schema = function(schema)
 }
 
 
-
 exports.show_dashboard = function(req, res, next)
 {
   res.render('cms/dashboard', {
@@ -81,6 +80,7 @@ exports.show_dashboard = function(req, res, next)
     models: req.models
   });
 }
+
 
 exports.browse = function(req, res, next)
 {
@@ -90,6 +90,7 @@ exports.browse = function(req, res, next)
       model: req.params.type
   });
 }
+
 
 exports.form =
 {

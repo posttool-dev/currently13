@@ -14,13 +14,13 @@ exports.models = {
         browse: [
             {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
             {name: "caption", cell: "char", filters: ["icontains", "equals"]},
-            {name: "path", cell: "image", filters: ["icontains", "equals"], order: "asc,desc"},
+            {name: "path", cell: "image", filters: ["icontains", "equals"], order: "asc,desc"}
         ],
         form: [
             {name: "title", widget: "input-large"},
             {name: "path", widget: "upload-single", options: {types: ["jpeg", "jpg"]}},
             {name: "caption", widget: "input"},
-            {name: "description", widget: "rich-text"},
+            {name: "description", widget: "rich-text"}
         ]
     },
 
@@ -42,16 +42,16 @@ exports.models = {
             {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc"},
             {name: "code", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
             {name: "resource", cell: "image"},
-            {name: "year", cell: "int", filters: ["gt","lt","gte","lte"], order: "asc,desc"},
+            {name: "year", cell: "int", filters: ["gt","lt","gte","lte"], order: "asc,desc"}
         ],
         form: [
             {_row: [
                 {name: "title", widget: "input-large", options: {width: "80%"}},
-                {name: "code", widget: "input-large", options: {width: "20%"}},
+                {name: "code", widget: "input-large", options: {width: "20%"}}
             ]},
             {_row: [
                 {name: "resource", widget: "choose-create", options: {type: "Resource"}},
-                {name: "views", widget: "choose-create", options: {type: "Resource", array: true}},
+                {name: "views", widget: "choose-create", options: {type: "Resource", array: true}}
             ]},
             {name: "description", widget: "rich-text"},
             {_section: "Details"},
@@ -59,7 +59,7 @@ exports.models = {
             {name: "alignment", widget: "input"},
             {name: "year", widget: "input"},
             {name: "materials", widget: "input"},
-            {name: "dimensions", widget: "input"},
+            {name: "dimensions", widget: "input"}
         ]
     },
 
