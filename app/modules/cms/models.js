@@ -24,7 +24,6 @@ exports.models = {
     ],
     form: [
       {name: "title", widget: "input"},
-      {name: "path", widget: "upload", options: {types: ["jpeg", "jpg"]}},
       {name: "caption", widget: "input"},
       {name: "description", widget: "rich_text"},
     ]

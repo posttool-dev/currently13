@@ -43,12 +43,22 @@ function form_form($el, meta_data) {
       if (n == null)
         return;
       for (var p in n) {
-        console.log(p);
         if (idx[p])
           idx[p].data = n[p];
       }
     }
   });
+
+  self.error = function(o)
+  {
+    console.log(o);
+    idx[o.path].$el().tooltip({title: JSON.stringify(o)});
+  }
+
+  self.update = function(o)
+  {
+
+  }
 }
 
 
@@ -381,7 +391,8 @@ var form_fields = {
     var _d = null;
     Object.defineProperty(this, "data", {
       get: function () {
-        return _d;
+        if (_d) return _d._id;
+        return null;
       },
       set: function (n) {
         _d = n;
@@ -394,7 +405,7 @@ var form_fields = {
     }
 
     function get_upload_row(row) {
-      if (!row.meta)
+      if (!row || !row.meta)
         return;
       var $e = $$('resource row');
       $e.append(row.meta.thumb);
