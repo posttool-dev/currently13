@@ -1,7 +1,6 @@
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Schema.Types.ObjectId;
 var cms = require('../modules/cms/models');
-var user = require('../modules/user/model');
 
 exports.models = {
 

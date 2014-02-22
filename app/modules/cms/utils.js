@@ -41,26 +41,3 @@ exports.process_err = function(err)
 };
 
 
-
-/// perms
-
-exports.has_user = function(req, res, next)
-{
-    if (req.session.user) {
-        next();
-    } else {
-        req.session.message = 'Access denied!';
-        res.redirect('/login?next='+encodeURIComponent(req.url));
-    }
-}
-
-//TODO
-exports.is_admin = function(req, res, next)
-{
-    if (req.session.user) {
-        next();
-    } else {
-        req.session.message = 'Access denied!';
-        res.redirect('/login?next='+encodeURIComponent(req.url));
-    }
-}

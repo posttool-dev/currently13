@@ -3,11 +3,18 @@
 <% include ../nav %>
 
 <div class="list">
-
-    <%= JSON.stringify(browser) %>
-
+    <% for (var i=0; i<browser.length; i++) { var b = browser[i]; %>
+        <%= b.name %><br>
+    <% } %>
+    <br>   <br>   <br>   <br>   <br>
+    <% for (var i=0; i<result.length; i++) { var r = result[i]; %>
+        <a href="/cms/update/<%= model%>/<%= r._id%>"><%=i%></a>
+        <% for (var j=0; j<browser.length; j++) { var b = browser[j]; %>
+        <%= r[b.name] %>
+        <% } %>
+    <br>
+    <% } %>
     <a href='/cms/create/<%=model%>'>Create <%= model %></a><br>
-
 </div>
 
 <% include ../foot %>

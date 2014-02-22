@@ -28,7 +28,7 @@
 <script>
 $(document).ready(function(){
     var form = new form_form( $("#workspace"), <%- JSON.stringify(form) %> );
-   // form.data(<%- JSON.stringify(object) %>);
+    form.data = <%- JSON.stringify(object) %>;
     $("#save").click(function(){
         console.log(form.data);
         $.ajax({

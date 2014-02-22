@@ -1,8 +1,9 @@
-var mongoose = require('mongoose'),
-    Grid = require('gridfs-stream'), gfs = null,
-    fs = require('fs'),
-    uuid = require('node-uuid'),
-    utils = require('../utils');
+var uuid = require('node-uuid');
+var fs = require('fs');
+var mongoose = require('mongoose');
+var gfs = null, Grid = require('gridfs-stream');
+var cloudinary = require('cloudinary');
+var use_gfs = false;
 
 Grid.mongo = mongoose.mongo;
 
@@ -113,10 +114,13 @@ exports.show_dashboard = function(req, res, next)
 
 exports.browse = function(req, res, next)
 {
-  res.render('cms/browse', {
-      title: 'CMS Dashboard ',
-      browser: req.browser,
-      model: req.params.type
+  req.model.find(function(err,result){
+    res.render('cms/browse', {
+        title: 'CMS Dashboard ',
+        browser: req.browser,
+        model: req.params.type,
+        result: result
+    });
   });
 };
 
@@ -136,10 +140,10 @@ exports.b = function(req, res, next)
 
 exports.c = function(req, res, next)
 {
-    var q = req.model.findOne({uuid: req.params.uuid});
+    var q = req.model.findOne({_id: req.params.id});
     q.exec(function(err, m)
     {
-        utils.process_err(err);
+      console.log(m);
         req.object = m;
         next();
     });
@@ -165,14 +169,14 @@ exports.form =
         }
         s.creator = req.session.user._id;
         s.save(function(err,s) {
-            utils.process_err(err);
             res.json(s);
         });
     }
 };
 
-var cloudinary = require('cloudinary');
-var use_gfs = false;
+
+// image and resource handling
+
 
 exports.upload = function(req, res)
 {
@@ -187,11 +191,10 @@ exports.upload = function(req, res)
         r.creator = req.session.user._id;
         r.meta = e;
         r.save(function(err,s) {
-            utils.process_err(err);
             s.meta.thumb = cloudinary.image(e.public_id + "." + e.format, { width: 100, height: 150, crop: "fill" })
             res.json(s);
         });
-    }
+    };
     if (use_gfs)
     {
         var ws = gfs.createWriteStream({ filename: file.path });
@@ -203,7 +206,7 @@ exports.upload = function(req, res)
             rs.pipe(ws);
         });
         rs.on('end', function() {
-            do_save();
+            do_save(null);
         });
         rs.on('error', function(e) {
             res.send('ERR');
@@ -225,7 +228,6 @@ exports.delete_resource = function(req, res)
     var q = Resource.findOne({_id: req.params.id});
     q.exec(function(err, r)
     {
-        utils.process_err(err);
         if (r)
         {
             cloudinary.uploader.destroy(r.meta.public_id, function(result) {
@@ -247,7 +249,6 @@ exports.download = function(req, res) {
     var q = Resource.findOne({_id: req.params.id});
     q.exec(function(err, r)
     {
-        utils.process_err(err);
         if (r)
         {
             gfs

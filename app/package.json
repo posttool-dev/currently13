@@ -1,16 +1,18 @@
 {
-    "name": "heynow",
-    "description": "againaaa",
-    "version": "0.0.1",
-    "private": true,
-    "dependencies": {
-        "express": "3.4.7",
-        "kue": "0.7.5",
-        "mongoose": "3.8.7",
-        "gridfs-stream": "0.4.1",
-        "cloudinary": "1.0.7",
-        "gm": "1.14.2",
-        "ejs": "0.8.5",
-        "node-uuid": "1.4.1"
-    }
+  "name": "heynow",
+  "description": "againaaa",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "3.4.7",
+    "kue": "0.7.5",
+    "mongoose": "3.8.7",
+    "gridfs-stream": "0.4.1",
+    "cloudinary": "1.0.7",
+    "gm": "1.14.2",
+    "ejs": "0.8.5",
+    "node-uuid": "1.4.1",
+    "nodemailer": "0.6.0",
+    "connect-session-mongo": "0.0.4"
+  }
 }
