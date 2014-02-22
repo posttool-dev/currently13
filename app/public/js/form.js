@@ -1,5 +1,5 @@
 var upload_url = "/cms/upload";
-var delete_url = "/cms/delete";
+var delete_url = "/cms/delete_resource/";
 
 function form_form($el, meta_data)
 {
@@ -364,18 +364,21 @@ var form_fields = {
             get: function() {return _d; },
             set: function(n) { _d = n; update_ui(); }
         });
-        function update_ui()
-        {
-        }
+
         function get_upload_row(row)
         {
             var $e = $$('resource row');
             $e.append(row.meta.thumb);
+            var $x = $("<div>x</div>");
+            $x.click(function(){
+                $$ajax(delete_url+row._id).done(function(){
+                    $btn.show();
+                    $info.empty();
+                });
+            })
+            $e.append($x);
             //console.log(row);
             return $e;
-        }
-        function on_delete()
-        {
         }
 
 
@@ -405,7 +408,7 @@ var form_fields = {
                 console.log(e, edata);
                 $progress.hide();
                 $info.show();
-                $btn.show();
+                //$btn.show();
                 $info.append(get_upload_row(edata.result));
                 _d = edata.result._id;
                 self.fire_change();

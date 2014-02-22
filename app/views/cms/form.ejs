@@ -30,13 +30,12 @@ $(document).ready(function(){
     var form = new form_form( $("#workspace"), <%- JSON.stringify(form) %> );
    // form.data(<%- JSON.stringify(object) %>);
     $("#save").click(function(){
-        console.log(f.data());
+        console.log(form.data);
         $.ajax({
-            data: { val: JSON.stringify(f.data()) },
+            data: { val: JSON.stringify(form.data) },
             method: 'post',
             success: function(o){
-                if (location.pathname != o)
-                    location.href = o;
+                console.log(o);
             },
             error: function(o){
                 console.error(o);

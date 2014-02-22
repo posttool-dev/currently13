@@ -21,7 +21,7 @@ exports.init = function(meta, resource_class_name, user_class_name)
         console.log(p);
         var schema_data = meta[p].schema;
         var schema = mongoose.Schema(schema_data);
-        add_fields_and_methods(schema);
+        add_fields_and_methods(schema, p);
         meta[p].schema = schema;
 //        var d = create_form_from_schema(schema);
 //        console.log(d);
@@ -33,7 +33,7 @@ exports.init = function(meta, resource_class_name, user_class_name)
 
 
 
-add_fields_and_methods = function(schema, user_ref)
+add_fields_and_methods = function(schema, name, user_ref)
 {
     if (!user_ref)
         user_ref = 'User';
@@ -45,7 +45,7 @@ add_fields_and_methods = function(schema, user_ref)
         'state': Number
     });
     schema.method('url', function(){
-        return this.modelName.toLowerCase() + '/' + this.uuid;
+        return name.toLowerCase() + '/' + this.uuid;
     });
     schema.pre('save', function (next) {
 //        this.uuid = uuid.v1();
@@ -108,7 +108,7 @@ exports.show_dashboard = function(req, res, next)
     title: 'CMS Dashboard ',
     models: req.models
   });
-}
+};
 
 
 exports.browse = function(req, res, next)
@@ -118,27 +118,28 @@ exports.browse = function(req, res, next)
       browser: req.browser,
       model: req.params.type
   });
-}
+};
 
-
-exports.a = function(req, res, next){
+exports.a = function(req, res, next)
+{
     req.models = Meta;
     next();
 };
 
-exports.b = function(req, res, next){
+exports.b = function(req, res, next)
+{
     req.browser = Meta[req.params.type]['browse'];
     req.form = Meta[req.params.type]['form'];
+    req.model = mongoose.model(req.params.type, Meta[req.params.type].schema);
     next();
 };
 
-exports.c = function(req, res, next){
-    req.browser = Meta[req.params.type]['browse'];
-    req.form = Meta[req.params.type]['form'];
-    var q = model.findOne({uuid: req.params.uuid});
+exports.c = function(req, res, next)
+{
+    var q = req.model.findOne({uuid: req.params.uuid});
     q.exec(function(err, m)
     {
-        exports.process_err(err);
+        utils.process_err(err);
         req.object = m;
         next();
     });
@@ -149,17 +150,23 @@ exports.form =
 {
     get: function(req, res)
     {
-        var s = null;//req.obj || new req.model();
+        var s = req.object || new req.model();
         res.render('cms/form', {title: 'Editing', object: s, form: req.form});
     },
 
     post: function(req, res)
     {
-        var s = req.obj || new req.model();
-        s.process(req.body);
-        s.save(req.user, function(err,s) {
+        var s = req.object || new req.model();
+        var data = JSON.parse(req.body.val);
+        for (var p in data)
+        {
+            console.log(p, data[p]);
+            s[p] = data[p];
+        }
+        s.creator = req.session.user._id;
+        s.save(function(err,s) {
             utils.process_err(err);
-            res.redirect(s.url());
+            res.json(s);
         });
     }
 };
@@ -213,6 +220,26 @@ exports.upload = function(req, res)
 
 };
 
+exports.delete_resource = function(req, res)
+{
+    var q = Resource.findOne({_id: req.params.id});
+    q.exec(function(err, r)
+    {
+        utils.process_err(err);
+        if (r)
+        {
+            cloudinary.uploader.destroy(r.meta.public_id, function(result) {
+                console.log(result);
+                res.json(result);
+            });
+        }
+        else
+        {
+            res.send('ERR');
+        }
+    });
+}
+
 
 // for gfs
 exports.download = function(req, res) {
@@ -233,33 +260,6 @@ exports.download = function(req, res) {
         }
     });
 };
-
-
-//// thumbnail
-//
-//var kue = require('kue')
-//    , gm = require('gm');
-//
-//// create our job queue
-//
-//var jobs = kue.createQueue();
-//
-//
-//
-//// process image resize jobs, 3 at a time.
-//
-//jobs.process('image conversion', 3, function (job, done) {
-//
-//    console.log("job",job)
-//    var ws = gfs.createWriteStream({ filename: "/thumb" + job.data.path });
-//    gm(job.data.path)
-//        .resize(job.data.max_width)
-//        .autoOrient()
-//        .write(ws, function (err) {
-//          if (!err) console.log(' hooray! ');
-//        });
-//
-//});
 
 
 

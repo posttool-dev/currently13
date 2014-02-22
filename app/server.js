@@ -73,11 +73,13 @@ function init_app()
 
     app.all ('/cms', [utils.has_user, cms.a], cms.show_dashboard);
     app.all ('/cms/browse/:type', [utils.has_user, cms.a, cms.b], cms.browse);
-    app.all ('/cms/create/:type', [utils.has_user, cms.a, cms.b], cms.form.get);
+    app.get ('/cms/create/:type', [utils.has_user, cms.a, cms.b], cms.form.get);
+    app.post('/cms/create/:type', [utils.has_user, cms.a, cms.b, cms.c], cms.form.post);
 //    app.get ('/cms/edit/:type/:uuid', [utils.has_user, a, b, c], cms.form.get);
 //    app.post('/cms/edit/:type/:uuid', [utils.has_user, a, b, c], cms.form.post);
     app.post('/cms/upload', [utils.has_user], cms.upload);
     app.get ('/cms/download/:id', [utils.has_user], cms.download);
+    app.get ('/cms/delete_resource/:id', [utils.has_user], cms.delete_resource);
 
     app.listen(3000);
     console.log('App started on port 3000');
