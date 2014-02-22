@@ -5,9 +5,12 @@
     "private": true,
     "dependencies": {
         "express": "3.4.7",
+        "kue": "0.7.5",
         "mongoose": "3.8.7",
-        "ejs": "0.8.5",
         "gridfs-stream": "0.4.1",
+        "cloudinary": "1.0.7",
+        "gm": "1.14.2",
+        "ejs": "0.8.5",
         "node-uuid": "1.4.1"
     }
 }

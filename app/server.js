@@ -1,7 +1,8 @@
 var fs = require('fs')
-    , domain = require('domain')
   , express = require('express'), app = express()
   , mongoose = require('mongoose')
+//  , kue = require('kue')
+  , cloudinary = require('cloudinary')
   , auth = require('./modules/auth')
   , user = require('./modules/user')
   , utils = require('./modules/utils')
@@ -17,6 +18,8 @@ mongoose.connect('mongodb://localhost/test', {}, function (err) {
     init_app();
 });
 
+
+
 function init_app()
 {
     app.set('view engine', 'ejs');
@@ -29,6 +32,12 @@ function init_app()
     app.use(express.methodOverride());
     app.use(express.static(__dirname + '/public'));
 
+    app.configure('development', function(){
+        app.use(express.errorHandler());
+        cloudinary.config({ cloud_name: 'posttool', api_key: '681946288916643', api_secret: 'L08_8W3noETBoKaMk9CV8paLlx8' });
+        console.log(cloudinary);
+    });
+
     // General
 
     // move session message to request locals
@@ -40,6 +49,8 @@ function init_app()
         res.user = req.session.user;
         next();
     });
+
+//    app.use(kue.app);
 
     // Index
     app.get('/', index.index);
@@ -66,6 +77,7 @@ function init_app()
 //    app.get ('/cms/edit/:type/:uuid', [utils.has_user, a, b, c], cms.form.get);
 //    app.post('/cms/edit/:type/:uuid', [utils.has_user, a, b, c], cms.form.post);
     app.post('/cms/upload', [utils.has_user], cms.upload);
+    app.get ('/cms/download/:id', [utils.has_user], cms.download);
 
     app.listen(3000);
     console.log('App started on port 3000');

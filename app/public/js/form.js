@@ -367,8 +367,11 @@ var form_fields = {
         function update_ui()
         {
         }
-        function get_upload_row()
+        function get_upload_row(row)
         {
+            var $e = $$('resource row');
+            $e.append("<img src='/cms/download/"+row._id+"' >");
+            return $e;
         }
         function on_delete()
         {
@@ -402,7 +405,7 @@ var form_fields = {
                 $progress.hide();
                 $info.show();
                 $btn.show();
-                $info.append(JSON.stringify(edata.result));
+                $info.append(get_upload_row(edata.result));
                 _d = edata.result._id;
                 self.fire_change();
             },

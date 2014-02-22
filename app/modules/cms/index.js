@@ -164,45 +164,101 @@ exports.form =
     }
 };
 
+var cloudinary = require('cloudinary');
+var use_gfs = false;
 
-exports.upload = function(req, res) {
-    var tempfile    = req.files.file.path;
-    var origname    = req.files.file.name;
-    var writestream = gfs.createWriteStream({ filename: tempfile });
-    writestream.on('error', function(e) {
-        console.log("xxxaa", e);
-        res.send('ERR');
-    });
-
-    var rs = fs.createReadStream(tempfile);
-    rs.on('open', function(){
-        console.log("PIPING")
-        rs.pipe(writestream);
-    });
-    rs.on('end', function()
+exports.upload = function(req, res)
+{
+    var file = req.files.file;
+    var do_save = function()
     {
-        console.log("HERE")
         // create a resource with path & return id
         var r = new Resource();
-        r.path = origname;
-        r.size = req.files.file.size;
+        r.filename = file.name;
+        r.path = file.path;
+        r.size = file.size;
         r.creator = req.session.user._id;
         r.save(function(err,s) {
             utils.process_err(err);
             res.json(s);
         });
-    });
-    rs.on('error', function(e) {
-        console.log("XXXXXXXXX", e);
-        res.send('ERR');
-    });
+    }
+    if (use_gfs)
+    {
+        var ws = gfs.createWriteStream({ filename: file.path });
+        ws.on('error', function(e) {
+            res.send('ERR');
+        });
+        var rs = fs.createReadStream(file.path);
+        rs.on('open', function() {
+            rs.pipe(ws);
+        });
+        rs.on('end', function() {
+            do_save();
+        });
+        rs.on('error', function(e) {
+            res.send('ERR');
+        });
+    }
+    else
+    {
+        var imageStream = fs.createReadStream(file.path, { encoding: 'binary' });
+        var cloudStream = cloudinary.uploader.upload_stream(function(e) {
+            console.log(e);
+            do_save();
+        });
+        imageStream.on('data', cloudStream.write).on('end', cloudStream.end);
+    }
 
 };
 
 
 exports.download = function(req, res) {
     // TODO: set proper mime type + filename, handle errors, etc...
-    gfs
-      .createReadStream({ filename: req.param('filename') })
-      .pipe(res);
+    var q = Resource.findOne({_id: req.params.id});
+    q.exec(function(err, r)
+    {
+        utils.process_err(err);
+        if (r)
+        {
+            console.log(r);
+            gfs
+              .createReadStream({ filename: "/thumb" + r.path })
+              .pipe(res);
+        }
+        else
+        {
+            res.send('ERR');
+        }
+    });
 };
+
+
+//// thumbnail
+//
+//var kue = require('kue')
+//    , gm = require('gm');
+//
+//// create our job queue
+//
+//var jobs = kue.createQueue();
+//
+//
+//
+//// process image resize jobs, 3 at a time.
+//
+//jobs.process('image conversion', 3, function (job, done) {
+//
+//    console.log("job",job)
+//    var ws = gfs.createWriteStream({ filename: "/thumb" + job.data.path });
+//    gm(job.data.path)
+//        .resize(job.data.max_width)
+//        .autoOrient()
+//        .write(ws, function (err) {
+//          if (!err) console.log(' hooray! ');
+//        });
+//
+//});
+
+
+

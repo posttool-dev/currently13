@@ -16,7 +16,7 @@ Vagrant::Config.run do |config|
   config.vm.provision :chef_solo do |chef|
     chef.add_recipe "nodejs"
     chef.add_recipe "mongodb-debs"
-    # chef.add_recipe "redis-server"
+    chef.add_recipe "redis-server"
     chef.json = {
       "nodejs" => {
         "version" => "0.10.0"
@@ -33,4 +33,5 @@ Vagrant::Config.run do |config|
   config.vm.provision :shell, :inline => "sudo apt-get install -y ruby1.9.1-dev --no-install-recommends"
   config.vm.provision :shell, :inline => "sudo apt-get install -y ruby1.9.3 --no-install-recommends"
   config.vm.provision :shell, :inline => "sudo gem install cf"
+  config.vm.provision :shell, :inline => "sudo apt-get install -y graphicsmagick libgraphicsmagick1-dev"
 end
