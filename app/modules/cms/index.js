@@ -170,7 +170,7 @@ var use_gfs = false;
 exports.upload = function(req, res)
 {
     var file = req.files.file;
-    var do_save = function()
+    var do_save = function(e)
     {
         // create a resource with path & return id
         var r = new Resource();
@@ -178,8 +178,10 @@ exports.upload = function(req, res)
         r.path = file.path;
         r.size = file.size;
         r.creator = req.session.user._id;
+        r.meta = e;
         r.save(function(err,s) {
             utils.process_err(err);
+            s.meta.thumb = cloudinary.image(e.public_id + "." + e.format, { width: 100, height: 150, crop: "fill" })
             res.json(s);
         });
     }
@@ -204,8 +206,7 @@ exports.upload = function(req, res)
     {
         var imageStream = fs.createReadStream(file.path, { encoding: 'binary' });
         var cloudStream = cloudinary.uploader.upload_stream(function(e) {
-            console.log(e);
-            do_save();
+            do_save(e);
         });
         imageStream.on('data', cloudStream.write).on('end', cloudStream.end);
     }
@@ -213,6 +214,7 @@ exports.upload = function(req, res)
 };
 
 
+// for gfs
 exports.download = function(req, res) {
     // TODO: set proper mime type + filename, handle errors, etc...
     var q = Resource.findOne({_id: req.params.id});
@@ -221,7 +223,6 @@ exports.download = function(req, res) {
         utils.process_err(err);
         if (r)
         {
-            console.log(r);
             gfs
               .createReadStream({ filename: "/thumb" + r.path })
               .pipe(res);

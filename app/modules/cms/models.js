@@ -1,3 +1,5 @@
+var mongoose = require('mongoose');
+
 exports.models = {
 
     /* for blobs */
@@ -8,7 +10,8 @@ exports.models = {
             description:   String,
             path:          String,
             size:          Number,
-            mimetype:      String
+            mime_type:     String,
+            meta:          mongoose.Schema.Types.Mixed
         },
         browse: [
             {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},

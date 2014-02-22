@@ -370,7 +370,8 @@ var form_fields = {
         function get_upload_row(row)
         {
             var $e = $$('resource row');
-            $e.append("<img src='/cms/download/"+row._id+"' >");
+            $e.append(row.meta.thumb);
+            //console.log(row);
             return $e;
         }
         function on_delete()
