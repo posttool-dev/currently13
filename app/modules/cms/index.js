@@ -12,42 +12,45 @@ var Meta = null;
 //var User = null;
 var Resource = null;
 
+/**
+ holds on to meta info
+ adds fields and methods to meta info
+ */
 exports.init = function (meta, resource_class_name, user_class_name) {
   gfs = new Grid(mongoose.connection.db, mongoose.mongo);
   Meta = meta;
+  console.log('current13 0.0.0');
   for (var p in  meta) {
     console.log(p);
     var schema_data = meta[p].schema;
     var schema = mongoose.Schema(schema_data);
     add_fields_and_methods(schema, p);
     meta[p].schema = schema;
-//        var d = create_form_from_schema(schema);
-//        console.log(d);
   }
   Resource = mongoose.model(resource_class_name, Meta[resource_class_name].schema);
 //    User = mongoose.model(user_class_name, Meta[user_class_name].schema);
 }
 
-
-add_fields_and_methods = function (schema, name, user_ref) {
-  if (!user_ref)
-    user_ref = 'User';
+/**
+  manages schema
+   - adds fields: creator, created, modified, state
+   - adds getters: url, type
+   - adds pre save to set times
+ */
+add_fields_and_methods = function (schema, name) {
   schema.add({
-    'creator': {type: mongoose.Schema.Types.ObjectId, ref: user_ref},
+    'creator': {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     'created': Date,
     'modified': Date,
-    //'uuid': String,
     'state': Number
   });
   schema.virtual('url').get(function () {
     return name.toLowerCase() + '/' + this._id;
   });
-
   schema.virtual('type').get(function () {
     return name.toLowerCase() + '/' + this.uuid;
   });
   schema.pre('save', function (next) {
-    //this.uuid = uuid.v1();
     this.modified = new Date();
     if (!this.created)
       this.created = new Date();
@@ -55,14 +58,26 @@ add_fields_and_methods = function (schema, name, user_ref) {
   });
 }
 
-//create_form_from_schema = function (schema) {
-//  var d = {};
-//  schema.eachPath(function (path, type) {
-//    d[path] = get_path_info(path, type);
-//  });
-//  return d;
-//}
 
+// model meta helpers
+
+get_schema_info = function(schema)
+{
+  var d = {};
+  schema.eachPath(function (path, mtype) {
+    d[path] = get_path_info(path, mtype);
+  });
+  return d;
+}
+
+/**
+ * returns a simple summary of the mongoose schema info.
+ * the "Reference" type is used throughout in a standardized way. TODO handle relationships between references.
+ *
+ * @param path the mongoose schema path
+ * @param mtype the mongoose type (provided by ```schema.forEach(function(path,type)```)
+ * @returns {{name: *, type: *, is_array: boolean}}
+ */
 get_path_info = function (path, mtype) {
   var is_array = false;
   var ftype = null;
@@ -108,40 +123,61 @@ get_path_info = function (path, mtype) {
 };
 
 
-get_references = function(schema) {
+get_by_type = function(schema, type) {
   var d = [];
   schema.eachPath(function (path, mtype) {
     var info = get_path_info(path, mtype);
-    if (info.type == 'Reference')
+    if (info.type == type)
       d.push(info);
   });
   return d;
 };
 
 
-exports.show_dashboard = function (req, res, next) {
-  res.render('cms/dashboard', {
-    title: 'CMS Dashboard ',
-    models: req.models
+get_references = function(schema) {
+  return get_by_type(schema, 'Reference');
+};
+
+
+get_names = function (field_info) {
+  if (!field_info)
+    return [];
+  else return field_info.map(function (elem) {
+    return elem.name;
   });
 };
 
 
-exports.browse = function (req, res, next) {
-  req.model.find(function (err, result) {
-    res.render('cms/browse', {
-      title: 'CMS Dashboard ',
-      browser: req.browser,
-      model: req.params.type,
-      result: result
-    });
-  });
+add_previews = function(object, refs)
+{
+  for (var i = 0; i < refs.length; i++) {
+    if (refs[i].ref == 'Resource') {
+      add_preview(object[refs[i].name]);
+    }
+  }
 };
+
+
+add_preview = function(r)
+{
+    if (r.meta)
+    {
+      r.meta.thumb = cloudinary.image(r.meta.public_id + ".jpg", { width: 100, height: 150, crop: "fill" });
+    }
+};
+
+
+// setup chain
+
+/* put the meta info in every request */
 
 exports.a = function (req, res, next) {
   req.models = Meta;
   next();
 };
+
+
+/* if a type was specified, put all its meta info in the request */
 
 exports.b = function (req, res, next) {
   var type = req.params.type;
@@ -153,44 +189,72 @@ exports.b = function (req, res, next) {
   next();
 };
 
+/* if an id was specified, find and populate a view of the model, with thumbnail references */
 exports.c = function (req, res, next) {
   var q = req.model.findOne({_id: req.params.id});
+  var refs = get_references(req.schema);
+  if (refs)
+    q.populate(get_names(refs).join(" "));
   q.exec(function (err, m) {
-    expando(req.schema, req.model, m, function(o){
-      req.object = o;
-      next();
-    });
+    if (err) next(err);
+    add_previews(m, refs);
+    req.object = m;
+    next();
   });
 };
 
-var expando = function (schema, model, object, next) {
-  if (!object)
-  {
-    next(object);
-    return;
+
+// the 'views'
+
+exports.show_dashboard = function (req, res, next) {
+  res.render('cms/dashboard', {
+    title: 'CMS Dashboard ',
+    models: req.models
+  });
+};
+
+get_conditions = function (props) {
+  try {
+    var conditions = JSON.parse(props);
+    // todo validate user conditions & join w/ limiting (like creator = you or other query)
+    // add_conditions(req.object, req.session.user, conditions);
+    return conditions;
+  } catch (e) {
+    return {};
   }
-  var refs = get_references(schema);
-  if (!refs)
-    next(object);
-  else {
-    var refnames = refs.map(function (elem) {
-      return elem.name;
-    }).join(" ");
-    model.populate(object, [
-      { path: refnames}
-    ], function (err, s) {
-      for (var i=0; i<refs.length; i++)
-      {
-        if (refs[i].ref == 'Resource')
-        {
-          var r = object[refs[i].name];
-          if (r.meta)
-            r.meta.thumb = cloudinary.image(r.meta.public_id + "." + r.meta.format, { width: 100, height: 150, crop: "fill" })
-        }
+};
+
+exports.browse = {
+  get: function (req, res, next) {
+    var conditions = get_conditions(req.body.conditions);
+    req.model.count(conditions, function (err, count) {
+      if (err){
+        next(err);
+        return;
       }
-      next(object);
+      res.render('cms/browse', {
+        title: 'CMS Dashboard ',
+        browser: req.browser,
+        type: req.type,
+        total: count
+      });
+    });
+  },
+  post: function (req, res, next) {
+    var conditions = get_conditions(req.body.conditions);
+    var fields = null;
+    var options = {order: req.body.order, offset: req.body.offset, limit: req.body.limit};
+    req.model.find(conditions, fields, options, function (err, r) {
+      if (err)
+        next(err);
+      else
+        res.json(r);
     });
   }
+};
+
+exports.schema = function (req, res, next) {
+  res.json({schema: get_schema_info(req.schema), browser: req.browser});
 };
 
 
@@ -264,6 +328,7 @@ exports.upload = function (req, res) {
   }
 
 };
+
 
 exports.delete_resource = function (req, res) {
   var q = Resource.findOne({_id: req.params.id});

@@ -83,14 +83,15 @@ var $$ = function(className, options)
 
 function $$ajax(url,data,type)
 {
+  console.log(data);
     return $.ajax({
         crossDomain:false,
-        type: type ? type : 'get',
+        method: type ? type : 'get',
         url: url,
         dataType: "json",
         contentType: "application/json",
         processData: false,
-        data: data ? $.param(data) : ""
+        data: data ? data : ""
     }).fail(function(e){
             console.log("ERROR",e.responseText);
         });

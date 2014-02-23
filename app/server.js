@@ -72,7 +72,9 @@ function init_app() {
   cms.init(hm.models, "Resource", "User");
 
   app.all('/cms', [auth.has_user, cms.a], cms.show_dashboard);
-  app.all('/cms/browse/:type', [auth.has_user, cms.a, cms.b], cms.browse);
+  app.get('/cms/browse/:type', [auth.has_user, cms.a, cms.b], cms.browse.get);
+  app.post('/cms/browse/:type', [auth.has_user, cms.a, cms.b], cms.browse.post);
+  app.post('/cms/schema/:type', [auth.has_user, cms.a, cms.b], cms.schema);
   app.get('/cms/create/:type', [auth.has_user, cms.a, cms.b], cms.form.get);
   app.post('/cms/create/:type', [auth.has_user, cms.a, cms.b, cms.c], cms.form.post);
   app.get ('/cms/update/:type/:id', [auth.has_user, cms.a, cms.b, cms.c], cms.form.get);

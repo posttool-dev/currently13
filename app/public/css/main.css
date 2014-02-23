@@ -54,3 +54,16 @@ ul { list-style-type: none; }
     background-color: #222;
     height: 100%;
 }
+
+
+
+
+
+.hrow, .crow {
+    clear: both;
+}
+
+.hcol, .ccol {
+    float: left;
+    width: 300px;
+}
