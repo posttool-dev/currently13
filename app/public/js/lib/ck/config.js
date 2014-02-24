@@ -7,7 +7,7 @@ CKEDITOR.editorConfig = function( config ) {
 	// Define changes to default configuration here.
 	// For the complete reference:
 	// http://docs.ckeditor.com/#!/api/CKEDITOR.config
-
+config.skin = 'moono-light';
 	// The toolbar groups arrangement, optimized for a single toolbar row.
 	config.toolbarGroups = [
 		{ name: 'document',	   groups: [ 'mode', 'document', 'doctools' ] },
@@ -16,7 +16,7 @@ CKEDITOR.editorConfig = function( config ) {
 		{ name: 'forms' },
 		{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
 		{ name: 'paragraph',   groups: [ 'list', 'indent', 'blocks', 'align', 'bidi' ] },
-//		{ name: 'links' },
+		{ name: 'links' },
 		{ name: 'insert' },
 		{ name: 'styles' },
 		{ name: 'colors' },
