@@ -474,6 +474,7 @@ var form_fields = {
     });
 
     function update_ui() {
+      $info.empty();
       get_upload_row(_d);
     }
 
