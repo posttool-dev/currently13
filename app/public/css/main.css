@@ -6,14 +6,26 @@ html {
 body {
     background-color: #fff;
     padding: 50px 20px 40px 19px;
-}
-
-.padded {
-    padding: 15px;
+    font-family: sans-serif;
 }
 
 ul {
     list-style-type: none;
+}
+
+label {
+    text-transform: uppercase;
+    font-size:10px;
+}
+
+input {
+    border: 1px solid #ccc;
+    font-size: 20px;
+    padding: 7px;
+    width: 100%;
+}
+.padded {
+    padding: 15px;
 }
 
 #tool-bar {
@@ -63,6 +75,10 @@ ul {
     padding-top: 50px;
 }
 
+.control-group {
+    padding-top: 20px;
+}
+
 .progress {
     width: 100%;
     height: 40px;
@@ -98,4 +114,8 @@ ul {
     overflow: hidden;
     text-overflow: ellipsis;
     font-size:11px;
+}
+
+.cke_editable {
+    font-size:12px;
 }
