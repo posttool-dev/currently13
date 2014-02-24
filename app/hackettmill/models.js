@@ -62,7 +62,7 @@ exports.models = {
             {name: "first_name", widget: "input"},
             {name: "last_name", widget: "input"},
             {name: "description", widget: "rich_text"},
-            {name: "works", widget: "choose_create", options: {type:"Inventory", array: true}}
+            {name: "work", widget: "choose_create", options: {type:"Inventory", array: true}}
         ]
     },
 
@@ -82,7 +82,7 @@ exports.models = {
             {name: "title", widget: "input"},
             {name: "subtitle", widget: "input"},
             {name: "body", widget: "rich_text"},
-            {name: "pages", widget: "choose_create", options: {type:"Pages", array: true}}
+            {name: "pages", widget: "choose_create", options: {type:"Page", array: true}}
         ]
     },
 

@@ -9,7 +9,7 @@ body {
 }
 
 .padded {
-    padding: 10px;
+    padding: 15px;
 }
 
 ul {
@@ -21,24 +21,38 @@ ul {
     top: 0;
     left: 0;
     width: 100%;
-    height: 30px;
-    background-color: #fff;
-    color: #333;
-    border-bottom: 1px solid #ccc;
-    z-index: 100000;
+    height: 40px;
+    background-color: #04061a;
+    color: #eee;
+    border-bottom: 1px solid #48adff;
+    z-index: 11;
 }
+
+.options {
+    font-size: 18px;
+    padding: 6px 0 0 30px;
+
+}
+.user {
+    position: fixed;
+    top: 12px;
+    right: 28px;
+    color: #888;
+    font-size:13px;
+}
+
 
 .form-controls {
     position: fixed;
-    top: 30px;
-        left: 0;
+    top: 40px;
+    left: 0;
     width: 100%;
-    height: 55px;
+    height: 53px;
     background-color: #fff;
     color: #333;
     border-bottom: 1px solid #ccc;
-    z-index: 100000;
-    padding:15px;
+    z-index: 12;
+    padding:8px 25px 0 30px;
 }
 
 .heading {
@@ -47,15 +61,6 @@ ul {
 
 .form .form {
     padding-top: 50px;
-}
-.options {
-    padding: 6px 0 0 20px;
-}
-
-.user {
-    position: fixed;
-    top: 6px;
-    right: 28px;
 }
 
 .progress {
@@ -86,4 +91,11 @@ ul {
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 2px 2px 2px 2px;
+}
+
+.time {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size:11px;
 }

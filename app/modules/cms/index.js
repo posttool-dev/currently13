@@ -21,8 +21,8 @@ exports.init = function (meta, resource_class_name, user_class_name) {
   Meta = meta;
   console.log('current13 0.0.0');
   for (var p in  meta) {
-    console.log(p);
     var schema_data = meta[p].schema;
+    validate_meta(p, schema_data, meta[p].browse, meta[p].form);
     var schema = mongoose.Schema(schema_data);
     add_fields_and_methods(schema, p);
     meta[p].schema = schema;
@@ -31,6 +31,16 @@ exports.init = function (meta, resource_class_name, user_class_name) {
 //    User = mongoose.model(user_class_name, Meta[user_class_name].schema);
 }
 
+validate_meta = function (p, schema, browse, form) {
+  if (browse)
+    for (var i = 0; i < browse.length; i++)
+      if (browse[i].name && !schema[browse[i].name])
+        throw new Error('No path ' + browse[i].name + ' in schema ' + p);
+  if (form)
+    for (var i = 0; i < form.length; i++)
+      if (form[i].name && !schema[form[i].name])
+        throw new Error('No path ' + form[i].name + ' in schema ' + p);
+}
 /**
   manages schema
    - adds fields: creator, created, modified, state
@@ -56,6 +66,7 @@ add_fields_and_methods = function (schema, name) {
       this.created = new Date();
     next();
   });
+  mongoose.model(name, schema);
 }
 
 
@@ -270,7 +281,7 @@ exports.form =
   get: function (req, res) {
     res.render('cms/form', {
       title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
-      ancestors: [{url:'/cms/browse/'+req.type, name:req.type}],
+      ancestors: [{url:'/cms/browse/'+req.type, name:'Browse'}],
       type: req.type,
       id: req.object ? req.object._id : null,
       object: req.object || new req.model(),

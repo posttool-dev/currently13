@@ -9,12 +9,16 @@
 <div class="padded">
    <div id="browser">
     </div>
-    <a href='/cms/create/<%=type%>'>Create <%= type %></a><br>
+    <a href='/cms/create/<%= type %>'>Create <%= type %></a><br>
 </div>
 
 <script>
 $(document).ready(function(){
     var browser = new browse_browse("<%= type %>", {});
+    browser.add_listener('click', function(f, r){
+        console.log(f,r)
+        location.href = '/cms/update/<%= type %>/' + r._id;
+    })
     $("#browser").append(browser.$el());
 });
 </script>

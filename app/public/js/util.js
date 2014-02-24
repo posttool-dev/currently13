@@ -83,7 +83,6 @@ var $$ = function(className, options)
 
 function $$ajax(url,data,type)
 {
-  console.log(data);
     return $.ajax({
         crossDomain:false,
         method: type ? type : 'get',
@@ -95,4 +94,88 @@ function $$ajax(url,data,type)
     }).fail(function(e){
             console.log("ERROR",e.responseText);
         });
+}
+
+
+function timeSince(date) {
+
+  var seconds = Math.floor((new Date() - date) / 1000);
+
+  var interval = Math.floor(seconds / 31536000);
+
+  if (interval > 1) {
+    return interval + " years";
+  }
+  interval = Math.floor(seconds / 2592000);
+  if (interval > 1) {
+    return interval + " months";
+  }
+  interval = Math.floor(seconds / 86400);
+  if (interval > 1) {
+    return interval + " days";
+  }
+  interval = Math.floor(seconds / 3600);
+  if (interval > 1) {
+    return interval + " hours";
+  }
+  interval = Math.floor(seconds / 60);
+  if (interval > 1) {
+    return interval + " minutes";
+  }
+  return Math.floor(seconds) + " seconds";
+}
+
+
+
+
+
+// modal template
+function $$modal(title)
+{
+    var $el = $$('modal', { css: { display: 'none'} });
+
+    var $head = $$('modal-header',{parent: $el});
+    var $btn = $$('close', { el: 'button', parent: $head,
+        attributes: { type:'button'}, data: { dismiss: 'modal' }, children: [ $('<span>&times;</span>') ]
+    });
+    var $h = $$(null,{ el: 'h3',parent: $head, children: [title] });
+    var $form = $$('dirty_form', { el: 'form', parent: $el,css: { marginBottom: 0}
+    });
+    var $body = $$('modal-body', { parent: $form});
+    var $foot = $$('modal-footer',{ parent: $form });
+    var $btn1 = $$('btn', { el: 'button', parent: $foot,
+        data: { dismiss: 'modal' }, children: [ 'Close' ]
+    });
+    var $btn2 = $$('btn btn-primary', { el: 'button', parent: $foot,
+        attributes: { type: 'submit', value:'Submit' },
+        children: [ 'Save Changes' ]
+    });
+
+    return $el;
+}
+
+
+
+
+
+
+
+// component mixins
+
+
+function form_make_listener(c) {
+  var listeners = {};
+  c.add_listener = function (name, callback) {
+    if (!listeners[name])
+      listeners[name] = [];
+    listeners[name].push(callback);
+  }
+  c.remove_listeners = function (name) {
+    listeners[name] = [];
+  }
+  c.emit = function (name, data) {
+    if (listeners[name])
+      for (var i = 0; i < listeners[name].length; i++)
+        listeners[name][i](c, data);
+  }
 }

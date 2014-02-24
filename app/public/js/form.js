@@ -3,6 +3,7 @@ var delete_url = "/cms/delete_resource/";
 
 function form_form(type) {
   var self = this;
+  form_make_listener(self);
   self.$el = function () {
     return $el;
   }
@@ -10,17 +11,16 @@ function form_form(type) {
   var idx = {};
 
   var $el = $$('form');
-  var $controls = $$('form-controls',{parent:$el});
-  var $time = $$('heading',{el:'span',parent: $controls}).text(type);
-  var $save = $$('btn btn-primary',{el:'a', parent: $controls}).text('SAVE');
-  var $time = $$('time',{el:'span',parent: $controls}).text('Last saved...');
+  var $controls = $$('form-controls', {parent: $el});
+  var $heading = $$('heading', {el: 'span', parent: $controls}).text(type);
+  var $save = $$('btn btn-primary ', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
+  var $time = $$('time', {el: 'span', parent: $controls}).text('Last saved...');
 //  var $cancel = $$('btn',{el:'a', parent: $controls}).text('CANCEL');
-  var $delete = $$('btn btn-danger',{el:'a', parent: $controls}).text('DELETE');
-  var $form = $$('form',{parent:$el});
+  var $delete = $$('btn btn-danger  pull-right', {el: 'a', parent: $controls}).text('DELETE');
+  var $form = $$('form', {parent: $el});
 
 
   function set_meta(meta_data) {
-    console.log(meta_data);
     idx = {};
     $form.empty();
     var $t = $form;
@@ -38,12 +38,39 @@ function form_form(type) {
         $t = s.pop();
       }
       else {
-        var f = new indicated_field(d.name, d.label ? d.label : d.name, d.widget);
+        var f = create_field(d);
         var $fel = f.$el();
         $t.append($fel);
         idx[d.name] = f;
       }
     }
+  }
+
+  function create_field(d) {
+    var f = new indicated_field(d.name, d.label ? d.label : d.name, d.widget);
+    f.add_listener('change', function () {
+      $save.prop('disabled', false);
+    });
+    f.add_listener('add', function () {
+      console.log('add', d.options.type);
+    });
+    f.add_listener('browse', function (f) {
+      var bb = new browse_browse(d.options.type);
+      bb.add_listener('click', function (b, r) {
+        if (d.options.array) {
+          var rs = f.data;
+          rs.push(r);
+          f.data = rs;
+        } else
+          f.data = r;
+      $save.prop('disabled', false);
+        $m.modal('hide');
+      });
+      var $m = $$modal('hey');
+      $m.find('.modal-body').append(bb.$el());
+      $m.modal();
+    });
+    return f;
   }
 
   Object.defineProperty(self, "data", {
@@ -56,23 +83,25 @@ function form_form(type) {
     set: function (n) {
       if (n == null)
         return;
+      console.log(n);
       for (var p in n) {
         if (idx[p])
           idx[p].data = n[p];
       }
+      $time.text(' Last saved ' + timeSince(new Date(n.modified)) + ' ago.');
     }
   });
 
-  self.error = function(o)
-  {
+  self.error = function (o) {
     console.log(o);
     idx[o.path].error = JSON.stringify(o);
   }
 
-  self.update = function(o)
-  {
-    if (location.href.indexOf('cms/create')!=-1)
-      location.href= '/cms/update/' + type + '/' + o._id;
+  self.update = function (o) {
+    if (location.href.indexOf('cms/create') != -1)
+      location.href = '/cms/update/' + type + '/' + o._id;
+    else
+      self.data = o;
   }
 
   self.init = function (id) {
@@ -109,12 +138,23 @@ function indicated_field(name, label, type)//, settings_callback)
   self.$el = function () {
     return $el;
   }
+  form_make_listener(self);
 
   var $label = $('<label></label>').addClass('control-label').attr('for', name).text(label);
   if (!form_fields[type + "_field"])
     throw Error("no field for " + type);
   var field = new form_fields[type + "_field"]();
-  form_make_listener(self, field);
+  form_make_listener(field);
+  // bubble...
+  field.add_listener('change', function () {
+    self.emit('change');
+  });
+  field.add_listener('add', function () {
+    self.emit('add');
+  });
+  field.add_listener('browse', function () {
+    self.emit('browse');
+  });
   $el.append($label, field.$el());
   field.$el().addClass('controls');
 
@@ -186,27 +226,13 @@ function indicated_field(name, label, type)//, settings_callback)
   });
   Object.defineProperty(this, "error", {
     set: function (e) {
-      field.$el().append('<span class="help-inline">'+e+'</span>');
+      field.$el().append('<span class="help-inline">' + e + '</span>');
       $el.addClass('error');
     }
   });
 
 }
 
-
-function form_make_listener(c, f) {
-  var listeners = [];
-  c.add_listener = function (callback) {
-    listeners.append(callback);
-  }
-  c.remove_listeners = function () {
-    listeners = [];
-  }
-  f.fire_change = function () {
-    for (var i = 0; i < listeners.length; i++)
-      listeners[i](f);
-  }
-}
 
 function form_field_create(self, $el, tag_name, clz) {
   if (typeof $el != 'undefined' && $el != null)
@@ -242,7 +268,6 @@ var form_fields = {
         set: function (n) {
           _b = n;
           update_ui();
-          self.fire_change();
 
         }
       });
@@ -254,7 +279,7 @@ var form_fields = {
     $c.click(function () {
       self.data = !self.data;
       update_ui();
-      self.fire_change();
+      self.emit('change');
     });
   },
 
@@ -285,7 +310,7 @@ var form_fields = {
 
     $c.change(function () {
       _n = $c.val();
-      self.fire_change();
+      self.emit('change');
     });
   },
 
@@ -316,7 +341,7 @@ var form_fields = {
 
     $c.change(function () {
       _n = $c.val();
-      self.fire_change();
+      self.emit('change');
     });
   },
 
@@ -350,7 +375,7 @@ var form_fields = {
 
     cm.on('change', function () {
       _s = cm.getValue();
-      self.fire_change();
+      self.emit('change');
     });
 
   },
@@ -383,7 +408,7 @@ var form_fields = {
 
     _ck.on('change', function () {
       _s = _ck.getData();
-      self.fire_change();
+      self.emit('change');
     });
 
 
@@ -415,7 +440,7 @@ var form_fields = {
 
     $c.change(function () {
       this.data = $c.val();
-      self.fire_change();
+      self.emit('change');
     });
   },
 
@@ -473,8 +498,8 @@ var form_fields = {
       dataType: 'json',
       dropZone: $el,
       add: function (e, edata) {
-//                if (data.valid && !edata.files[0].name.match(data.valid))
-//                    return;
+        //if (data.valid && !edata.files[0].name.match(data.valid))
+        //  return;
         $progress.show();
         $info.hide();
         $btn.hide();
@@ -494,20 +519,19 @@ var form_fields = {
         $info.show();
         get_upload_row(edata.result);
         _d = edata.result;
-        self.fire_change();
+        self.emit('change');
       },
       error: function (e) {
         console.log("ERR", e);
       }
     });
-    console.log($fileupload);
   },
 
   model_field: function ($el) {
     $el = form_field_create(self, $el, 'span');
     this.$el = function () {
       return $el;
-    }
+    };
 
     var _d = null;
     Object.defineProperty(this, "data", {
@@ -521,17 +545,28 @@ var form_fields = {
     });
     function update_ui() {
       $el.empty();
-      $el.text(_d);
+      $el.text(_d.title);
     }
   },
 
   choose_create_field: function ($el) {
+    var self = this;
     $el = form_field_create(self, $el);
-    var f = new form_fields.add_remove($el, form_fields.model_field);
-    $el.append(f.$el());
     this.$el = function () {
       return $el;
-    }
+    };
+
+    var f = new form_fields.add_remove($el, form_fields.model_field);
+    f.add_listener('change', function () {
+      self.emit('change');
+    });
+    f.add_listener('click.add', function () {
+      self.emit('add');
+    });
+    f.add_listener('click.browse', function () {
+      self.emit('browse');
+    });
+    $el.append(f.$el());
 
     Object.defineProperty(this, "data", {
       get: function () {
@@ -550,7 +585,7 @@ var form_fields = {
     $el.append(f.$el());
     this.$el = function () {
       return $el;
-    }
+    };
 
     Object.defineProperty(this, "data", {
       get: function () {
@@ -564,10 +599,12 @@ var form_fields = {
 
   add_remove: function ($el, clazz, options) {
     var self = this;
+    form_make_listener(self);
     $el = form_field_create(self, $el);
     this.$el = function () {
       return $el;
-    }
+    };
+
     var $list = $("<div></div>");
     options = $.extend({add: true, browse: true}, options);
     var $actions = $("<div></div>");
@@ -580,9 +617,14 @@ var form_fields = {
     $el.append($list);
     $el.append($actions);
     $add.click(function () {
-      $list.append(add_one().$el());
+      self.emit('click.add');
     });
-    $list.sortable({handle: '.sort'});
+    $browse.click(function () {
+      self.emit('click.browse');
+    });
+    $list.sortable({handle: '.sort', change: function (event, ui) {
+      self.emit('change');
+    }});
 
     Object.defineProperty(this, "data", {
       get: function () {
@@ -597,6 +639,7 @@ var form_fields = {
         $list.empty();
         if (!o)
           return;
+        console.log("!",o);
         for (var i = 0; i < o.length; i++) {
           $list.append(add_one(o[i]).$el());
         }
@@ -606,14 +649,23 @@ var form_fields = {
     function add_one(data) {
       var d = new form_fields.deletable_row(clazz);
       d.data = data;
-      d.add_listener(self.fire_change);
+      d.add_listener('change', function () {
+        self.emit('change');
+      });
       return d;
     }
 
   },
 
   deletable_row: function (clazz) {
+    var self = this;
+    form_make_listener(self);
+
     var $el = $("<div></div>").data("__obj__", this);
+    this.$el = function () {
+      return $el;
+    }
+
     var $h = $("<span></span>").addClass("fa fa-sort sort");
     var $c = $("<span></span>").css({padding: '0 5px 0 5px'});
     var c = new clazz();
@@ -634,13 +686,7 @@ var form_fields = {
       }
     });
 
-    this.$el = function () {
-      return $el;
-    }
 
-    this.change = function (callback) {
-      c.change(callback);
-    }
   },
 
   group_field: function () {
@@ -671,16 +717,10 @@ var form_fields = {
       _c[c.name] = _c;
       c.change(function () {
         _d[c.name] = c.data;
-        fire_change();
+        self.emit('change');
       })
     }
-    this.change = function (c) {
-      self.change_callback = c;
-    }
-    function fire_change() {
-      if (self.change_callback)
-        self.change_callback();
-    }
+
   },
 
   break_field: function () {

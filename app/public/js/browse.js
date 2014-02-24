@@ -1,4 +1,5 @@
 function browse_browse(type, filters, order, page, pagesize) {
+  var self = this;
   var schema;
   var bmeta;
   var row_height = 30;
@@ -12,6 +13,7 @@ function browse_browse(type, filters, order, page, pagesize) {
   this.$el = function () {
     return init_ui();
   }
+  form_make_listener(self);
 
   function init_ui() {
     if ($el)
@@ -52,25 +54,27 @@ function browse_browse(type, filters, order, page, pagesize) {
 
   function update_ui(results) {
     for (var i = 0; i < results.length; i++) {
-      (function (r) {
-        var $r = $$('crow');
-        $r.hover(function () {
-            $r.addClass('over');
-          },
-          function () {
-            $r.removeClass('over');
-          });
-        $r.click(function () {
-          location.href = '/cms/update/' + type + '/' + r._id;
-        });
-        $r.height(row_height);
-        for (var j = 0; j < bmeta.length; j++) {
-          var $c = $$('ccol');
-          $c.text(r[bmeta[j].name]);
-          $r.append($c);
-        }
-        $rbody.append($r);
-      })(results[i]);
+      $results.append(create_row(results[i]));
     }
+  }
+
+  function create_row(r) {
+    var $r = $$('crow');
+    $r.hover(function () {
+        $r.addClass('over');
+      },
+      function () {
+        $r.removeClass('over');
+      });
+    $r.click(function () {
+      self.emit('click', r);
+    });
+    $r.height(row_height);
+    for (var j = 0; j < bmeta.length; j++) {
+      var $c = $$('ccol');
+      $c.text(r[bmeta[j].name]);
+      $r.append($c);
+    }
+    return $r;
   }
 }

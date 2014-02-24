@@ -34,7 +34,6 @@ function init_app() {
   app.configure('development', function () {
     app.use(express.errorHandler());
     cloudinary.config({ cloud_name: 'posttool', api_key: '681946288916643', api_secret: 'L08_8W3noETBoKaMk9CV8paLlx8' });
-    console.log(cloudinary);
   });
 
   // General
