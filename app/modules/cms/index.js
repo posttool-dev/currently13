@@ -204,23 +204,32 @@ exports.b = function (req, res, next) {
 
 /* if an id was specified, find and populate a view of the model, with thumbnail references */
 exports.c = function (req, res, next) {
-  if (req.params.id == 'null')
-  {
+  if (req.params.id == 'null') {
     next();
     return;
   }
-  var q = req.model.findOne({_id: req.params.id});
-  var refs = get_references(req.schema);
-  if (refs)
-    q.populate(get_names(refs).join(" "));
-  q.exec(function (err, m) {
+  expand(req.schema, req.model, req.params.id, function (err, m) {
     if (err) next(err);
-    add_previews(m, refs);
-    req.object = m;
-    next();
+    else {
+      req.object = m;
+      next();
+    }
   });
 };
 
+
+expand = function(schema, model, id, next)
+{
+  var q = model.findOne({_id: id});
+  var refs = get_references(schema);
+  if (refs)
+    q.populate(get_names(refs).join(" "));
+  q.exec(function (err, m) {
+    if (!err)
+      add_previews(m, refs);
+    next(err, m);
+  });
+}
 
 // the 'views'
 
@@ -296,7 +305,7 @@ exports.form =
       form: req.form})
   },
 
-  post: function (req, res) {
+  post: function (req, res, next) {
     var s = req.object || new req.model();
     var data = JSON.parse(req.body.val);
     for (var p in data) {
@@ -306,8 +315,15 @@ exports.form =
     s.save(function (err, s) {
       if (err)
         res.json(err);
-      else
-        res.json(s);
+      else {
+        expand(req.schema, req.model, req.params.id, function (err, m) {
+          if (err)
+            next(err);
+          else
+            res.json(m);
+
+        });
+      }
     });
   }
 };

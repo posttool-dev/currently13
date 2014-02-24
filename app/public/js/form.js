@@ -51,24 +51,22 @@ function form_form(type) {
     f.add_listener('change', function () {
       $save.prop('disabled', false);
     });
+    // for reference fields
     f.add_listener('add', function () {
       console.log('add', d.options.type);
     });
     f.add_listener('browse', function (f) {
       var bb = new browse_browse(d.options.type);
       bb.add_listener('click', function (b, r) {
-        if (d.options.array) {
-          var rs = f.data;
-          rs.push(r);
-          f.data = rs;
-        } else
-          f.data = r;
-      $save.prop('disabled', false);
-        $m.modal('hide');
+        console.log(f.field)
+        f.field.push(r);
+        $save.prop('disabled', false);
+        $m.remove();
       });
-      var $m = $$modal('hey');
+      var $m = $$modal('Select one...');
+      $(document.body).append($m);
       $m.find('.modal-body').append(bb.$el());
-      $m.modal();
+      $m.show();
     });
     return f;
   }
@@ -93,7 +91,7 @@ function form_form(type) {
   });
 
   self.error = function (o) {
-    console.log(o);
+      $time.text(' ERROR - see fields for details');
     idx[o.path].error = JSON.stringify(o);
   }
 
@@ -101,7 +99,10 @@ function form_form(type) {
     if (location.href.indexOf('cms/create') != -1)
       location.href = '/cms/update/' + type + '/' + o._id;
     else
+    {
       self.data = o;
+      $save.prop('disabled', true);
+    }
   }
 
   self.init = function (id) {
@@ -145,6 +146,7 @@ function indicated_field(name, label, type)//, settings_callback)
     throw Error("no field for " + type);
   var field = new form_fields[type + "_field"]();
   form_make_listener(field);
+  self.field = field;
   // bubble...
   field.add_listener('change', function () {
     self.emit('change');
@@ -268,7 +270,6 @@ var form_fields = {
         set: function (n) {
           _b = n;
           update_ui();
-
         }
       });
     function update_ui() {
@@ -308,7 +309,7 @@ var form_fields = {
       $c.val(_n);
     }
 
-    $c.change(function () {
+    $c.keyup(function () {
       _n = $c.val();
       self.emit('change');
     });
@@ -339,7 +340,7 @@ var form_fields = {
       $c.val(_n);
     }
 
-    $c.change(function () {
+    $c.keyup(function () {
       _n = $c.val();
       self.emit('change');
     });
@@ -577,6 +578,8 @@ var form_fields = {
       }
     });
 
+    self.push = function(e){f.push(e);}
+
   },
 
   many_reference_field: function ($el) {
@@ -631,7 +634,7 @@ var form_fields = {
         var vals = [];
         $list.children().each(function (i, e) {
           var o = $(e).data("__obj__");
-          vals.push(o.data);
+          vals.push(o.data._id);
         });
         return vals;
       },
@@ -639,19 +642,19 @@ var form_fields = {
         $list.empty();
         if (!o)
           return;
-        console.log("!",o);
         for (var i = 0; i < o.length; i++) {
-          $list.append(add_one(o[i]).$el());
+          self.push(o[i]);
         }
       }
     });
 
-    function add_one(data) {
+    self.push = function(data) {
       var d = new form_fields.deletable_row(clazz);
       d.data = data;
       d.add_listener('change', function () {
         self.emit('change');
       });
+      $list.append(d.$el());
       return d;
     }
 
@@ -674,6 +677,7 @@ var form_fields = {
     $el.append($h, $c, $x);
     $c.append(c.$el());
     $x.click(function () {
+      self.emit('change');
       $el.remove();
     });
 
