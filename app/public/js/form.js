@@ -1,7 +1,7 @@
 var upload_url = "/cms/upload";
 var delete_url = "/cms/delete_resource/";
 
-function form_form($el, meta_data) {
+function form_form(type) {
   var self = this;
   self.$el = function () {
     return $el;
@@ -9,26 +9,39 @@ function form_form($el, meta_data) {
 
   var idx = {};
 
-  $el.empty();
-  var $t = $el;
-  var s = [];
-  idx = {};
-  for (var i = 0; i < meta_data.length; i++) {
-    var d = meta_data[i];
-    if (d.begin) {
-      var $x = $("<div></div>");
-      $t.append($x);
-      s.push($t);
-      $t = $x;
-    }
-    else if (d.end) {
-      $t = s.pop();
-    }
-    else {
-      var f = new indicated_field(d.name, d.label ? d.label : d.name, d.widget);
-      var $fel = f.$el();
-      $t.append($fel);
-      idx[d.name] = f;
+  var $el = $$('form');
+  var $controls = $$('controls',{parent:$el});
+  var $save = $$('btn',{el:'a', parent: $controls}).text('SAVE');
+  var $time = $$('time',{parent: $controls}).text('Last saved...');
+  var $cancel = $$('btn',{el:'a', parent: $controls}).text('CANCEL');
+  var $delete = $$('btn',{el:'a', parent: $controls}).text('DELETE');
+  var $form = $$('form',{parent:$el});
+
+
+  function set_meta(meta_data) {
+    console.log(meta_data);
+    idx = {};
+    $form.empty();
+    var $t = $form;
+    var s = [];
+    idx = {};
+    for (var i = 0; i < meta_data.length; i++) {
+      var d = meta_data[i];
+      if (d.begin) {
+        var $x = $("<div></div>");
+        $t.append($x);
+        s.push($t);
+        $t = $x;
+      }
+      else if (d.end) {
+        $t = s.pop();
+      }
+      else {
+        var f = new indicated_field(d.name, d.label ? d.label : d.name, d.widget);
+        var $fel = f.$el();
+        $t.append($fel);
+        idx[d.name] = f;
+      }
     }
   }
 
@@ -59,23 +72,49 @@ function form_form($el, meta_data) {
   {
 
   }
+
+  self.init = function (id) {
+    $$ajax('/cms/get/' + type + '/' + id).done(function (o) {
+      set_meta(o.form);
+      self.data = o.object;
+    });
+
+    $save.click(function () {
+      $.ajax({
+        data: { val: JSON.stringify(self.data) },
+        method: 'post',
+        success: function (o) {
+          if (o.name && o.name.indexOf("Error") != -1)
+            self.error(o);
+          else {
+            self.update(o);
+          }
+        },
+        error: function (o) {
+          console.error(o);
+        }
+      })
+    });
+
+  }
 }
 
 
 function indicated_field(name, label, type)//, settings_callback)
 {
   var self = this;
-  var $el = form_field_create(self, null, 'item');
+  var $el = $$('item control-group');
   self.$el = function () {
     return $el;
   }
 
-  var $label = $('<label></label>').addClass('info').text(label);
+  var $label = $('<label></label>').addClass('info control-label').attr('for', name).text(label);
   if (!form_fields[type + "_field"])
     throw Error("no field for " + type);
   var field = new form_fields[type + "_field"]();
   form_make_listener(self, field);
   $el.append($label, field.$el());
+  field.$el().addClass('controls');
 
   Object.defineProperty(this, "data", {
     get: function () {

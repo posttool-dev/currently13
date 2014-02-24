@@ -16,7 +16,7 @@ Vagrant::Config.run do |config|
   config.vm.provision :chef_solo do |chef|
     chef.add_recipe "nodejs"
     chef.add_recipe "mongodb-debs"
-    chef.add_recipe "redis-server"
+    # chef.add_recipe "redis-server"
     chef.json = {
       "nodejs" => {
         "version" => "0.10.0"

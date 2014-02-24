@@ -150,6 +150,8 @@ get_names = function (field_info) {
 
 add_previews = function(object, refs)
 {
+  if (!object)
+    return;
   for (var i = 0; i < refs.length; i++) {
     if (refs[i].ref == 'Resource') {
       add_preview(object[refs[i].name]);
@@ -264,8 +266,17 @@ exports.form =
     res.render('cms/form', {
       title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
       type: req.type,
+      id: req.object ? req.object._id : null,
       object: req.object || new req.model(),
       form: req.form});
+  },
+
+  get_json: function(req,res) {
+    res.json({
+      title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
+      type: req.type,
+      object: req.object || new req.model(),
+      form: req.form})
   },
 
   post: function (req, res) {

@@ -1,6 +1,7 @@
 function browse_browse(type, filters, order, page, pagesize) {
   var schema;
   var bmeta;
+  var row_height = 30;
   //
   var $el;
   var $filters;
@@ -51,14 +52,25 @@ function browse_browse(type, filters, order, page, pagesize) {
 
   function update_ui(results) {
     for (var i = 0; i < results.length; i++) {
-      var $r = $$('crow');
-      for (var j=0; j<bmeta.length; j++)
-      {
-        var $c = $$('ccol');
-        $c.text(results[i][bmeta[j].name]);
-        $r.append($c);
-      }
-      $rbody.append($r);
+      (function (r) {
+        var $r = $$('crow');
+        $r.hover(function () {
+            $r.addClass('over');
+          },
+          function () {
+            $r.removeClass('over');
+          });
+        $r.click(function () {
+          location.href = '/cms/update/' + type + '/' + r._id;
+        });
+        $r.height(row_height);
+        for (var j = 0; j < bmeta.length; j++) {
+          var $c = $$('ccol');
+          $c.text(r[bmeta[j].name]);
+          $r.append($c);
+        }
+        $rbody.append($r);
+      })(results[i]);
     }
   }
 }

@@ -16,36 +16,14 @@
 <% include ../nav %>
 
 <div class="padded">
-    <button id="save" class="btn">SAVE</button>
-    <button id="delete" class="btn">DELETE</button>
-   <div id="workspace-root">
-        <form method="post">
-        <div id="workspace" class="group root"></div>
-        </form>
-    </div>
+    <div id="workspace" class="group root"></div>
 </div>
 
 <script>
 $(document).ready(function(){
-    var form = new form_form( $("#workspace"), <%- JSON.stringify(form) %> );
-    form.data = <%- JSON.stringify(object) %>;
-    $("#save").click(function(){
-        $.ajax({
-            data: { val: JSON.stringify(form.data) },
-            method: 'post',
-            success: function(o){
-                if (o.name && o.name.indexOf("Error") != -1)
-                    form.error(o);
-                else
-                {
-                    form.update(o);
-                }
-            },
-            error: function(o){
-                console.error(o);
-            }
-        })
-    });
+    var form = new form_form("<%=type%>");
+    form.init("<%=id%>");
+    $("#workspace").append(form.$el());
 });
 </script>
 

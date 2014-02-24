@@ -1,69 +1,69 @@
 /* Style tweaks */
 html {
-  overflow-x: hidden; /* Prevent scroll on narrow devices */
+    overflow-x: hidden; /* Prevent scroll on narrow devices */
 }
+
 body {
     background-color: #fff;
-    padding:50px 20px 40px 19px;
+    padding: 50px 20px 40px 19px;
 }
-
-
-
-
-
 
 .padded {
     padding: 10px;
 }
 
-
-
-ul { list-style-type: none; }
-
-
-
-
+ul {
+    list-style-type: none;
+}
 
 #tool-bar {
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:30px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
     background-color: #fff;
     color: #333;
     border-bottom: 1px solid #ccc;
     z-index: 100000;
 }
+
 .options {
     padding: 6px 0 0 20px;
 }
+
 .user {
     position: fixed;
     top: 6px;
     right: 28px;
 }
 
+.progress {
+    width: 100%;
+    height: 40px;
+    background-color: #999;
+}
 
-
-
-
-
-.progress { width: 100%; height: 40px; background-color: #999;}
 .progress .bar {
     background-color: #222;
     height: 100%;
 }
 
-
-
-
-
 .hrow, .crow {
     clear: both;
+    cursor: pointer;
+}
+
+.over {
+    background-color: #e7f5fe;
 }
 
 .hcol, .ccol {
     float: left;
-    width: 300px;
+    width: 100px;
+    border-left: 1px solid #ddd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 2px 2px 2px 2px;
 }
