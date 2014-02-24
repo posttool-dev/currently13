@@ -65,7 +65,7 @@ function form_form(type) {
   self.error = function(o)
   {
     console.log(o);
-    idx[o.path].$el().tooltip({title: JSON.stringify(o)});
+    idx[o.path].error = JSON.stringify(o);
   }
 
   self.update = function(o)
@@ -180,6 +180,12 @@ function indicated_field(name, label, type)//, settings_callback)
   Object.defineProperty(this, "name", {
     get: function () {
       return name;
+    }
+  });
+  Object.defineProperty(this, "error", {
+    set: function (e) {
+      field.$el().append('<span class="help-inline">'+e+'</span>');
+      $el.addClass('error');
     }
   });
 
