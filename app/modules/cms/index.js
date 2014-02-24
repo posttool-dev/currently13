@@ -162,7 +162,7 @@ add_previews = function(object, refs)
 
 add_preview = function(r)
 {
-    if (r.meta)
+    if (r && r.meta)
     {
       r.meta.thumb = cloudinary.image(r.meta.public_id + ".jpg", { width: 100, height: 150, crop: "fill" });
     }
@@ -193,6 +193,11 @@ exports.b = function (req, res, next) {
 
 /* if an id was specified, find and populate a view of the model, with thumbnail references */
 exports.c = function (req, res, next) {
+  if (req.params.id == 'null')
+  {
+    next();
+    return;
+  }
   var q = req.model.findOne({_id: req.params.id});
   var refs = get_references(req.schema);
   if (refs)
@@ -265,6 +270,7 @@ exports.form =
   get: function (req, res) {
     res.render('cms/form', {
       title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
+      ancestors: [{url:'/cms/browse/'+req.type, name:req.type}],
       type: req.type,
       id: req.object ? req.object._id : null,
       object: req.object || new req.model(),

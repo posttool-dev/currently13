@@ -4,7 +4,7 @@
     <a href='/cms'><i class="fa fa-home"></i></a>
     <%if (typeof ancestors != "undefined") { %>
        <%for (var i=0; i<ancestors.length; i++) {%>
-        <i class="fa fa-angle-right"></i> <a href="<%- ancestors[i].url()%>"><%- ancestors[i].name %></a>
+        <i class="fa fa-angle-right"></i> <a href="<%- ancestors[i].url%>"><%- ancestors[i].name %></a>
     <% } %><% } %>
     </div>
     <div class="user">

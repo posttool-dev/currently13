@@ -10,11 +10,12 @@ function form_form(type) {
   var idx = {};
 
   var $el = $$('form');
-  var $controls = $$('controls',{parent:$el});
-  var $save = $$('btn',{el:'a', parent: $controls}).text('SAVE');
-  var $time = $$('time',{parent: $controls}).text('Last saved...');
-  var $cancel = $$('btn',{el:'a', parent: $controls}).text('CANCEL');
-  var $delete = $$('btn',{el:'a', parent: $controls}).text('DELETE');
+  var $controls = $$('form-controls',{parent:$el});
+  var $time = $$('heading',{el:'span',parent: $controls}).text(type);
+  var $save = $$('btn btn-primary',{el:'a', parent: $controls}).text('SAVE');
+  var $time = $$('time',{el:'span',parent: $controls}).text('Last saved...');
+//  var $cancel = $$('btn',{el:'a', parent: $controls}).text('CANCEL');
+  var $delete = $$('btn btn-danger',{el:'a', parent: $controls}).text('DELETE');
   var $form = $$('form',{parent:$el});
 
 
@@ -70,7 +71,8 @@ function form_form(type) {
 
   self.update = function(o)
   {
-
+    if (location.href.indexOf('cms/create')!=-1)
+      location.href= '/cms/update/' + type + '/' + o._id;
   }
 
   self.init = function (id) {
@@ -103,12 +105,12 @@ function form_form(type) {
 function indicated_field(name, label, type)//, settings_callback)
 {
   var self = this;
-  var $el = $$('item control-group');
+  var $el = $$('control-group');
   self.$el = function () {
     return $el;
   }
 
-  var $label = $('<label></label>').addClass('info control-label').attr('for', name).text(label);
+  var $label = $('<label></label>').addClass('control-label').attr('for', name).text(label);
   if (!form_fields[type + "_field"])
     throw Error("no field for " + type);
   var field = new form_fields[type + "_field"]();
@@ -452,7 +454,7 @@ var form_fields = {
     function get_upload_row(row) {
       if (!row || !row.meta)
         return;
-      var $e = $$('resource row');
+      var $e = $$('resource');
       $e.append(row.meta.thumb);
       var $x = $("<div>x</div>");
       $x.click(function () {
