@@ -540,7 +540,7 @@ var form_fields = {
   },
 
   model_field: function ($el) {
-    $el = form_field_create(self, $el, 'span');
+    $el = form_field_create(self, $el, 'span', 'model');
     this.$el = function () {
       return $el;
     };
@@ -557,7 +557,7 @@ var form_fields = {
     });
     function update_ui() {
       $el.empty();
-      $el.text(_d.title);
+      $el.append("<span class='nowrap'>"+_d.title+"</span>");
     }
   },
 
@@ -636,7 +636,7 @@ var form_fields = {
     $browse.click(function () {
       self.emit('click.browse');
     });
-    $list.sortable({handle: '.sort', change: function (event, ui) {
+    $list.sortable({change: function (event, ui) {
       self.emit('change');
     }});
 
@@ -680,12 +680,11 @@ var form_fields = {
       return $el;
     }
 
-    var $h = $("<span></span>").addClass("fa fa-sort sort");
-    var $c = $("<span></span>").css({padding: '0 5px 0 5px'});
+    var $c = $("<span></span>").css({padding: '0 5px 0 0'});
     var c = new clazz();
     c.$el().css({display: 'inline-block'})
     var $x = $("<span></span>").addClass("fa fa-times-circle");
-    $el.append($h, $c, $x);
+    $el.append($c, $x);
     $c.append(c.$el());
     $x.click(function () {
       self.emit('change');

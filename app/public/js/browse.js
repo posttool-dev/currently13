@@ -42,7 +42,7 @@ function browse_browse(type, filters, order, page, pagesize) {
 
 
   function init_ui2() {
-    var $r = $$('hrow');
+    var $r = $$('hrow nowrap');
     for (var i = 0; i < bmeta.length; i++)
       $r.append(create_header_col(bmeta[i]));
     $rhead.append($r);
@@ -70,7 +70,7 @@ function browse_browse(type, filters, order, page, pagesize) {
 
   var $lh = null; // last header clicked
   function create_header_col(m) {
-    var $e = $$('hcol');
+    var $e = $$('hcol nowrap');
     $e.css({width: p})
     $e.text(m.name);
     $e.click(function () {
@@ -92,7 +92,7 @@ function browse_browse(type, filters, order, page, pagesize) {
 
 
   function create_row(r) {
-    var $r = $$('crow');
+    var $r = $$('crow nowrap');
     $r.hover(function () {
         $r.addClass('over');
       },
@@ -104,7 +104,7 @@ function browse_browse(type, filters, order, page, pagesize) {
     });
     $r.height(row_height);
     for (var j = 0; j < bmeta.length; j++) {
-      var $c = $$('ccol');
+      var $c = $$('ccol nowrap');
       $c.css({width: p});
       $c.text(r[bmeta[j].name]);
       $r.append($c);

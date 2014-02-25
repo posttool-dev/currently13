@@ -134,7 +134,7 @@ button:disabled {
 .hrow, .crow {
     clear: both;
     cursor: pointer;
-    height:30px;
+    height: 30px;
 }
 
 .over {
@@ -144,9 +144,6 @@ button:disabled {
 .hcol, .ccol {
     float: left;
     border-left: 1px solid #ddd;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     padding: 4px 2px 4px 4px;
 }
 
@@ -154,6 +151,7 @@ button:disabled {
     font-size: 11px;
     text-transform: uppercase;
 }
+
 .ccol {
     font-size: 12px;
 }
@@ -178,10 +176,14 @@ button:disabled {
 }
 
 .time {
+    font-size: 11px;
+}
+
+.nowrap {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 11px;
+
 }
 
 .cke_editable {
@@ -190,9 +192,21 @@ button:disabled {
 
 .browser {
     -webkit-touch-callout: none;
--webkit-user-select: none;
--khtml-user-select: none;
--moz-user-select: none;
--ms-user-select: none;
-user-select: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
+
+.model {
+    width: 300px;
+    height: 30px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin: 5px 0 5px 0;
+    font-size: 12px;
+    background-color: #fff;
+    cursor: move;
+}
+
