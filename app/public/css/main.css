@@ -147,7 +147,7 @@ button:disabled {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 2px 2px 2px 2px;
+    padding: 4px 2px 4px 4px;
 }
 
 .hcol {
@@ -186,4 +186,13 @@ button:disabled {
 
 .cke_editable {
     font-size: 12px;
+}
+
+.browser {
+    -webkit-touch-callout: none;
+-webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
 }
