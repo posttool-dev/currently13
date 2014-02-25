@@ -5,6 +5,7 @@ html {
 
 * {
     font-family: 'Helvetica Neue', sans-serif;
+    letter-spacing: .02em;
 }
 
 body {
@@ -78,7 +79,7 @@ button:disabled {
     background-color: #04061a;
     color: #eee;
     border-bottom: 1px solid #48adff;
-    z-index: 11;
+    z-index: 99999919199991991991;
 }
 
 .options {
@@ -95,6 +96,18 @@ button:disabled {
     font-size: 13px;
 }
 
+
+.heading {
+    font-size: 20px;
+}
+
+/* form */
+
+.form .form {
+    padding-top: 50px;
+}
+
+
 .form-controls {
     position: fixed;
     top: 40px;
@@ -104,16 +117,7 @@ button:disabled {
     background-color: #fff;
     color: #333;
     border-bottom: 1px solid #ccc;
-    z-index: 12;
     padding: 8px 25px 0 20px;
-}
-
-.heading {
-    font-size: 20px;
-}
-
-.form .form {
-    padding-top: 50px;
 }
 
 .control-group {
@@ -130,6 +134,42 @@ button:disabled {
     background-color: #222;
     height: 100%;
 }
+
+
+.cke_editable {
+    font-size: 12px;
+}
+
+
+
+.model {
+    width: 300px;
+    height: 30px;
+    padding: 8px;
+    margin: 5px 0 5px 0;
+    font-size: 12px;
+    background-color: #48adff;
+    color:#fff;
+    cursor: move;
+}
+
+
+
+/* browser */
+.browser {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.filters{}
+.pager{padding:0 0 15px 0;}
+.results{}
+.header{}
+
 
 .hrow, .crow {
     clear: both;
@@ -186,27 +226,33 @@ button:disabled {
 
 }
 
-.cke_editable {
-    font-size: 12px;
+
+
+
+/* layers */
+
+.layer {
+    position:absolute;
+    top:30px;
+    left:0px;
+    width:100%;
+    height:100%;
 }
 
-.browser {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+.layer .lens {
+    position:absolute;
+    width:100%;
+    height:100%;
+    top:0;
+    left:0;
+    background-color: rgba(255,255,255,.7);
 }
 
-.model {
-    width: 300px;
-    height: 30px;
-    padding: 8px;
-    margin: 5px 0 5px 0;
-    font-size: 12px;
-    background-color: #48adff;
-    color:#fff;
-    cursor: move;
+.c {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    position: relative;
+    padding:20px;
+    background-color: white;
 }
-

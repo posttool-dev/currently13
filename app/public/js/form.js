@@ -4,17 +4,21 @@ var delete_url = "/cms/delete_resource/";
 function form_form(type) {
   var self = this;
   form_make_listener(self);
+  var $el = $$('form');
   self.$el = function () {
     return $el;
   }
 
+  var _id = null;
+  var _created = null;
+  var _modified = null;
   var idx = {};
 
-  var $el = $$('form');
   var $controls = $$('form-controls', {parent: $el});
+  var $title = $$('title', {el: 'span', parent: $controls}).text(type);
   var $save = $$('btn btn-primary', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
   var $time = $$('time', {el: 'span', parent: $controls}).text('Last modified...');
-  var $delete = $$('btn btn-delete', {el: 'button', parent: $controls}).text('DELETE');
+  var $delete = $$('btn btn-delete', {el: 'button', parent: $controls}).text('X');
   var $form = $$('form', {parent: $el});
 
 
@@ -48,35 +52,21 @@ function form_form(type) {
     var f = new indicated_field(d.name, d.label ? d.label : d.name, d.widget);
     f.add_listener('change', function () {
       $save.prop('disabled', false);
+      self.emit('change');
     });
     // for reference fields
-    f.add_listener('add', function () {
-      console.log('add', d.options.type);
+    f.add_listener('add', function (f) {
+      self.emit('create', {type: d.options.type, field: f.field});
     });
     f.add_listener('browse', function (f) {
-      var bb = new browse_browse(d.options.type);
-      bb.add_listener('click', function (b, r) {
-        f.field.push(r);
-        $save.prop('disabled', false);
-        $m.remove();
-        $el.show();
-      });
-      var $m = $$modal('Select one...');
-      $(document.body).append($m);
-      $m.find('.modal-body').append(bb.$el());
-      $m.find('.close').click(function(){
-        $m.remove();
-        $el.show();
-      });
-      $m.show();
-      $el.hide();
+      self.emit('browse', {type: d.options.type, field: f.field})
     });
     return f;
   }
 
   Object.defineProperty(self, "data", {
     get: function () {
-      var d = {};
+      var d = {_id: _id, created: _created, modified: _modified};
       for (var p in idx)
         d[p] = idx[p].data;
       return d;
@@ -84,11 +74,14 @@ function form_form(type) {
     set: function (n) {
       if (n == null)
         return;
-      console.log(n);
+      _id = n._id;
+      _created = n.created;
+      _modified = n.modified;
       for (var p in n) {
         if (idx[p])
           idx[p].data = n[p];
       }
+      // todo updateui
       if (n.modified)
         $time.text(' Last modified ' + timeSince(new Date(n.modified)) + ' ago.');
       else
@@ -112,13 +105,23 @@ function form_form(type) {
   }
 
   self.init = function (id) {
-    $$ajax('/cms/get/' + type + '/' + id).done(function (o) {
+    _id = id;
+    var url = '/cms/get/' + type;
+    if (id)
+      url += '/' + id;
+    $$ajax(url).done(function (o) {
       set_meta(o.form);
       self.data = o.object;
     });
 
     $save.click(function () {
+      var url = '/cms';
+      if (id)
+        url += '/update/' + type + '/' + id;
+      else
+        url += '/create/' + type;
       $.ajax({
+        url: url,
         data: { val: JSON.stringify(self.data) },
         method: 'post',
         success: function (o) {
@@ -133,7 +136,9 @@ function form_form(type) {
         }
       })
     });
-
+    $delete.click(function(){
+      self.emit('close', self.data);
+    })
   }
 }
 
@@ -331,7 +336,7 @@ var form_fields = {
     var $c = $("<input type='text'/>").addClass("form-control");
     $el.append($c);
 
-    var _n = 0;
+    var _n = "";
     Object.defineProperty(this, "data",
       {
         get: function () {
@@ -434,10 +439,10 @@ var form_fields = {
     var _d = new Date();
     Object.defineProperty(this, "data", {
       get: function () {
-        return _d;
+        return new Date(_d);
       },
       set: function (n) {
-        _d = n;
+        _d = n.substring(0,10);
         update_ui();
       }
     });
@@ -445,8 +450,8 @@ var form_fields = {
       $c.val(_d);
     }
 
-    $c.change(function () {
-      this.data = $c.val();
+    $c.keyup(function () {
+      _d = $c.val();
       self.emit('change');
     });
   },
@@ -501,7 +506,6 @@ var form_fields = {
         });
       })
       $e.append($x);
-      //console.log(row);
       $info.append($e);
     }
 
@@ -519,14 +523,12 @@ var form_fields = {
       },
       progressall: function (e, edata) {
         var progress = parseInt(edata.loaded / edata.total * 100, 10);
-        console.log(progress);
         $progress.show();
         $info.hide();
         $btn.hide();
         $progressbar.css('width', progress + '%');
       },
       done: function (e, edata) {
-        console.log(e, edata);
         $progress.hide();
         $info.show();
         get_upload_row(edata.result);

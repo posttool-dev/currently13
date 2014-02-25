@@ -78,6 +78,7 @@ function init_app() {
   app.post('/cms/create/:type', [auth.has_user, cms.a, cms.b, cms.c], cms.form.post);
   app.get ('/cms/update/:type/:id', [auth.has_user, cms.a, cms.b, cms.c], cms.form.get);
   app.post('/cms/update/:type/:id', [auth.has_user, cms.a, cms.b, cms.c], cms.form.post);
+  app.get ('/cms/get/:type', [auth.has_user, cms.a, cms.b], cms.form.get_json);
   app.get ('/cms/get/:type/:id', [auth.has_user, cms.a, cms.b, cms.c], cms.form.get_json);
   app.post('/cms/upload', [auth.has_user], cms.upload);
   app.get('/cms/download/:id', [auth.has_user], cms.download);

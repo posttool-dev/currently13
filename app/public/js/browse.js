@@ -62,6 +62,7 @@ function browse_browse(type, filters, order, page, pagesize) {
   function update_ui(results, total) {
     for (var i = 0; i < results.length; i++)
       $rbody.append(create_row(results[i]));
+    $pager.append('<span>'+total+' total</span>')
     if (total > pagesize)
       for (var i = 0; i < total / pagesize; i++)
         $pager.append(make_page(i));

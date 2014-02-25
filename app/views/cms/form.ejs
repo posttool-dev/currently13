@@ -1,6 +1,7 @@
 <% include ../head %>
 
 <script src="/js/util.js"></script>
+<script src="/js/layers.js"></script>
 <script src="/js/form.js"></script>
 <script src="/js/browse.js"></script>
 
@@ -9,8 +10,8 @@
 <script src="/js/lib/jquery.fileupload.js"></script>
 <script src="/js/lib/jquery.iframe-transport.js"></script>
 
-<link  href="/css/upload.css" rel="stylesheet">
-<link  href="/css/codemirror.css" rel="stylesheet">
+<link href="/css/upload.css" rel="stylesheet">
+<link href="/css/codemirror.css" rel="stylesheet">
 
 
 <% include ../head1 %>
@@ -21,11 +22,52 @@
 </div>
 
 <script>
-$(document).ready(function(){
+    var layers = new layers_layers();
+    var form_stack = [];
     var form = new form_form("<%=type%>");
-    form.init("<%=id%>");
-    $("#workspace").append(form.$el());
-});
+    form.init(<% if (id) { %>"<%=id%>"<% } %>);
+    form.add_listener('browse', function (f, o) {
+        browse(o.type, o.field)
+    });
+    form.add_listener('create', function (f, o) {
+        create(o.type, o.field)
+    });
+    form.add_listener('close', function (e, r) {
+       confirm('really delete?');
+    });
+    layers.add_layer(form);
+
+    function browse(type, for_field) {
+        var bb = new browse_browse(type);
+        bb.add_listener('click', function (e, r) {
+            for_field.push(r);
+            layers.pop_layer();
+        });
+        layers.add_layer(bb);
+    }
+
+    function create(type, for_field) {
+        console.log(type, for_field)
+        var ff = new form_form(type);
+        ff.init();
+        ff.add_listener('browse', function (f, o) {
+            browse(o.type, o.field)
+        });
+        ff.add_listener('create', function (f, o) {
+            create(o.type, o.field)
+        });
+        ff.add_listener('close', function (e, r) {
+            console.log(r._id)
+            if (r.created)
+                for_field.push(r);
+            layers.pop_layer();
+        });
+        layers.add_layer(ff);
+    }
+
+    $(document).ready(function () {
+        $("#workspace").append(layers.$el());
+    });
 </script>
 
 <% include ../foot %>
