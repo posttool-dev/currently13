@@ -2,10 +2,7 @@
 <% if (user) { %>
     <div class="options">
     <a href='/cms'><i class="fa fa-home"></i></a>
-    <%if (typeof ancestors != "undefined") { %>
-       <%for (var i=0; i<ancestors.length; i++) {%>
-        <i class="fa fa-angle-right"></i> <a href="<%- ancestors[i].url%>"><%- ancestors[i].name %></a>
-    <% } %><% } %>
+        <span id="extra-options"></span>
     </div>
     <div class="user">
     You are logged in as <%-user.email%> <a href='/user/<%- user._id %>'>Profile</a> <a href='/logout'>Logout</a>

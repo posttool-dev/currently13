@@ -204,10 +204,6 @@ exports.b = function (req, res, next) {
 
 /* if an id was specified, find and populate a view of the model, with thumbnail references */
 exports.c = function (req, res, next) {
-  if (req.params.id == 'null') {
-    next();
-    return;
-  }
   expand(req.schema, req.model, req.params.id, function (err, m) {
     if (err) next(err);
     else {
@@ -296,7 +292,7 @@ exports.form =
   get: function (req, res) {
     res.render('cms/form', {
       title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
-      ancestors: [{url:'/cms/browse/'+req.type, name:'Browse'}],
+      ancestors: [{url:'/cms/browse/'+req.type, name:req.type}],
       type: req.type,
       id: req.object ? req.object._id : null,
       object: req.object || new req.model(),

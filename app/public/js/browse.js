@@ -8,9 +8,11 @@ function browse_browse(type, filters, order, page, pagesize) {
   if (!pagesize)
     pagesize = 20;
   var p; // number of fields/90 (for initial cell percent width)
+  var filters = [];
   //
   var $el;
   var $filters;
+  var $filter_config;
   var $results;
   var $rhead;
   var $rbody;
@@ -25,8 +27,14 @@ function browse_browse(type, filters, order, page, pagesize) {
       return $el;
     $el = $$('browser');
 
-    $filters = $$('filters', {parent: $el});
-    $pager = $$('pager', {parent: $el});
+    var $controls = $$('form-controls', {parent: $el});
+    var $title = $$('title', {el: 'span', parent: $controls}).text('Browse ' + type);
+
+    $filters = $$('filters', {parent: $controls});
+    $pager = $$('pager', {parent: $controls});
+  var $create = $$('btn btn-delete', {el: 'button', parent: $controls}).text('CREATE');
+
+    $filter_config = $$('filter-config', {parent: $el});
     $results = $$('results', {parent: $el});
     $rhead = $$('header', {parent: $results});
     $rbody = $$('body', {parent: $results});
@@ -46,6 +54,7 @@ function browse_browse(type, filters, order, page, pagesize) {
     for (var i = 0; i < bmeta.length; i++)
       $r.append(create_header_col(bmeta[i]));
     $rhead.append($r);
+    update_filters();
   }
 
 
@@ -113,7 +122,7 @@ function browse_browse(type, filters, order, page, pagesize) {
     return $r;
   }
 
-
+/* pager */
   var $lp = null; // last page clicked
   function make_page(i) {
     var $p = $$('page', {el: 'span'});
@@ -132,4 +141,70 @@ function browse_browse(type, filters, order, page, pagesize) {
     return $p;
   }
 
+
+
+  /* filters */
+
+  function update_filters(){
+    $filters.empty();
+    for (var i=0; i<filters.length; i++)
+    {
+      var $e = $$('tag');
+      $e.text(filters[i].name+": "+filters[i].value);
+      $e.append("<i class='fa fa-times-circle'></i>");
+      $filters.append($e);
+    }
+    var $a = $$icon('', {fa: 'plus-circle', label:'filter', parent: $filters});
+    $a.click(function(){
+      $filter_config.empty();
+      var $x = $$('big', {parent: $filter_config});
+      var $y = $$('', {parent: $x});
+      // todo  iterate existing filters and add to display
+      // for filters: $y.append(predicate_row(filter))
+      $y.append(predicate_row());
+      var $add = $$('add',{el:'a', parent: $x}).text('add');
+      var $apply = $$('add',{el:'a', parent: $x}).text('apply');
+      var $cancel = $$('add',{el:'a', parent: $x}).text('cancel');
+      $apply.click(function(){
+        filters = [];
+        var c = $y.children();
+        for (var i=0; i< c.length; i++)
+        {
+          var $c = $(c[i]);
+          var cc = $c.children();
+          var name = bmeta[Number($(cc[0]).val())].name;
+          var cond = $(cc[1]).val();
+          var val = $(cc[2]).val(); // todo get val from component c.data
+          filters.push({name:name, filter: cond, value: val});
+          console.log(filters)
+          update_filters();
+        }
+      })
+    })
+  }
+
+
+  function predicate_row(value)
+  {
+    var $r = $$('pr');
+    var $s = $$('name', {el:'select', parent: $r});
+    for (var i=0; i< bmeta.length; i++)
+      $s.append($("<option value='"+i+"'>"+ bmeta[i].name+"</option>"));
+    var $t = $$('comp', {el:'select', parent: $r});
+    var $i = $$('i', {el: 'span', parent: $r});
+    var $del = $$icon('', {fa: 'plus-circle', parent: $r});
+
+    function update_t_and_i(){
+      $t.empty();
+      var b = bmeta[Number($s.val())];
+      for (var i=0; i< b.filters.length; i++)
+        $t.append($("<option>"+ b.filters[i]+"</option>"));
+
+      $i.empty();
+      $i.append('<input type="text" class="small">');
+    }
+    $s.change(update_t_and_i);
+    update_t_and_i();
+    return $r;
+  }
 }

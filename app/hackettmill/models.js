@@ -49,6 +49,10 @@ exports.models = {
 
     /* the artists */
     Artist: {
+        meta: {
+          plural: "Artists",
+          string: 'first_name last_name'
+        },
         schema: {
             first_name:    String,
             last_name:     String,

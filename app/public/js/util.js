@@ -81,6 +81,16 @@ var $$ = function(className, options)
     return $el;
 }
 
+
+function $$icon(className, options) {
+  var $c = $("<span><i class='fa fa-" + options.fa + "'></i></span>");
+  if (options.label)
+    $c.append(options.label);
+  if (options.parent)
+    options.parent.append($c);
+  return $c;
+}
+
 function $$ajax(url,data,type)
 {
     return $.ajax({
