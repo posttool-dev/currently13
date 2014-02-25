@@ -143,14 +143,6 @@ function $$modal(title)
     });
     var $body = $$('modal-body', { parent: $form});
     var $foot = $$('modal-footer',{ parent: $form });
-    var $btn1 = $$('btn', { el: 'button', parent: $foot,
-        data: { dismiss: 'modal' }, children: [ 'Close' ]
-    });
-    var $btn2 = $$('btn btn-primary', { el: 'button', parent: $foot,
-        attributes: { type: 'submit', value:'Submit' },
-        children: [ 'Save Changes' ]
-    });
-
     return $el;
 }
 

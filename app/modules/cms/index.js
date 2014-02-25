@@ -30,15 +30,20 @@ exports.init = function (meta, resource_class_name, user_class_name) {
   Resource = mongoose.model(resource_class_name, Meta[resource_class_name].schema);
 //    User = mongoose.model(user_class_name, Meta[user_class_name].schema);
 }
-
+extra_fields = {
+    'creator': {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    'created': Date,
+    'modified': Date,
+    'state': Number
+  };
 validate_meta = function (p, schema, browse, form) {
   if (browse)
     for (var i = 0; i < browse.length; i++)
-      if (browse[i].name && !schema[browse[i].name])
+      if (browse[i].name && !schema[browse[i].name] && !extra_fields[browse[i].name])
         throw new Error('No path ' + browse[i].name + ' in schema ' + p);
   if (form)
     for (var i = 0; i < form.length; i++)
-      if (form[i].name && !schema[form[i].name])
+      if (form[i].name && !schema[form[i].name] && !extra_fields[form[i].name])
         throw new Error('No path ' + form[i].name + ' in schema ' + p);
 }
 /**
@@ -48,12 +53,7 @@ validate_meta = function (p, schema, browse, form) {
    - adds pre save to set times
  */
 add_fields_and_methods = function (schema, name) {
-  schema.add({
-    'creator': {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    'created': Date,
-    'modified': Date,
-    'state': Number
-  });
+  schema.add(extra_fields);
   schema.virtual('url').get(function () {
     return name.toLowerCase() + '/' + this._id;
   });
@@ -270,12 +270,18 @@ exports.browse = {
   post: function (req, res, next) {
     var conditions = get_conditions(req.body.conditions);
     var fields = null;
-    var options = {order: req.body.order, offset: req.body.offset, limit: req.body.limit};
-    req.model.find(conditions, fields, options, function (err, r) {
-      if (err)
+    var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
+    req.model.count(conditions, function (err, count) {
+      if (err){
         next(err);
-      else
-        res.json(r);
+        return;
+      }
+      req.model.find(conditions, fields, options, function (err, r) {
+        if (err)
+          next(err);
+        else
+          res.json({results: r, count: count});
+      });
     });
   }
 };
@@ -320,8 +326,7 @@ exports.form =
           if (err)
             next(err);
           else
-            res.json(m);
-
+            res.json(m ? m : s);
         });
       }
     });

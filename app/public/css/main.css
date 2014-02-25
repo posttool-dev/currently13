@@ -3,10 +3,13 @@ html {
     overflow-x: hidden; /* Prevent scroll on narrow devices */
 }
 
+* {
+    font-family: 'Helvetica Neue', sans-serif;
+}
+
 body {
     background-color: #fff;
-    padding: 50px 20px 40px 19px;
-    font-family: sans-serif;
+    padding: 20px 0 20px 0;
 }
 
 ul {
@@ -15,15 +18,53 @@ ul {
 
 label {
     text-transform: uppercase;
-    font-size:10px;
+    font-size: 10px;
 }
 
 input {
     border: 1px solid #ccc;
-    font-size: 20px;
+    font-size: 26px;
     padding: 7px;
     width: 100%;
+    color: #555;
 }
+
+input, button {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+a {
+    color: #48adff;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #79b6ff;
+}
+
+button {
+    border: 0;
+    background-color: #444;
+    padding: 5px;
+    color: #fff;
+    cursor: pointer;
+}
+
+button:hover:enabled {
+    background-color: #111;
+}
+
+button:disabled {
+    opacity: .3;
+}
+
+.btn-delete {
+    position: fixed;
+    right: 20px;
+}
+
 .padded {
     padding: 15px;
 }
@@ -42,29 +83,29 @@ input {
 
 .options {
     font-size: 18px;
-    padding: 6px 0 0 30px;
+    padding: 9px 0 0 30px;
 
 }
+
 .user {
     position: fixed;
     top: 12px;
     right: 28px;
     color: #888;
-    font-size:13px;
+    font-size: 13px;
 }
-
 
 .form-controls {
     position: fixed;
     top: 40px;
     left: 0;
     width: 100%;
-    height: 53px;
+    height: 35px;
     background-color: #fff;
     color: #333;
     border-bottom: 1px solid #ccc;
     z-index: 12;
-    padding:8px 25px 0 30px;
+    padding: 8px 25px 0 20px;
 }
 
 .heading {
@@ -93,6 +134,7 @@ input {
 .hrow, .crow {
     clear: both;
     cursor: pointer;
+    height:30px;
 }
 
 .over {
@@ -101,7 +143,6 @@ input {
 
 .hcol, .ccol {
     float: left;
-    width: 100px;
     border-left: 1px solid #ddd;
     white-space: nowrap;
     overflow: hidden;
@@ -109,13 +150,40 @@ input {
     padding: 2px 2px 2px 2px;
 }
 
+.hcol {
+    font-size: 11px;
+    text-transform: uppercase;
+}
+.ccol {
+    font-size: 12px;
+}
+
+.page {
+    color: #48adff;
+    text-decoration: none;
+    padding-right: 10px;
+    cursor: pointer;
+}
+
+.page:hover {
+    color: #79b6ff;
+}
+
+.page.selected {
+    color: #333;
+}
+
+.order {
+    font-weight: bold;
+}
+
 .time {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size:11px;
+    font-size: 11px;
 }
 
 .cke_editable {
-    font-size:12px;
+    font-size: 12px;
 }

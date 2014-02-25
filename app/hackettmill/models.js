@@ -25,6 +25,7 @@ exports.models = {
             {name: "code", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
             {name: "resource", cell: "image"},
             {name: "year", cell: "int", filters: ["gt","lt","gte","lte"], order: "asc,desc"},
+            {name: "modified", cell: "int", filters: ["gt","lt","gte","lte"], order: "asc,desc"},
         ],
         form: [
             {begin: "row"},

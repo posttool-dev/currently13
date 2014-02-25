@@ -12,11 +12,9 @@ function form_form(type) {
 
   var $el = $$('form');
   var $controls = $$('form-controls', {parent: $el});
-  var $heading = $$('heading', {el: 'span', parent: $controls}).text(type);
-  var $save = $$('btn btn-primary ', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
-  var $time = $$('time', {el: 'span', parent: $controls}).text('Last saved...');
-//  var $cancel = $$('btn',{el:'a', parent: $controls}).text('CANCEL');
-  var $delete = $$('btn btn-danger  pull-right', {el: 'a', parent: $controls}).text('DELETE');
+  var $save = $$('btn btn-primary', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
+  var $time = $$('time', {el: 'span', parent: $controls}).text('Last modified...');
+  var $delete = $$('btn btn-delete', {el: 'button', parent: $controls}).text('DELETE');
   var $form = $$('form', {parent: $el});
 
 
@@ -58,15 +56,20 @@ function form_form(type) {
     f.add_listener('browse', function (f) {
       var bb = new browse_browse(d.options.type);
       bb.add_listener('click', function (b, r) {
-        console.log(f.field)
         f.field.push(r);
         $save.prop('disabled', false);
         $m.remove();
+        $el.show();
       });
       var $m = $$modal('Select one...');
       $(document.body).append($m);
       $m.find('.modal-body').append(bb.$el());
+      $m.find('.close').click(function(){
+        $m.remove();
+        $el.show();
+      });
       $m.show();
+      $el.hide();
     });
     return f;
   }
@@ -86,7 +89,10 @@ function form_form(type) {
         if (idx[p])
           idx[p].data = n[p];
       }
-      $time.text(' Last saved ' + timeSince(new Date(n.modified)) + ' ago.');
+      if (n.modified)
+        $time.text(' Last modified ' + timeSince(new Date(n.modified)) + ' ago.');
+      else
+        $time.text(' New record.');
     }
   });
 
@@ -476,6 +482,10 @@ var form_fields = {
     function update_ui() {
       $info.empty();
       get_upload_row(_d);
+      if (_d)
+        $btn.hide();
+      else
+        $btn.show();
     }
 
     function get_upload_row(row) {
