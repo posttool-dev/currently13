@@ -16,10 +16,17 @@
 <script>
 $(document).ready(function(){
     var browser = new browse_browse("<%= type %>");
-    browser.add_listener('click', function(f, r){
-        console.log(f,r)
-        location.href = '/cms/update/<%= type %>/' + r._id;
-    })
+    var ctrlKeyDown;
+    $(window).keydown(function (e){
+        ctrlKeyDown = e.ctrlKey || e.altKey || e.shiftKey || e.metaKey;
+    }).keyup(function(e){
+        ctrlKeyDown = e.ctrlKey || e.altKey || e.shiftKey || e.metaKey;
+    });
+    browser.add_listener('click', function (f, r) {
+        var url = '/cms/update/<%= type %>/' + r._id;
+        var win = window.open(url, ctrlKeyDown ? '_blank' : '_self');
+        win.focus();
+    });
     $("#browser").append(browser.$el());
 });
 </script>
