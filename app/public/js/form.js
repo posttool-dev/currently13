@@ -663,13 +663,11 @@ var form_fields = {
       return d;
     }
     self.update = function(data) {
+      // do all children (refs may have repeats)
         $list.children().each(function (i, e) {
           var o = $(e).data("__obj__");
           if (o.data._id == data._id)
-          {
             o.data = data;
-            return;
-          }
         });
     }
 
