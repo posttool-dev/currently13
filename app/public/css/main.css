@@ -202,11 +202,11 @@ button:disabled {
 .model {
     width: 300px;
     height: 30px;
-    border: 1px solid #ccc;
-    padding: 5px;
+    padding: 8px;
     margin: 5px 0 5px 0;
     font-size: 12px;
-    background-color: #fff;
+    background-color: #48adff;
+    color:#fff;
     cursor: move;
 }
 
