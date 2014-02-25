@@ -61,6 +61,9 @@ function form_form(type) {
     f.add_listener('browse', function (f) {
       self.emit('browse', {type: d.options.type, field: f.field})
     });
+    f.add_listener('select', function(f, o){
+      self.emit('select', {type: d.options.type, id: o._id, field: f.field});
+    })
     return f;
   }
 
@@ -157,17 +160,8 @@ function indicated_field(name, label, type)//, settings_callback)
     throw Error("no field for " + type);
   var field = new form_fields[type + "_field"]();
   form_make_listener(field);
+  field.bubble_listener(self);
   self.field = field;
-  // bubble...
-  field.add_listener('change', function () {
-    self.emit('change');
-  });
-  field.add_listener('add', function () {
-    self.emit('add');
-  });
-  field.add_listener('browse', function () {
-    self.emit('browse');
-  });
   $el.append($label, field.$el());
   field.$el().addClass('controls');
 
@@ -466,7 +460,7 @@ var form_fields = {
     var $progress = $$('progress');
     var $progressbar = $$('bar', { css: { width: '0%' }, parent: $progress });
     var $info = $$('multi-drop-area file-input-drop');
-    var $btn = $$('btn btn-small file-input-button', { children: [ $('<span><i class="fa fa-arrow-circle-o-up"></i> Browse...</span>') ] });
+    var $btn = $$('btn btn-small file-input-button', { children: [ $('<span><i class="fa fa-arrow-circle-o-up"></i> Upload file...</span>') ] });
     var $fileupload = $$('multi_upload', { el: 'input', parent: $btn,
       data: { url: upload_url },
       attributes: { type: 'file', name: 'file', multiple: 'multiple' }});
@@ -542,8 +536,10 @@ var form_fields = {
   },
 
   model_field: function ($el) {
+    var self = this;
     $el = form_field_create(self, $el, 'span', 'model');
-    this.$el = function () {
+    form_make_listener(self);
+    self.$el = function () {
       return $el;
     };
 
@@ -561,6 +557,11 @@ var form_fields = {
       $el.empty();
       $el.append("<span class='nowrap'>"+_d.title+"</span>");
     }
+
+    $el.dblclick(function () {
+      console.log(self.data)
+      self.emit('select', self.data);
+    })
   },
 
   choose_create_field: function ($el) {
@@ -571,15 +572,7 @@ var form_fields = {
     };
 
     var f = new form_fields.add_remove($el, form_fields.model_field);
-    f.add_listener('change', function () {
-      self.emit('change');
-    });
-    f.add_listener('click.add', function () {
-      self.emit('add');
-    });
-    f.add_listener('click.browse', function () {
-      self.emit('browse');
-    });
+    f.bubble_listener(self);
     $el.append(f.$el());
 
     Object.defineProperty(this, "data", {
@@ -592,6 +585,7 @@ var form_fields = {
     });
 
     self.push = function(e){f.push(e);}
+    self.update = function(e){f.update(e);}
 
   },
 
@@ -624,8 +618,8 @@ var form_fields = {
     var $list = $("<div></div>");
     options = $.extend({add: true, browse: true}, options);
     var $actions = $("<div></div>");
-    var $add = $("<span><i class='fa fa-plus'></i> add</span>").css({'cursor': 'pointer'});
-    var $browse = $("<span><i class='fa fa-plus'></i> browse</span>").css({'cursor': 'pointer'});
+    var $add = $("<span><i class='fa fa-plus-circle'></i> create</span>").css({'cursor': 'pointer'});
+    var $browse = $("<span><i class='fa fa-play-circle '></i> browse</span>").css({'cursor': 'pointer'});
     if (options.add)
       $actions.append($add, '&nbsp;');
     if (options.browse)
@@ -633,10 +627,10 @@ var form_fields = {
     $el.append($list);
     $el.append($actions);
     $add.click(function () {
-      self.emit('click.add');
+      self.emit('add');
     });
     $browse.click(function () {
-      self.emit('click.browse');
+      self.emit('browse');
     });
     $list.sortable({change: function (event, ui) {
       self.emit('change');
@@ -664,11 +658,19 @@ var form_fields = {
     self.push = function(data) {
       var d = new form_fields.deletable_row(clazz);
       d.data = data;
-      d.add_listener('change', function () {
-        self.emit('change');
-      });
+      d.bubble_listener(self);
       $list.append(d.$el());
       return d;
+    }
+    self.update = function(data) {
+        $list.children().each(function (i, e) {
+          var o = $(e).data("__obj__");
+          if (o.data._id == data._id)
+          {
+            o.data = data;
+            return;
+          }
+        });
     }
 
   },
@@ -684,6 +686,7 @@ var form_fields = {
 
     var $c = $("<span></span>").css({padding: '0 5px 0 0'});
     var c = new clazz();
+    c.bubble_listener(self);
     c.$el().css({display: 'inline-block'})
     var $x = $("<span></span>").addClass("fa fa-times-circle");
     $el.append($c, $x);

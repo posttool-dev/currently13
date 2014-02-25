@@ -10,7 +10,6 @@ html {
 
 body {
     background-color: #fff;
-    padding: 20px 0 20px 0;
 }
 
 ul {
@@ -67,7 +66,8 @@ button:disabled {
 }
 
 .padded {
-    padding: 15px;
+        padding:70px 20px 40px 20px;
+
 }
 
 #tool-bar {
@@ -84,7 +84,7 @@ button:disabled {
 
 .options {
     font-size: 18px;
-    padding: 9px 0 0 30px;
+    padding: 9px 0 0 20px;
 
 }
 
@@ -104,7 +104,6 @@ button:disabled {
 /* form */
 
 .form .form {
-    padding-top: 50px;
 }
 
 
@@ -252,7 +251,7 @@ button:disabled {
     height:100%;
     top:0;
     left:0;
-    background-color: rgba(0,0,0,.7);
+    background-color: rgba(0,0,0,.4);
 }
 
 .c {
@@ -260,6 +259,10 @@ button:disabled {
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     position: relative;
-    padding:20px;
+    padding:70px 20px 40px 20px;
     background-color: white;
+        -webkit-box-shadow: 0px 0px 138px 67px rgba(0,0,0,0.3);
+    -moz-box-shadow: 0px 0px 138px 67px rgba(0,0,0,0.3);
+    box-shadow: 0px 0px 138px 67px rgba(0,0,0,0.3);
+
 }

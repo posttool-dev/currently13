@@ -9,6 +9,13 @@ function layers_layers(){
   {
     var $layer = $$('layer');
     var $lens = $$('lens');
+    $lens.click(function(){
+      if ($el.children().length == 1)
+        return;
+      self.pop_layer();
+      //emit close
+
+    })
     var $c = $$('c');
     $c.append(f.$el());
     $layer.append($lens, $c);
@@ -19,6 +26,7 @@ function layers_layers(){
   self.pop_layer = function()
   {
     $el.children().last().remove();
+    update_ui();
   }
 
   function update_ui()
@@ -27,7 +35,11 @@ function layers_layers(){
     for (var i=0; i<c.length; i++)
     {
       var $c = $(c[i]);
-      $c.find('.c').css({left: (i*5)+'%', width: (100-i*5)+'%'})
+      $c.find('.c').css({left: (i*5)+'%', width: (100-i*5)+'%'});
+      if (i== c.length-1)
+        $c.css({position:'absolute'});
+      else
+        $c.css({position:'fixed'});
     }
   }
 }

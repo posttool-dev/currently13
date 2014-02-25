@@ -22,7 +22,7 @@ $(document).ready(function(){
     }).keyup(function(e){
         ctrlKeyDown = e.ctrlKey || e.altKey || e.shiftKey || e.metaKey;
     });
-    browser.add_listener('click', function (f, r) {
+    browser.add_listener('select', function (f, r) {
         var url = '/cms/update/<%= type %>/' + r._id;
         var win = window.open(url, ctrlKeyDown ? '_blank' : '_self');
         win.focus();

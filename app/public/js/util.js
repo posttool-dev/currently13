@@ -156,7 +156,10 @@ function $$modal(title)
 
 
 function form_make_listener(c) {
+  if (c.add_listener)
+    return;
   var listeners = {};
+  var bubbler = null;
   c.add_listener = function (name, callback) {
     if (!listeners[name])
       listeners[name] = [];
@@ -166,8 +169,15 @@ function form_make_listener(c) {
     listeners[name] = [];
   }
   c.emit = function (name, data) {
-    if (listeners[name])
+    if (bubbler)
+      bubbler.emit(name, data);
+    else if (listeners[name])
       for (var i = 0; i < listeners[name].length; i++)
         listeners[name][i](c, data);
   }
+  c.bubble_listener = function(p){
+    bubbler = p;
+  }
 }
+
+

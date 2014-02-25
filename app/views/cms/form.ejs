@@ -18,51 +18,64 @@
 <% include ../nav %>
 
 <div class="padded">
-    <div id="workspace" class="group root"></div>
+    <div id="workspace"></div>
 </div>
 
 <script>
     var layers = new layers_layers();
     var form_stack = [];
-    var form = new form_form("<%=type%>");
-    form.init(<% if (id) { %>"<%=id%>"<% } %>);
-    form.add_listener('browse', function (f, o) {
-        browse(o.type, o.field)
-    });
-    form.add_listener('create', function (f, o) {
-        create(o.type, o.field)
-    });
-    form.add_listener('close', function (e, r) {
+    var root_form = form("<%=type%>");
+    root_form.init(<% if (id) { %>"<%=id%>"<% } %>);
+    root_form.add_listener('close', function (e, r) {
        confirm('really delete?');
+        //todo form.delete();
     });
-    layers.add_layer(form);
 
-    function browse(type, for_field) {
-        var bb = new browse_browse(type);
-        bb.add_listener('click', function (e, r) {
-            for_field.push(r);
-            layers.pop_layer();
-        });
-        layers.add_layer(bb);
-    }
-
-    function create(type, for_field) {
-        console.log(type, for_field)
+    function form(type) {
         var ff = new form_form(type);
-        ff.init();
         ff.add_listener('browse', function (f, o) {
-            browse(o.type, o.field)
+            var bb = new browse_browse(o.type);
+            bb.add_listener('select', function (e, r) {
+                add_object(o.field, r);
+            });
+            layers.add_layer(bb);
         });
         ff.add_listener('create', function (f, o) {
-            create(o.type, o.field)
+            var ff = form(o.type);
+            ff.init();
+            ff.add_listener('close', function (e, r) {
+                add_object(o.field, r);
+            });
         });
-        ff.add_listener('close', function (e, r) {
-            console.log(r._id)
-            if (r.created)
-                for_field.push(r);
-            layers.pop_layer();
+        ff.add_listener('select', function (f, o) {
+            var ff = form(o.type);
+            ff.init(o.id);
+            ff.add_listener('close', function (e, r) {
+                update_object(o.field, r);
+            });
         });
         layers.add_layer(ff);
+        return ff;
+    }
+
+    function add_object(for_field, r)
+    {
+        if (r.created)
+        {
+            for_field.push(r);
+            for_field.emit('change');
+        }
+        layers.pop_layer();
+    }
+
+    function update_object(for_field, r)
+    {
+        if (r.created)
+        {
+            for_field.update(r);
+            for_field.emit('change');
+        }
+        layers.pop_layer();
     }
 
     $(document).ready(function () {

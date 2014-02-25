@@ -101,7 +101,7 @@ function browse_browse(type, filters, order, page, pagesize) {
         $r.removeClass('over');
       });
     $r.click(function () {
-      self.emit('click', r);
+      self.emit('select', r);
     });
     $r.height(row_height);
     for (var j = 0; j < bmeta.length; j++) {
