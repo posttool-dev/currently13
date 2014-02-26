@@ -4,6 +4,7 @@ var delete_url = "/cms/delete_resource/";
 function form_form(type) {
   var self = this;
   self.type = type;
+  self.toString = function(){ return 'Edit '+type; }
   form_make_listener(self);
   var $el = $$('form');
   self.$el = function () {
@@ -19,7 +20,7 @@ function form_form(type) {
 //  var $title = $$('title', {el: 'span', parent: $controls}).text(type);
   var $save = $$('btn btn-primary', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
   var $time = $$('time', {el: 'span', parent: $controls}).text('Last modified...');
-  var $delete = $$('btn btn-delete', {el: 'button', parent: $controls}).text('X');
+  var $delete = $$('btn btn-right', {el: 'button', parent: $controls}).text('X');
   var $form = $$('form', {parent: $el});
 
   function set_meta(meta_data) {

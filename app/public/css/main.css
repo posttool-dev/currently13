@@ -66,14 +66,22 @@ button:disabled {
     opacity: .3;
 }
 
-.btn-delete {
+.btn-right {
     position: fixed;
     right: 20px;
 }
 
 .padded {
-        padding:80px 20px 40px 20px;
+    padding: 80px 12px 40px 12px;
+}
 
+.tag {
+    background-color: #b2e0ff;
+    border-radius: 4px;
+    padding: 4px;
+    margin: 2px;
+    color: #555;
+    float: left;
 }
 
 #tool-bar {
@@ -92,6 +100,7 @@ button:disabled {
     font-size: 18px;
     padding: 9px 0 0 20px;
 }
+
 #extra-options {
 }
 
@@ -103,7 +112,6 @@ button:disabled {
     font-size: 13px;
 }
 
-
 .heading {
     font-size: 20px;
 }
@@ -112,7 +120,6 @@ button:disabled {
 
 .form .form {
 }
-
 
 .form-controls {
     position: fixed;
@@ -141,12 +148,9 @@ button:disabled {
     height: 100%;
 }
 
-
 .cke_editable {
     font-size: 12px;
 }
-
-
 
 .model {
     width: 300px;
@@ -155,11 +159,9 @@ button:disabled {
     margin: 5px 0 5px 0;
     font-size: 12px;
     background-color: #48adff;
-    color:#fff;
+    color: #fff;
     cursor: move;
 }
-
-
 
 /* browser */
 .browser {
@@ -171,21 +173,65 @@ button:disabled {
     user-select: none;
 }
 
-.title {float:left;}
-.filters{float: left;}
-.pager{padding:0 0 15px 0; float: left;}
-.results{}
-.header{}
+.browse-controls {
+    position: fixed;
+    top: 40px;
+    left: 0;
+    width: 100%;
+    height: 35px;
+    background-color: #fff;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    padding: 8px 25px 0 20px;
+}
 
+.title {
+    float: left;
+    padding: 6px 5px 2px 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    padding-right: 4px;
+    font-weight: bold;
+}
+
+.filters {
+    float: left;
+    font-size: 13px;
+    padding: 0 5px 2px 0;
+    cursor:pointer;
+}
+
+.filter-tag {
+    background-color: #deebff;
+    border-radius: 4px;
+    padding: 4px;
+    margin: 2px;
+    color: #555;
+    float: left;
+}
+.filter-tag:hover {
+    background-color: #c9e8ff;
+}
+/*.filters:hover {*/
+    /*background-color: #ccc;*/
+/*}*/
+
+.pager {
+    padding: 5px 130px 15px 0;
+    float: right;
+    font-size: 13px;
+}
+
+.results {
+}
+
+.header {
+}
 
 .hrow, .crow {
     clear: both;
     cursor: pointer;
     height: 30px;
-}
-
-.over {
-    background-color: #e7f5fe;
 }
 
 .hcol, .ccol {
@@ -203,11 +249,19 @@ button:disabled {
     font-size: 12px;
 }
 
+.over {
+    background-color: #deebff;
+}
+
+
 .page {
     color: #48adff;
     text-decoration: none;
-    padding-right: 10px;
+    margin: 5px;
     cursor: pointer;
+    background-color: #deebff;
+    padding: 2px;
+    border-radius: 3px;
 }
 
 .page:hover {
@@ -216,29 +270,27 @@ button:disabled {
 
 .page.selected {
     color: #333;
+    font-weight:bold;
 }
 
 .big {
     width: 100%;
-    background-color: #79b6ff;
     left: 0;
     top: 80px;
-
+    border-bottom: 1px solid #333;
+    padding-bottom:15px;
 }
 
 .order {
     font-weight: bold;
 }
 
-.title {
-    font-size: 11px;
-    text-transform: uppercase;
-    padding-right:4px;
-    font-weight: bold;
-}
-
 .time {
     font-size: 11px;
+}
+
+.small {
+    font-size: 12px;
 }
 
 .nowrap {
@@ -248,33 +300,23 @@ button:disabled {
 
 }
 
-.tag {
-    float:left;
-    background-color: #b7e0ff;
-    -webkit-border-radius: 3px;
-    font-size:12px;
-    padding:3px;
-    margin:3px;
-}
-
-
 /* layers */
 
 .layer {
-    position:absolute;
-    top:30px;
-    left:0px;
-    width:100%;
-    height:100%;
+    position: absolute;
+    top: 30px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
 }
 
 .layer .lens {
-    position:fixed;
-    width:100%;
-    height:100%;
-    top:0;
-    left:0;
-    background-color: rgba(0,0,0,.4);
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, .7);
 }
 
 .c {
@@ -282,10 +324,10 @@ button:disabled {
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     position: relative;
-    padding:70px 20px 40px 20px;
+    padding: 70px 20px 40px 20px;
     background-color: white;
-        -webkit-box-shadow: 0px 0px 138px 67px rgba(0,0,0,0.3);
-    -moz-box-shadow: 0px 0px 138px 67px rgba(0,0,0,0.3);
-    box-shadow: 0px 0px 138px 67px rgba(0,0,0,0.3);
+    -webkit-box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);
+    -moz-box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);
+    box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);
 
 }

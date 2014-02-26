@@ -34,7 +34,7 @@ function layers_layers(){
     var c = $el.children();
     for (var i = 0; i < c.length; i++) {
       var $c = $(c[i]);
-      $c.find('.c').css({left: (i * 5) + '%', width: (100 - i * 5) + '%'});
+//      $c.find('.c').css({left: (i * 5) + '%', width: (100 - i * 5) + '%'});
       if (i == c.length - 1)
         $c.css({position: 'absolute'});
       else
@@ -46,7 +46,7 @@ function layers_layers(){
     for (var i = 0; i < c.length; i++)
     {
       var d = $(c[i]).data('__obj__');
-      $x.append('<i class="fa fa-angle-right"></i> ' + d.type + ' ');
+      $x.append('<i class="fa fa-angle-right"></i> ' + d.toString() + ' ');
     }
 
     setTimeout(function () {
