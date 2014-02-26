@@ -147,10 +147,13 @@ function browse_browse(type, filters, order, page, pagesize) {
 
   function update_filters(){
     $filters.empty();
-    for (var i=0; i<filters.length; i++)
+    for (var p in filters)
     {
       var $e = $$('tag');
-      $e.text(filters[i].name+": "+filters[i].value);
+      var s = p + ' ';
+      for (var q in filters[p])
+        s += q + ' ' + filters[p][q];
+      $e.text(s);
       $e.append("<i class='fa fa-times-circle'></i>");
       $filters.append($e);
     }
@@ -163,8 +166,11 @@ function browse_browse(type, filters, order, page, pagesize) {
       // for filters: $y.append(predicate_row(filter))
       $y.append(predicate_row());
       var $add = $$('add',{el:'a', parent: $x}).text('add');
-      var $apply = $$('add',{el:'a', parent: $x}).text('apply');
-      var $cancel = $$('add',{el:'a', parent: $x}).text('cancel');
+      var $apply = $$('apply',{el:'a', parent: $x}).text('apply');
+      var $cancel = $$('close',{el:'a', parent: $x}).text('close');
+      $add.click(function(){
+      $y.append(predicate_row());
+      })
       $apply.click(function(){
         filters = {};
         var c = $y.children();
@@ -175,13 +181,14 @@ function browse_browse(type, filters, order, page, pagesize) {
           var name = bmeta[Number($(cc[0]).val())].name;
           var cond = $(cc[1]).val();
           var val = $(cc[2]).find('input').val(); // todo get val from component c.data
+          if (!isNaN(val))
+            val = Number(val);
           var d = {};
           filters[name] = {};
           filters[name][cond] = val;
-          console.log(filters)
-          update_filters();
-          update_data();
         }
+        update_filters();
+        update_data();
       })
     })
   }
@@ -195,8 +202,8 @@ function browse_browse(type, filters, order, page, pagesize) {
       $s.append($("<option value='"+i+"'>"+ bmeta[i].name+"</option>"));
     var $t = $$('comp', {el:'select', parent: $r});
     var $i = $$('i', {el: 'span', parent: $r});
-    var $del = $$icon('', {fa: 'plus-circle', parent: $r});
-
+    var $del = $$icon('', {fa: 'times-circle', parent: $r});
+    $del.click(function(){ $r.remove(); })
     function update_t_and_i(){
       $t.empty();
       var b = bmeta[Number($s.val())];

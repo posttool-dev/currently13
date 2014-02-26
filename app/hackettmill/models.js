@@ -21,11 +21,11 @@ exports.models = {
             dimensions:    String
         },
         browse: [
-            {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},
-            {name: "code", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
+            {name: "title", cell: "char", filters: ["$regex", "$eq"], order: "asc,desc"},
+            {name: "code", cell: "char", filters: ["$regex", "$eq"], order: "asc,desc,default"},
             {name: "resource", cell: "image"},
-            {name: "year", cell: "int", filters: ["gt","lt","gte","lte"], order: "asc,desc"},
-            {name: "modified", cell: "int", filters: ["gt","lt","gte","lte"], order: "asc,desc"},
+            {name: "year", cell: "int", filters: ["$gt","$lt","$gte","$lte"], order: "asc,desc"},
+            {name: "modified", cell: "int", filters: ["$gt","$lt","$gte","$lte"], order: "asc,desc"},
         ],
         form: [
             {begin: "row"},
@@ -60,8 +60,8 @@ exports.models = {
             work:          [{type: ObjectId, ref: 'Inventory'}]
         },
         browse: [
-            {name: "first_name", cell: "char", filters: ["icontains", "equals"], order: "asc,desc"},
-            {name: "last_name", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"}
+            {name: "first_name", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},
+            {name: "last_name", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"}
         ],
         form: [
             {name: "first_name", widget: "input"},
@@ -80,8 +80,8 @@ exports.models = {
             pages:         [{type: ObjectId, ref: 'Page'}]
         },
         browse: [
-            {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
-            {name: "subtitle", cell: "char", filters: ["icontains", "equals"], order: "asc,desc"}
+            {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
+            {name: "subtitle", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"}
         ],
         form: [
             {name: "title", widget: "input"},
@@ -100,7 +100,7 @@ exports.models = {
             release_date:  Date
         },
         browse: [
-            {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
+            {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
             {name: "release_date", cell: "date", filters: ["gt","lt"], order: "asc,desc"}
         ],
         form: [
