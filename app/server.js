@@ -34,7 +34,10 @@ function init_app() {
 
   app.configure('development', function () {
     app.use(express.errorHandler());
-    cloudinary.config({ cloud_name: 'posttool', api_key: '681946288916643', api_secret: 'L08_8W3noETBoKaMk9CV8paLlx8' });
+    cloudinary.config({
+      cloud_name: 'hackettmill',
+      api_key: '927166441966584',
+      api_secret: 'nJpv1R7U_-uhuvxiaJar8ihqUBg' });
   });
 
   hmm.migrate_data(__dirname);
