@@ -1,32 +1,66 @@
 <% include ../head %>
 
 <script src="/js/util.js"></script>
+<script src="/js/layers.js"></script>
+<script src="/js/form.js"></script>
 <script src="/js/browse.js"></script>
+<script src="/js/app.js"></script>
+
+<script src="/js/lib/ck/ckeditor.js"></script>
+<script src="/js/lib/codemirror.js"></script>
+<script src="/js/lib/jquery.fileupload.js"></script>
+<script src="/js/lib/jquery.iframe-transport.js"></script>
+
+<link href="/css/upload.css" rel="stylesheet">
+<link href="/css/codemirror.css" rel="stylesheet">
 
 <% include ../head1 %>
 <% include ../nav %>
 
 <div class="padded">
    <div id="browser"></div>
-   <a href='/cms/create/<%= type %>'>Create <%= type %></a><br>
 </div>
 
 <script>
-$(document).ready(function(){
-    var browser = new browse_browse("<%= type %>");
+
     var ctrlKeyDown;
     $(window).keydown(function (e){
         ctrlKeyDown = e.ctrlKey || e.altKey || e.shiftKey || e.metaKey;
     }).keyup(function(e){
         ctrlKeyDown = e.ctrlKey || e.altKey || e.shiftKey || e.metaKey;
     });
+
+
+    var layers = new layers_layers();
+    var browser = new browse_browse("<%= type %>");
     browser.add_listener('select', function (f, r) {
-        var url = '/cms/update/<%= type %>/' + r._id;
-        var win = window.open(url, ctrlKeyDown ? '_blank' : '_self');
-        win.focus();
+        if (ctrlKeyDown)
+        {
+            var url = '/cms/update/<%= type %>/' + r._id;
+            var win = window.open(url, ctrlKeyDown ? '_blank' : '_self');
+            win.focus();
+        }
+        else
+        {
+            var root_form = form("<%=type%>");
+            root_form.init(r._id);
+            root_form.add_listener('close', function (e, r) {
+               layers.pop_layer();
+            });
+        }
     });
-    $("#browser").append(browser.$el());
-});
+    layers.add_layer(browser);
+
+
+
+
+
+
+    $(document).ready(function () {
+        $("#browser").append(layers.$el());
+    });
+
+
 </script>
 
 <% include ../foot %>

@@ -88,6 +88,12 @@ function $$icon(className, options) {
     $c.append(options.label);
   if (options.parent)
     options.parent.append($c);
+  if (className)
+    $c.addClass(className);
+  $c.setfa = function(fa){
+    $c.find('i').remove();
+    $c.prepend("<i class='fa fa-" +fa + "'></i>")
+  };
   return $c;
 }
 

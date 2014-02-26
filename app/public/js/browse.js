@@ -1,7 +1,10 @@
 function browse_browse(type, filters, order, page, pagesize) {
   var self = this;
+  self.type = type;
+  self.toString = function(){ return 'Browse '+type; }
   var schema;
   var bmeta;
+  var bmeta_idx;
   var row_height = 30;
   if (!page)
     page = 0;
@@ -27,12 +30,15 @@ function browse_browse(type, filters, order, page, pagesize) {
       return $el;
     $el = $$('browser');
 
-    var $controls = $$('form-controls', {parent: $el});
-    var $title = $$('title', {el: 'span', parent: $controls}).text('Browse ' + type);
+    var $controls = $$('browse-controls', {parent: $el});
+//    var $title = $$('title', {el: 'span', parent: $controls}).text('Browse ' + type);
 
     $filters = $$('filters', {parent: $controls});
     $pager = $$('pager', {parent: $controls});
-  var $create = $$('btn btn-delete', {el: 'button', parent: $controls}).text('CREATE');
+    var $create = $$('btn btn-right', {el: 'button', parent: $controls}).text('CREATE');
+    $create.click(function(){
+         location.href = '/cms/create/'+ type ;
+    })
 
     $filter_config = $$('filter-config', {parent: $el});
     $results = $$('results', {parent: $el});
@@ -41,6 +47,9 @@ function browse_browse(type, filters, order, page, pagesize) {
     $$ajax('/cms/schema/' + type, null, 'post').done(function (o) {
       schema = o;
       bmeta = o.browser;
+      bmeta_idx = {};
+      for (var i=0; i<bmeta.length; i++)
+        bmeta_idx[bmeta[i].name] = bmeta[i];
       p = Math.floor(90 / bmeta.length) + '%';
       init_ui2();
       update_data();
@@ -71,10 +80,7 @@ function browse_browse(type, filters, order, page, pagesize) {
   function update_ui(results, total) {
     for (var i = 0; i < results.length; i++)
       $rbody.append(create_row(results[i]));
-    $pager.append('<span>'+total+' total</span>')
-    if (total > pagesize)
-      for (var i = 0; i < total / pagesize; i++)
-        $pager.append(make_page(i));
+    create_pager(total);
   }
 
 
@@ -123,14 +129,39 @@ function browse_browse(type, filters, order, page, pagesize) {
   }
 
 /* pager */
+//
+//  function create_pager2(total) {
+//    $pager.append('<span>Show rows: <input class="small" value="' + pagesize + '"></span>');
+//    $pager.append('<span>Go to: <input class="small" value="' + page + '"></span>');
+//    var top = Math.min(page * pagesize + pagesize, total);
+//    $pager.append('<span>' + (page * pagesize) + '-' + top + ' of ' + total + '</span>');
+//    $pager.append('<button>p</button>');
+//    $pager.append('<button>n</button>');
+//  }
+
+  function create_pager(total)
+  {
+//    $pager.append('<span> <button>&lt;</button>  </span>');
+    $pager.empty();
+    $pager.append('<span>'+ total +' total </span>');
+    if (total > pagesize)
+      for (var i = 0; i < total / pagesize; i++)
+        $pager.append(make_page(i, total));
+//    $pager.append('<span> <button>&gt;</button>  </span>');
+//    var top = Math.min(page*pagesize+pagesize, total);
+//    $pager.append('<span>&nbsp;&nbsp;|&nbsp;&nbsp;'+(page*pagesize+1)+'-'+top+' of '+ total +'</span>');
+
+  }
+
   var $lp = null; // last page clicked
-  function make_page(i) {
+  function make_page(i, total) {
     var $p = $$('page', {el: 'span'});
     if (i == page) {
       $p.addClass('selected');
       $lp = $p;
     }
-    $p.text(i + 1);
+    var top = Math.min(i*pagesize+pagesize, total);
+    $p.text((i*pagesize+1)+'-'+top);
     $p.click(function () {
       page = i;
       $lp.removeClass('selected');
@@ -145,66 +176,118 @@ function browse_browse(type, filters, order, page, pagesize) {
 
   /* filters */
 
-  function update_filters(){
+  var filters_open = false;
+
+  function update_filters() {
     $filters.empty();
-    for (var i=0; i<filters.length; i++)
-    {
-      var $e = $$('tag');
-      $e.text(filters[i].name+": "+filters[i].value);
-      $e.append("<i class='fa fa-times-circle'></i>");
-      $filters.append($e);
-    }
-    var $a = $$icon('', {fa: 'plus-circle', label:'filter', parent: $filters});
-    $a.click(function(){
-      $filter_config.empty();
-      var $x = $$('big', {parent: $filter_config});
-      var $y = $$('', {parent: $x});
-      // todo  iterate existing filters and add to display
-      // for filters: $y.append(predicate_row(filter))
-      $y.append(predicate_row());
-      var $add = $$('add',{el:'a', parent: $x}).text('add');
-      var $apply = $$('add',{el:'a', parent: $x}).text('apply');
-      var $cancel = $$('add',{el:'a', parent: $x}).text('cancel');
-      $apply.click(function(){
-        filters = {};
-        var c = $y.children();
-        for (var i=0; i< c.length; i++)
-        {
-          var $c = $(c[i]);
-          var cc = $c.children();
-          var name = bmeta[Number($(cc[0]).val())].name;
-          var cond = $(cc[1]).val();
-          var val = $(cc[2]).find('input').val(); // todo get val from component c.data
-          var d = {};
-          filters[name] = {};
-          filters[name][cond] = val;
-          console.log(filters)
-          update_filters();
-          update_data();
-        }
-      })
+    var getfa = function () {
+      return filters_open ? 'angle-up' : 'angle-down';
+    };
+    var $a = $$icon('filter-tag', {fa: getfa(), label: ' filter', parent: $filters});
+    for (var p in filters)
+      create_filter_tag(p);
+    $a.click(function () {
+      if (filters_open)
+        $filter_config.empty();
+      else
+        create_filter_ui()
+      filters_open = !filters_open;
+      $a.setfa(getfa());
     })
   }
 
+  function create_filter_tag(p) {
+    var $e = $$('tag');
+    var s = p + ': ';
+    for (var q in filters[p])
+      s += filters[p][q] + ' ';
+    $e.text(s);
+    var $a = $("<i class='fa fa-times-circle'></i>");
+    $e.append($a);
+    $a.click(function () {
+      delete filters[p];
+      update_filters();
+      if (filters_open)
+        create_filter_ui();
+    });
+    $filters.append($e);
+  }
 
-  function predicate_row(value)
+  function create_filter_ui() {
+    $filter_config.empty();
+    var $x = $$('big', {parent: $filter_config});
+//      var $apply = $$('btn',{el:'button', parent: $x}).text('apply');
+//      var $cancel = $$('btn',{el:'button', parent: $x}).text('cancel');
+    var $filter_rows = $$('filter-rows', {parent: $x});
+    var c = 0;
+    for (var p in filters) {
+      $filter_rows.append(predicate_row(p, filters[p]));
+      c++;
+    }
+    if (c == 0)
+      $filter_rows.append(predicate_row());
+    $filter_rows.find('input')
+    var $add = $$icon('small', {fa: 'plus-circle', parent: $x, label: ' add condition'})
+    $add.click(function () {
+      $filter_rows.append(predicate_row());
+    });
+  }
+
+  function get_data_from_ui_and_query()
+  {
+    page = 0;
+    filters = {};
+    var c = $filter_config.find('.filter-rows').children();
+    for (var i=0; i< c.length; i++)
+    {
+      var $c = $(c[i]);
+      var cc = $c.children();
+      var name = $(cc[0]).val();
+      var cond = $(cc[1]).val();
+      var val = $(cc[2]).find('input').val(); // todo get val from component c.data
+      filters[name] = {};
+      filters[name][cond] = val;
+    }
+    update_filters();
+    update_data();
+  }
+
+
+  function predicate_row(p, r)
   {
     var $r = $$('pr');
     var $s = $$('name', {el:'select', parent: $r});
     for (var i=0; i< bmeta.length; i++)
-      $s.append($("<option value='"+i+"'>"+ bmeta[i].name+"</option>"));
+      $s.append($("<option>"+ bmeta[i].name+"</option>"));
+    if (p)
+      $s.val(p);
     var $t = $$('comp', {el:'select', parent: $r});
     var $i = $$('i', {el: 'span', parent: $r});
-    var $del = $$icon('', {fa: 'plus-circle', parent: $r});
-
+    var $del = $$icon('', {fa: 'times-circle', parent: $r});
+    $del.click(function(){
+      $r.remove();
+      get_data_from_ui_and_query();
+    });
+    $i.keyup(function(){
+      get_data_from_ui_and_query();
+    });
     function update_t_and_i(){
       $t.empty();
-      var b = bmeta[Number($s.val())];
+      var b = bmeta_idx[$s.val()];
       for (var i=0; i< b.filters.length; i++)
         $t.append($("<option>"+ b.filters[i]+"</option>"));
-
+      var iv = null;
+      if (r) {
+        for (var q in r)
+        {
+          $t.val(q);
+          iv = r[q];
+        }
+      }
       $i.empty();
-      $i.append('<input type="text" class="small">');
+      var $ic = $('<input type="text" class="small">')
+      $i.append($ic);
+      $ic.val(iv);
     }
     $s.change(update_t_and_i);
     update_t_and_i();
