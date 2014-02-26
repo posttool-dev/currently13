@@ -236,20 +236,10 @@ exports.show_dashboard = function (req, res, next) {
   });
 };
 
-get_conditions = function (props) {
-  try {
-    var conditions = JSON.parse(props);
-    // todo validate user conditions & join w/ limiting (like creator = you or other query)
-    // add_conditions(req.object, req.session.user, conditions);
-    return conditions;
-  } catch (e) {
-    return {};
-  }
-};
 
 exports.browse = {
   get: function (req, res, next) {
-    var conditions = get_conditions(req.body.conditions);
+    var conditions = req.body.condition;
     req.model.count(conditions, function (err, count) {
       if (err){
         next(err);
@@ -264,7 +254,8 @@ exports.browse = {
     });
   },
   post: function (req, res, next) {
-    var conditions = get_conditions(req.body.conditions);
+    var conditions = req.body.condition;
+    console.log(conditions, req.body.condition)
     var fields = null;
     var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
     req.model.count(conditions, function (err, count) {

@@ -166,7 +166,7 @@ function browse_browse(type, filters, order, page, pagesize) {
       var $apply = $$('add',{el:'a', parent: $x}).text('apply');
       var $cancel = $$('add',{el:'a', parent: $x}).text('cancel');
       $apply.click(function(){
-        filters = [];
+        filters = {};
         var c = $y.children();
         for (var i=0; i< c.length; i++)
         {
@@ -174,10 +174,13 @@ function browse_browse(type, filters, order, page, pagesize) {
           var cc = $c.children();
           var name = bmeta[Number($(cc[0]).val())].name;
           var cond = $(cc[1]).val();
-          var val = $(cc[2]).val(); // todo get val from component c.data
-          filters.push({name:name, filter: cond, value: val});
+          var val = $(cc[2]).find('input').val(); // todo get val from component c.data
+          var d = {};
+          filters[name] = {};
+          filters[name][cond] = val;
           console.log(filters)
           update_filters();
+          update_data();
         }
       })
     })
