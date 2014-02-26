@@ -13,6 +13,7 @@
     "ejs": "0.8.5",
     "node-uuid": "1.4.1",
     "nodemailer": "0.6.0",
-    "connect-session-mongo": "0.0.4"
+    "connect-session-mongo": "0.0.4",
+    "csv": "0.3.7"
   }
 }

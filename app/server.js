@@ -36,6 +36,7 @@ function init_app() {
     cloudinary.config({ cloud_name: 'posttool', api_key: '681946288916643', api_secret: 'L08_8W3noETBoKaMk9CV8paLlx8' });
   });
 
+  migrate_data();
   // General
 
   // move session message to request locals
@@ -86,4 +87,37 @@ function init_app() {
 
   app.listen(3000);
   console.log('App started on port 3000');
+}
+
+
+
+function migrate_data()
+{
+  var fs = require('fs');
+  var csv = require('csv');
+  var path = __dirname+'/hackettmill/data/';
+  fs.readdir(path, function(err, files){
+    for (var i=0; i<files.length; i++)
+    {
+      console.log(files[i]);
+      csv()
+      .from.path(path+files[i], { delimiter: ',', escape: '"' })
+//      .transform( function(row){
+//        row.unshift(row.pop());
+//        return row;
+//      })
+      .on('record', function(row,index){
+        console.log('#'+index+' '+JSON.stringify(row));
+      })
+      .on('close', function(count){
+        // when writing to a file, use the 'close' event
+        // the 'end' event may fire before the file has been written
+        console.log('Number of lines: '+count);
+      })
+      .on('error', function(error){
+        console.log("X",error.message);
+      });
+    }
+  });
+
 }
