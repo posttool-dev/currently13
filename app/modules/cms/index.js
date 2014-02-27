@@ -3,181 +3,19 @@ var fs = require('fs');
 var mongoose = require('mongoose');
 var gfs = null, Grid = require('gridfs-stream');
 var cloudinary = require('cloudinary');
+var meta = require('./meta');
 var use_gfs = false;
 
 Grid.mongo = mongoose.mongo;
 
-
-var Meta = null;
-//var User = null;
-var Resource = null;
-
-/**
- holds on to meta info
- adds fields and methods to meta info
- */
-exports.init = function (meta, resource_class_name, user_class_name) {
+exports.init = function (config, resource_class_name, user_class_name) {
   gfs = new Grid(mongoose.connection.db, mongoose.mongo);
-  Meta = meta;
   console.log('current13 0.0.0');
-  for (var p in  meta) {
-    var schema_data = meta[p].schema;
-    validate_meta(p, schema_data, meta[p].browse, meta[p].form);
-    var schema = mongoose.Schema(schema_data);
-    add_fields_and_methods(schema, p);
-    meta[p].schema = schema;
-  }
-  Resource = mongoose.model(resource_class_name, Meta[resource_class_name].schema);
-//    User = mongoose.model(user_class_name, Meta[user_class_name].schema);
-}
-extra_fields = {
-    'creator': {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    'created': Date,
-    'modified': Date,
-    'state': Number
-  };
-validate_meta = function (p, schema, browse, form) {
-  if (browse)
-    for (var i = 0; i < browse.length; i++)
-      if (browse[i].name && !schema[browse[i].name] && !extra_fields[browse[i].name])
-        throw new Error('No path ' + browse[i].name + ' in schema ' + p);
-  if (form)
-    for (var i = 0; i < form.length; i++)
-      if (form[i].name && !schema[form[i].name] && !extra_fields[form[i].name])
-        throw new Error('No path ' + form[i].name + ' in schema ' + p);
-}
-/**
-  manages schema
-   - adds fields: creator, created, modified, state
-   - adds getters: url, type
-   - adds pre save to set times
- */
-add_fields_and_methods = function (schema, name) {
-  schema.add(extra_fields);
-  schema.virtual('url').get(function () {
-    return name.toLowerCase() + '/' + this._id;
-  });
-  schema.virtual('type').get(function () {
-    return name.toLowerCase() + '/' + this.uuid;
-  });
-  schema.pre('save', function (next) {
-    this.modified = new Date();
-    if (!this.created)
-      this.created = new Date();
-    next();
-  });
-  mongoose.model(name, schema);
+  meta.init(config, resource_class_name, user_class_name);
 }
 
 
-// model meta helpers
 
-get_schema_info = function(schema)
-{
-  var d = {};
-  schema.eachPath(function (path, mtype) {
-    d[path] = get_path_info(path, mtype);
-  });
-  return d;
-}
-
-/**
- * returns a simple summary of the mongoose schema info.
- * the "Reference" type is used throughout in a standardized way. TODO handle relationships between references.
- *
- * @param path the mongoose schema path
- * @param mtype the mongoose type (provided by ```schema.forEach(function(path,type)```)
- * @returns {{name: *, type: *, is_array: boolean}}
- */
-get_path_info = function (path, mtype) {
-  var is_array = false;
-  var ftype = null;
-  var stype = null;
-  var ref = null;
-  if (mtype.options.type) {
-    is_array = Array.isArray(mtype.options.type);
-    ftype = is_array ? mtype.options.type[0] : mtype.options;
-  }
-  if (ftype != null && ftype.ref) {
-    ref = ftype.ref;
-  }
-  switch (ftype.type) {
-    case String:
-      stype = "String";
-      break;
-    case Number:
-      stype = "Number";
-      break;
-    case Date:
-      stype = "Date";
-      break;
-    case mongoose.Schema.Types.ObjectId:
-      if (ref)
-        stype = "Reference";
-      else
-        stype = "Id";
-      break;
-    default:
-      stype = ftype.type;
-      break;
-  }
-  var d = {
-    name: path,
-    type: stype,
-    is_array: is_array
-  };
-  if (ref != null) {
-    d.type = 'Reference';
-    d.ref = ref;
-  }
-  return d;
-};
-
-
-get_by_type = function(schema, type) {
-  var d = [];
-  schema.eachPath(function (path, mtype) {
-    var info = get_path_info(path, mtype);
-    if (info.type == type)
-      d.push(info);
-  });
-  return d;
-};
-
-
-get_references = function(schema) {
-  return get_by_type(schema, 'Reference');
-};
-
-
-get_names = function (field_info) {
-  if (!field_info)
-    return [];
-  else return field_info.map(function (elem) {
-    return elem.name;
-  });
-};
-
-
-add_previews = function(object, refs)
-{
-  if (!object)
-    return;
-  for (var i = 0; i < refs.length; i++) {
-    if (refs[i].ref == 'Resource') {
-      add_preview(object[refs[i].name]);
-    }
-  }
-};
-
-
-add_preview = function(r)
-{
-    if (r && r.meta)
-    {
-      r.meta.thumb = cloudinary.image(r.meta.public_id + ".jpg", { width: 100, height: 150, crop: "fill" });
-    }
-};
 
 
 // setup chain
@@ -185,7 +23,7 @@ add_preview = function(r)
 /* put the meta info in every request */
 
 exports.a = function (req, res, next) {
-  req.models = Meta;
+  req.models = meta.meta();
   next();
 };
 
@@ -194,11 +32,11 @@ exports.a = function (req, res, next) {
 
 exports.b = function (req, res, next) {
   var type = req.params.type;
-  req.browser = Meta[type].browse;
-  req.form = Meta[type].form;
   req.type = type;
-  req.schema = Meta[type].schema;
-  req.model = mongoose.model(type, Meta[type].schema);
+  req.schema = meta.schema(type);
+  req.model = meta.model(type);
+  req.browser = meta.browse(type);
+  req.form = meta.form(type);
   next();
 };
 
@@ -217,9 +55,9 @@ exports.c = function (req, res, next) {
 expand = function(schema, model, id, next)
 {
   var q = model.findOne({_id: id});
-  var refs = get_references(schema);
+  var refs = meta.get_references(schema);
   if (refs)
-    q.populate(get_names(refs).join(" "));
+    q.populate(meta.get_names(refs).join(" "));
   q.exec(function (err, m) {
     if (!err)
       add_previews(m, refs);
@@ -255,7 +93,6 @@ exports.browse = {
   },
   post: function (req, res, next) {
     var conditions = req.body.condition;
-    console.log(conditions, req.body.condition)
     var fields = null;
     var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
     req.model.count(conditions, function (err, count) {
@@ -263,7 +100,11 @@ exports.browse = {
         next(err);
         return;
       }
-      req.model.find(conditions, fields, options, function (err, r) {
+      var q = req.model.find(conditions, fields, options);
+      var refs = meta.get_references(req.schema);
+      if (refs)
+        q.populate(meta.get_names(refs).join(" "));
+      q.exec(function (err, r) {
         if (err)
           next(err);
         else
@@ -274,7 +115,7 @@ exports.browse = {
 };
 
 exports.schema = function (req, res, next) {
-  res.json({schema: get_schema_info(req.schema), browser: req.browser});
+  res.json({schema: meta.get_schema_info(req.schema), browser: req.browser});
 };
 
 
@@ -305,6 +146,10 @@ exports.form =
       s[p] = data[p];
     }
     s.creator = req.session.user._id;
+    if (req.model == meta.Resource && s.meta)
+    {
+      console.log("REES");
+    }
     s.save(function (err, s) {
       if (err)
         res.json(err);
@@ -322,6 +167,26 @@ exports.form =
 
 
 // image and resource handling
+
+add_previews = function(object, refs)
+{
+  if (!object)
+    return;
+  for (var i = 0; i < refs.length; i++) {
+    if (refs[i].ref == 'Resource') {
+      add_preview(object[refs[i].name]);
+    }
+  }
+};
+
+
+add_preview = function(r)
+{
+    if (r && r.meta)
+    {
+      r.meta.thumb = cloudinary.url(r.meta.public_id + ".jpg", { width: 100, height: 150, crop: "fill" });
+    }
+};
 
 
 exports.upload = function (req, res) {
