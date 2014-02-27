@@ -17,7 +17,7 @@ exports.models = {
       ],
       use: String,
       alignment: String,
-      year: Number,
+      year: String,
       materials: String,
       dimensions: String
     },
@@ -25,7 +25,7 @@ exports.models = {
       {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},
       {name: "code", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
       {name: "resources", cell: "image"},
-      {name: "year", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
+      {name: "year", cell: "string", filters: ["$regex"], order: "asc,desc"},
       {name: "modified", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
     ],
     form: [

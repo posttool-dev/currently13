@@ -41,11 +41,24 @@ function migrate1()
 
 function migrate2()
 {
-  process_list(data['Inventory'].array, create_inventory, migrate3);
+  var R = mongoose.model('Inventory');
+  R.find().remove(function (err, c) {
+    process_list(data['Inventory'].array,
+      function(e, next){ create('Inventory', e, next);},
+      migrate3);
+  });
 }
 
 function migrate3()
 {
+  var R = mongoose.model('Artist');
+  R.find().remove(function (err, c) {
+    process_list(data['Artist'].array,
+      function(e, next){
+        create('Artist', e, next);},
+      migrate4);
+  });
+
 }
 
 function migrate4()
@@ -151,15 +164,15 @@ function delete_resource(r, next)
   }
 }
 
-function create_inventory(inv, next)
+function create(type, data, next)
 {
-  var i = create_model('Inventory', inv);
-  i.save(function (err, inv) {
-    i.model = inv;
+  var i = create_model(type, data);
+  i.save(function (err, i) {
+    if (err)
+      console.log(err);
+    data.model = i;
     next();
   });
-  console.log(i);
-//  next();
 }
 
 function create_model(type, data)
@@ -185,7 +198,10 @@ function get_field_val(meta, sval)
         var vals = [];
         var v = sval.substring(1, sval.length-1).split(',');
         for (var i=0; i< v.length; i++)
-          vals.push(get_ref_val(v[i]));
+        {
+          var r = get_ref_val(v[i]);
+          if (r) vals.push(r);
+        }
         return vals;
       }
       else
@@ -205,10 +221,14 @@ function get_field_val(meta, sval)
 function get_ref_val(ref_str)
 {
     var vv = ref_str.split(':');
+  try {
     var vtype = vv[0].trim();
     var vid = vv[1].trim();
-  console.log(vtype, vid, data[vtype].map[vid]);
     return data[vtype].map[vid].model;
+    } catch(e){
+    console.log(">>>>", ref_str);
+    return null;
+  }
 }
 
 

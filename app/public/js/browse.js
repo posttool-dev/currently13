@@ -5,7 +5,7 @@ function browse_browse(type, filters, order, page, pagesize) {
   var schema;
   var bmeta;
   var bmeta_idx;
-  var row_height = 30;
+  var row_height = 40;
   if (!page)
     page = 0;
   if (!pagesize)
@@ -120,9 +120,21 @@ function browse_browse(type, filters, order, page, pagesize) {
     });
     $r.height(row_height);
     for (var j = 0; j < bmeta.length; j++) {
+      var b = bmeta[j];
+      var v = r[b.name];
       var $c = $$('ccol nowrap');
       $c.css({width: p});
-      $c.text(r[bmeta[j].name]);
+      if (bmeta[j].cell == 'image')
+      {
+        var u;
+        if (Array.isArray(v) && v.length != 0)
+          u = v[0].meta.thumb;
+        else if (v.meta)
+          u = v.meta.thumb;
+        $c.append('<img src="'+u+'">');
+      }
+      else
+        $c.text(v);
       $r.append($c);
     }
     return $r;
