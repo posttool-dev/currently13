@@ -12,8 +12,7 @@ exports.models = {
       title: String,
       code: String,
       description: String,
-      resource: {type: ObjectId, ref: 'Resource'},
-      views: [
+      resources: [
         {type: ObjectId, ref: 'Resource'}
       ],
       use: String,
@@ -25,7 +24,7 @@ exports.models = {
     browse: [
       {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},
       {name: "code", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
-      {name: "resource", cell: "image"},
+      {name: "resources", cell: "image"},
       {name: "year", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
       {name: "modified", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
     ],
@@ -35,8 +34,7 @@ exports.models = {
         {name: "code", widget: "input", options: {className: "large", width: "20%"}},
       {end: "row" },
       {begin: "row"},
-        {name: "resource", widget: "upload", options: {type: "Resource"}},
-        {name: "views", widget: "choose_create", options: {type: "Resource", array: true}},
+        {name: "resources", widget: "upload", options: {type: "Resource"}},
       {end: "row" },
       {name: "description", widget: "rich_text"},
       {begin: "section"},
