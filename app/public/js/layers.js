@@ -1,3 +1,7 @@
+
+
+
+
 function layers_layers(){
   var self = this;
   var $el = $$('layers');
@@ -22,6 +26,7 @@ function layers_layers(){
     $layer.append($lens, $c);
     $el.append($layer);
     update_ui();
+    history.pushState(null, f.toString(), f.url());
   }
 
   self.pop_layer = function()

@@ -220,13 +220,12 @@ function get_field_val(meta, sval)
 
 function get_ref_val(ref_str)
 {
-    var vv = ref_str.split(':');
+  var vv = ref_str.split(':');
   try {
     var vtype = vv[0].trim();
     var vid = vv[1].trim();
     return data[vtype].map[vid].model;
-    } catch(e){
-    console.log(">>>>", ref_str);
+  } catch (e) {
     return null;
   }
 }

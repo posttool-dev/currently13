@@ -2,6 +2,7 @@ function browse_browse(type, filters, order, page, pagesize) {
   var self = this;
   self.type = type;
   self.toString = function(){ return 'Browse '+type; }
+  self.url = function() { return '/cms/browse/'+type; }
   var schema;
   var bmeta;
   var bmeta_idx;

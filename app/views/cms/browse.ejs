@@ -42,16 +42,17 @@
         }
         else
         {
-            var root_form = form("<%=type%>");
-            root_form.init(r._id);
+            var root_form = form("<%=type%>", r._id);
             root_form.add_listener('close', function (e, r) {
                layers.pop_layer();
             });
         }
     });
-    layers.add_layer(browser);
+    layers.add_layer(browser, '/cms/browse/<%= type %>');
 
-
+//    window.addEventListener("popstate", function(e) {
+//        layers.pop_layer();
+//    });
 
 
 

@@ -1,7 +1,7 @@
 var upload_url = "/cms/upload";
 var delete_url = "/cms/delete_resource/";
 
-function form_form(type) {
+function form_form(type, id) {
   var self = this;
   self.type = type;
   self.toString = function(){ return 'Edit '+type; }
@@ -11,7 +11,7 @@ function form_form(type) {
     return $el;
   }
 
-  var _id = null;
+  var _id = id;
   var _created = null;
   var _modified = null;
   var idx = {};
@@ -108,42 +108,46 @@ function form_form(type) {
     }
   }
 
-  self.init = function (id) {
-    _id = id;
-    var url = '/cms/get/' + type;
-    if (id)
-      url += '/' + id;
-    $$ajax(url).done(function (o) {
-      set_meta(o.form);
-      self.data = o.object;
-    });
-
-    $save.click(function () {
+  self.url = function()
+  {
       var url = '/cms';
       if (id)
         url += '/update/' + type + '/' + id;
       else
         url += '/create/' + type;
-      $.ajax({
-        url: url,
-        data: { val: JSON.stringify(self.data) },
-        method: 'post',
-        success: function (o) {
-          if (o.name && o.name.indexOf("Error") != -1)
-            self.error(o);
-          else {
-            self.update(o);
-          }
-        },
-        error: function (o) {
-          console.error(o);
-        }
-      })
-    });
-    $delete.click(function(){
-      self.emit('close', self.data);
-    })
+    return url;
   }
+
+  var url = '/cms/get/' + type;
+  if (id)
+    url += '/' + id;
+
+  $$ajax(url).done(function (o) {
+    set_meta(o.form);
+    self.data = o.object;
+  });
+
+  $save.click(function () {
+    $.ajax({
+      url: self.url(),
+      data: { val: JSON.stringify(self.data) },
+      method: 'post',
+      success: function (o) {
+        if (o.name && o.name.indexOf("Error") != -1)
+          self.error(o);
+        else {
+          self.update(o);
+        }
+      },
+      error: function (o) {
+        console.error(o);
+      }
+    })
+  });
+
+  $delete.click(function(){
+    self.emit('close', self.data);
+  });
 }
 
 

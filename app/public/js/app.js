@@ -9,14 +9,12 @@ function form(type) {
   });
   ff.add_listener('create', function (f, o) {
     var ff = form(o.type);
-    ff.init();
     ff.add_listener('close', function (e, r) {
       add_object(o.field, r);
     });
   });
   ff.add_listener('select', function (f, o) {
-    var ff = form(o.type);
-    ff.init(o.id);
+    var ff = form(o.type, o.id);
     ff.add_listener('close', function (e, r) {
       update_object(o.field, r);
     });
