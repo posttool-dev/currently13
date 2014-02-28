@@ -10,6 +10,7 @@ var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
 
 var use_existing_images = true; // false will destroy images at cloudinary & table of resources
 
+
 exports.migrate_data = function () {
   if (use_existing_images)
     migrate0();
@@ -18,6 +19,7 @@ exports.migrate_data = function () {
       process_list(items.resources, delete_resource, migrate_delete_resources0, 20);
     }, {max_results: 500});
 }
+
 
 function migrate_delete_resources0() {
   var R = mongoose.model('Resource');
@@ -28,6 +30,7 @@ function migrate_delete_resources0() {
   });
 }
 
+
 function migrate0() {
   console.log('Reading CSVs');
   fs.readdir(path, function (err, files) {
@@ -35,36 +38,27 @@ function migrate0() {
   });
 }
 
+
 function migrate1()
 {
   process_list(data['Resource'].array, create_resource, migrate2, 20);
 }
 
+
 function migrate2()
 {
-  var R = mongoose.model('Inventory');
-  R.find().remove(function (err, c) {
-    process_list(data['Inventory'].array,
-      function(e, next){ create('Inventory', e, next);},
-      migrate3);
+  var e = ['Inventory','Artist', 'Catalog','Contact','Essay','Exhibition','News','Page'];
+  process_list(e, function (e, next) {
+    repopulate(e, next);
+  }, function () {
+    'hey now'
   });
 }
 
-function migrate3()
-{
-  var R = mongoose.model('Artist');
-  R.find().remove(function (err, c) {
-    process_list(data['Artist'].array,
-      function(e, next){
-        create('Artist', e, next);},
-      migrate4);
-  });
 
-}
 
-function migrate4()
-{
-}
+
+
 
 function migraten(d)
 {
@@ -79,6 +73,19 @@ function migraten(d)
       console.error(e);
     }
   }
+}
+
+
+function repopulate(type, complete)
+{
+  var R = mongoose.model(type);
+  R.find().remove(function (err, c) {
+  console.log('Repopulating '+type+' ... removed '+c+' old records.');
+    process_list(data[type].array,
+      function(e, next){
+        create(type, e, next);},
+      complete);
+  });
 }
 
 
@@ -150,6 +157,7 @@ function create_resource(rd, next) {
   });
 }
 
+
 function delete_resource(r, next)
 {
   if (r && r.public_id)
@@ -165,6 +173,7 @@ function delete_resource(r, next)
   }
 }
 
+
 function create(type, data, next)
 {
   var i = create_model(type, data);
@@ -175,6 +184,7 @@ function create(type, data, next)
     next();
   });
 }
+
 
 function create_model(type, data)
 {
@@ -188,6 +198,7 @@ function create_model(type, data)
       model[p] = get_field_val(info[p], data[p]);
   return model;
 }
+
 
 function get_field_val(meta, sval)
 {
@@ -230,6 +241,10 @@ function get_ref_val(ref_str)
     return null;
   }
 }
+
+
+
+
 
 
 /* helper for processing lists sequentially */
