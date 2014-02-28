@@ -485,7 +485,11 @@ var form_fields = {
 
     function update_ui() {
       $info.empty();
-      get_upload_row(_d);
+      // if (is_array)
+      for (var i=0; i<_d.length; i++)
+        get_upload_row(_d[i]);
+      // else
+      //   get_upload_row(_d);
       if (_d)
         $btn.hide();
       else
@@ -496,7 +500,7 @@ var form_fields = {
       if (!row || !row.meta)
         return;
       var $e = $$('resource');
-      $e.append(row.meta.thumb);
+      $e.append('<img src="'+row.meta.thumb+'">');
       var $x = $("<div>x</div>");
       $x.click(function () {
         $$ajax(delete_url + row._id).done(function () {

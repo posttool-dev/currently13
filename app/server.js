@@ -40,7 +40,8 @@ function init_app() {
       api_secret: 'nJpv1R7U_-uhuvxiaJar8ihqUBg' });
   });
 
-  hmm.migrate_data();
+  //hmm.migrate_data();
+
   // General
 
   // move session message to request locals

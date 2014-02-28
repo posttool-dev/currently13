@@ -9,6 +9,7 @@ var data = {};
 var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
 
 var use_existing_images = true; // false will destroy images at cloudinary & table of resources
+
 exports.migrate_data = function () {
   if (use_existing_images)
     migrate0();
