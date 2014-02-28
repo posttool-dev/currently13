@@ -14,11 +14,10 @@ exports.init = function (config, resource_class_name, user_class_name) {
   meta.init(config, resource_class_name, user_class_name);
 }
 
+exports.meta = meta;
 
 
 
-
-// setup chain
 
 /* put the meta info in every request */
 
@@ -59,8 +58,6 @@ expand = function(schema, model, id, next)
   if (refs)
     q.populate(meta.get_names(refs).join(" "));
   q.exec(function (err, m) {
-    if (!err)
-      add_previews(m, refs);
     next(err, m);
   });
 }
@@ -168,24 +165,12 @@ exports.form =
 
 // image and resource handling
 
-add_previews = function(object, refs)
-{
-  if (!object)
-    return;
-  for (var i = 0; i < refs.length; i++) {
-    if (refs[i].ref == 'Resource') {
-      add_preview(object[refs[i].name]);
-    }
-  }
-};
 
-
-add_preview = function(r)
+exports.get_preview_url = function(r)
 {
-    if (r && r.meta)
-    {
-      r.meta.thumb = cloudinary.url(r.meta.public_id + ".jpg", { width: 100, height: 150, crop: "fill" });
-    }
+  if (!r || !r.meta || !r.meta.public_id)
+    return null;
+  return cloudinary.url(r.meta.public_id + ".jpg", { width: 200, height: 150 });
 };
 
 
@@ -199,26 +184,13 @@ exports.upload = function (req, res) {
     r.size = file.size;
     r.creator = req.session.user._id;
     r.meta = e;
+    r.meta.thumb = exports.get_preview_url();
     r.save(function (err, s) {
-      s.meta.thumb = cloudinary.image(e.public_id + "." + e.format, { width: 100, height: 150, crop: "fill" })
       res.json(s);
     });
   };
   if (use_gfs) {
-    var ws = gfs.createWriteStream({ filename: file.path });
-    ws.on('error', function (e) {
-      res.send('ERR');
-    });
-    var rs = fs.createReadStream(file.path);
-    rs.on('open', function () {
-      rs.pipe(ws);
-    });
-    rs.on('end', function () {
-      do_save(null);
-    });
-    rs.on('error', function (e) {
-      res.send('ERR');
-    });
+    save_gfs(file, do_save);
   }
   else {
     var imageStream = fs.createReadStream(file.path, { encoding: 'binary' });
@@ -263,5 +235,24 @@ exports.download = function (req, res) {
   });
 };
 
+
+function save_gfs(file, next)
+{
+    var ws = gfs.createWriteStream({ filename: file.path });
+    ws.on('error', function (e) {
+      next(e);
+    });
+    var rs = fs.createReadStream(file.path);
+    rs.on('open', function () {
+      rs.pipe(ws);
+    });
+    rs.on('end', function () {
+      next(null);
+    });
+    rs.on('error', function (e) {
+      next(e);
+    });
+
+}
 
 

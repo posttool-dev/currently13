@@ -220,7 +220,7 @@ create_browse_info = function(type)
   var s = [];
   for (var p in si)
   {
-    s.push({name: si[p].name, cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"})
+      s.push({name: si[p].name, cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"})
   }
   return s;
 }
@@ -233,7 +233,12 @@ create_form_info = function(type)
   var s = [];
   for (var p in si)
   {
-    s.push({name: si[p].name, widget: "input"});
+    if (p == 'creator' || p == 'created' || p == 'modified' || p == 'state')
+      continue;
+    if (si[p].type == 'Reference')
+      s.push({name: si[p].name, widget: "choose_create", options: {type: si[p].ref, array: si[p].is_array}});
+    else
+      s.push({name: si[p].name, widget: "input"});
   }
   return s;
 }

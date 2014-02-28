@@ -3,7 +3,7 @@ var csv = require('csv');
 var mongoose = require('mongoose');
 var cloudinary = require('cloudinary');
 
-var meta = require('../modules/cms/meta');
+var cms = require('../modules/cms');
 
 var data = {};
 var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
@@ -146,7 +146,7 @@ function create_resource(rd, next) {
           r.filename = x;
           r.path = p;
           r.meta = e;
-          r.meta.thumb = cloudinary.url(e.public_id + "." + e.format, { width: 300, height: 200, crop: "fill" })
+          r.meta.thumb = cms.get_preview_url(r);
           r.save(function (err, r) {
             rd.model = r;
             console.log(r.meta.public_id, r.meta.thumb);
@@ -190,7 +190,7 @@ function create_model(type, data)
 {
   var M = mongoose.model(type);
   var model = new M();
-  var info = meta.info(type);
+  var info = cms.meta.info(type);
   for (var p in info)
     if (p == 'creator' || p == 'modified' || p == 'created')
       continue;
