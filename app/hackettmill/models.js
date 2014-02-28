@@ -162,7 +162,7 @@ exports.models = {
       title: String,
       subtitle: String,
       images: [
-        {type: ObjectId, ref: 'Resource'}
+        {type: ObjectId, ref: 'Inventory'}
       ],
       start_date: Date,
       end_date: Date,

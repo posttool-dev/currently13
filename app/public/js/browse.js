@@ -31,7 +31,7 @@ function browse_browse(type, filters, order, page, pagesize) {
       return $el;
     $el = $$('browser');
 
-    var $controls = $$('browse-controls', {parent: $el});
+    var $controls = $$('browse-controls', {parent: $(document.body)});
 //    var $title = $$('title', {el: 'span', parent: $controls}).text('Browse ' + type);
 
     $filters = $$('filters', {parent: $controls});

@@ -16,7 +16,7 @@ function form_form(type, id) {
   var _modified = null;
   var idx = {};
 
-  var $controls = $$('form-controls', {parent: $el});
+  var $controls = $$('form-controls', {parent: $(document.body)});
 //  var $title = $$('title', {el: 'span', parent: $controls}).text(type);
   var $save = $$('btn btn-primary', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
   var $time = $$('time', {el: 'span', parent: $controls}).text('Last modified...');

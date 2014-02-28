@@ -3,7 +3,7 @@ var csv = require('csv');
 var mongoose = require('mongoose');
 var cloudinary = require('cloudinary');
 
-var cms = require('../modules/cms');
+var cms = require('../modules/cms'), process_list = cms.utils.process_list;
 
 var data = {};
 var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
@@ -56,24 +56,6 @@ function migrate2()
 }
 
 
-
-
-
-
-function migraten(d)
-{
-  for (var p in d)
-  {
-    console.log(p);
-    try {
-      var M = mongoose.model(p);
-      console.log(M.modelName);
-
-    } catch(e){
-      console.error(e);
-    }
-  }
-}
 
 
 function repopulate(type, complete)
@@ -176,18 +158,6 @@ function delete_resource(r, next)
 
 function create(type, data, next)
 {
-  var i = create_model(type, data);
-  i.save(function (err, i) {
-    if (err)
-      console.log(err);
-    data.model = i;
-    next();
-  });
-}
-
-
-function create_model(type, data)
-{
   var M = mongoose.model(type);
   var model = new M();
   var info = cms.meta.info(type);
@@ -196,8 +166,15 @@ function create_model(type, data)
       continue;
     else if (data[p])
       model[p] = get_field_val(info[p], data[p]);
-  return model;
+  model.save(function (err, i) {
+    if (err)
+      console.log(err);
+    data.model = i;
+    next();
+  });
 }
+
+
 
 
 function get_field_val(meta, sval)
@@ -219,7 +196,11 @@ function get_field_val(meta, sval)
       else
         return get_ref_val(sval);
     case 'Date':
-      return new Date(sval);
+      var d = sval.split('.');
+      var d6 = d[5].split(' ');
+      var dd = new Date(Number(d[0]),Number(d[1])-1,Number(d[2]),Number(d[3]),Number(d[4]),Number(d6[0]));
+      console.log(d, dd, d6);
+      return dd;
     case 'Number':
       return Number(sval);
     case 'Boolean':
@@ -247,32 +228,5 @@ function get_ref_val(ref_str)
 
 
 
-/* helper for processing lists sequentially */
+/* helper for processing lists sequentially - move to cms utils */
 
-function process_list(list, target, complete, concurrent)
-{
-  if (!list || list.length == 0)
-  {
-    complete();
-    return;
-  }
-  var c = concurrent ? concurrent : 1;
-  var i = 0;
-  var k = 0;
-  var ff = function(){
-    for (var j=0; j<c && i+j<list.length; j++) f();
-  }
-  var f = function()
-  {
-    var item = list[i];
-    target(item, function(){
-      k++;
-      if (k < list.length)
-        ff();
-      else
-        complete();
-    });
-    i++;
-  }
-  ff();
-}

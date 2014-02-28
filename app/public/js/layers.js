@@ -112,7 +112,7 @@ function layers_layers(){
 
   function init_nav()
   {
-    $("#tool-bar").hover(function () {
+    dhova(400, $("#tool-bar"), function () {
         var c = $el.children();
         for (var i = 0; i < c.length; i++) {
           var $c = $(c[i]);
@@ -125,6 +125,27 @@ function layers_layers(){
           var $c = $(c[i]);
           $c.transition({x: 0});
         }
+      });
+  }
+
+  //
+  function dhova(entasis, $e, a, b) {
+    var id = -1;
+    $e.hover(function () {
+        if (id != -1)
+          return;
+        id = setTimeout(function () {
+          id = -1;
+          a();
+        }, entasis);
+      },
+      function () {
+        if (id != -1) {
+          clearTimeout(id);
+          id = -1;
+          return;
+        }
+        b();
       })
   }
 }

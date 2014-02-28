@@ -4,6 +4,7 @@ var mongoose = require('mongoose');
 var gfs = null, Grid = require('gridfs-stream');
 var cloudinary = require('cloudinary');
 var meta = require('./meta');
+var utils = require('./utils');
 var use_gfs = false;
 
 Grid.mongo = mongoose.mongo;
@@ -15,7 +16,7 @@ exports.init = function (config, resource_class_name, user_class_name) {
 }
 
 exports.meta = meta;
-
+exports.utils = utils;
 
 
 
