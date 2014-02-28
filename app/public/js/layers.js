@@ -1,11 +1,10 @@
-
-
 function layers_layers(){
   var self = this;
   var $el = $$('layers');
   self.$el = function(){
     return $el;
   }
+  init_nav();
 
   self.add_layer = function(f)
   {
@@ -23,8 +22,15 @@ function layers_layers(){
     $c.append(f.$el());
     $layer.append($lens, $c);
     $el.append($layer);
+    $layer.transition({x: 0});
+    history_push();
     update_ui();
-    history.pushState(f.url(), f.toString(), f.url());
+
+  }
+
+  self.size = function()
+  {
+    return $el.children().length;
   }
 
   self.is_empty = function()
@@ -54,17 +60,17 @@ function layers_layers(){
 
   self.pop_layer = function()
   {
-    $el.children().last().remove();
+    pop_child();
+    history_push();
     update_ui();
   }
 
   self.pop_to = function (url) {
     var i = self.find(url);
-    var c = $el.children();
-    var x = c.length - i - 1;
-    console.log('popto', x);
+    var x = $el.children().length - i - 1;
     for (var i=0; i<x; i++)
-      c.last().remove();
+      pop_child();
+    history_push();
     update_ui();
   }
 
@@ -72,7 +78,6 @@ function layers_layers(){
     var c = $el.children();
     for (var i = 0; i < c.length; i++) {
       var $c = $(c[i]);
-//      $c.find('.c').css({left: (i * 5) + '%', width: (100 - i * 5) + '%'});
       if (i == c.length - 1)
         $c.css({position: 'absolute'});
       else
@@ -81,14 +86,45 @@ function layers_layers(){
 
     var $x = $("#extra-options");
     $x.empty();
-    for (var i = 0; i < c.length; i++)
-    {
-      var d = $(c[i]).data('__obj__');
-      $x.append('<i class="fa fa-angle-right"></i> ' + d.toString() + ' ');
+    for (var i = 0; i < c.length; i++) {
+      var f = $(c[i]).data('__obj__');
+      (function (f) {
+        var $r = $('<span class="nav-item"><i class="fa fa-angle-right"></i> ' + f.toString()+'</span>');
+        $r.click(function () {
+          self.pop_to(f.url())
+        });
+        $x.append($r);
+      })(f);
     }
+  }
 
-    setTimeout(function () {
-      update_ui();
-    }, 1500);
+  function history_push()
+  {
+    var f = $el.children().last().data('__obj__');
+    history.pushState(f.url(), f.toString(), f.url());
+  }
+
+  function pop_child()
+  {
+    var $c = $($el.children().last());
+    $c.remove();
+  }
+
+  function init_nav()
+  {
+    $("#tool-bar").hover(function () {
+        var c = $el.children();
+        for (var i = 0; i < c.length; i++) {
+          var $c = $(c[i]);
+          $c.transition({x: i * 100});
+        }
+      },
+      function () {
+        var c = $el.children();
+        for (var i = 0; i < c.length; i++) {
+          var $c = $(c[i]);
+          $c.transition({x: 0});
+        }
+      })
   }
 }

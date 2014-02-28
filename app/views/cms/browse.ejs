@@ -1,19 +1,5 @@
 <% include ../head %>
-
-<script src="/js/util.js"></script>
-<script src="/js/layers.js"></script>
-<script src="/js/form.js"></script>
-<script src="/js/browse.js"></script>
-<script src="/js/app.js"></script>
-
-<script src="/js/lib/ck/ckeditor.js"></script>
-<script src="/js/lib/codemirror.js"></script>
-<script src="/js/lib/jquery.fileupload.js"></script>
-<script src="/js/lib/jquery.iframe-transport.js"></script>
-
-<link href="/css/upload.css" rel="stylesheet">
-<link href="/css/codemirror.css" rel="stylesheet">
-
+<% include head %>
 <% include ../head1 %>
 <% include ../nav %>
 
@@ -50,24 +36,27 @@
                 });
             }
         });
-        layers.add_layer(browser, '/cms/browse/<%= type %>');
+        layers.add_layer(browser);
     }
 
     var type = "<%= type %>";
     window.addEventListener("popstate", function(e) {
         var s = e.state ? e.state : location.pathname;
-        if (layers.is_empty())
+        var f = layers.find(s) ;
+        if (f != -1)
         {
-            add_root_browser(type);
-        }
-        else if (layers.find(s) != -1)
-        {
-            layers.pop_to(s);
+            console.log('found', e.state);
+            if (f==0 && layers.size() == 1)
+                history.back();
+            else
+                layers.pop_to(s);
         }
         else
         {
+            console.log('create',e.state)
             layers.clear_layers();
-            var p = s.split('/');
+            var p = s.substring(1).split('/');
+            console.log(p);
             if (p[1] == 'browse')
                 add_root_browser(p[2])
             else if (p[1] == 'create')
