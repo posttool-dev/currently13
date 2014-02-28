@@ -39,30 +39,31 @@ function migrate1()
   process_list(data['Resource'].array, create_resource, migrate2, 20);
 }
 
-function migrate2()
-{
+function migrate2() {
   var R = mongoose.model('Inventory');
   R.find().remove(function (err, c) {
     process_list(data['Inventory'].array,
-      function(e, next){ create('Inventory', e, next);},
+      function (e, next) {
+        create('Inventory', e, next);
+      },
       migrate3);
   });
 }
 
-function migrate3()
-{
+function migrate3() {
   var R = mongoose.model('Artist');
   R.find().remove(function (err, c) {
     process_list(data['Artist'].array,
-      function(e, next){
-        create('Artist', e, next);},
+      function (e, next) {
+        create('Artist', e, next);
+      },
       migrate4);
   });
-
 }
 
 function migrate4()
 {
+  console.log('dun')
 }
 
 function migraten(d)
@@ -224,6 +225,7 @@ function get_ref_val(ref_str)
   try {
     var vtype = vv[0].trim();
     var vid = vv[1].trim();
+    console.log(data[vtype].map[vid].model);
     return data[vtype].map[vid].model;
   } catch (e) {
     return null;

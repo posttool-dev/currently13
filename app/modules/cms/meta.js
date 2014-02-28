@@ -41,6 +41,8 @@ exports.form = function(type)
 
 exports.schema = function(type)
 {
+  if (!Meta[type])
+    throw new Error('no such type '+type);
   return Meta[type].schema;
 };
 

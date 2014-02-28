@@ -1,5 +1,5 @@
-function form(type) {
-  var ff = new form_form(type);
+function form(type, id) {
+  var ff = new form_form(type, id);
   ff.add_listener('browse', function (f, o) {
     var bb = new browse_browse(o.type);
     bb.add_listener('select', function (e, r) {

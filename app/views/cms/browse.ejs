@@ -48,11 +48,13 @@
             });
         }
     });
-    layers.add_layer(browser, '/cms/browse/<%= type %>');
+    layers.add_layer(browser);
 
-//    window.addEventListener("popstate", function(e) {
-//        layers.pop_layer();
-//    });
+    window.addEventListener("popstate", function(e) {
+        if (e.state == 1)
+            layers.pop_layer();
+
+    });
 
 
 

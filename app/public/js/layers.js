@@ -26,7 +26,8 @@ function layers_layers(){
     $layer.append($lens, $c);
     $el.append($layer);
     update_ui();
-    history.pushState(null, f.toString(), f.url());
+//    if ($el.children().length > 1)
+      history.pushState(1, f.toString(), f.url());
   }
 
   self.pop_layer = function()

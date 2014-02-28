@@ -132,7 +132,8 @@ function browse_browse(type, filters, order, page, pagesize) {
           u = v[0].meta.thumb;
         else if (v.meta)
           u = v.meta.thumb;
-        $c.append('<img src="'+u+'">');
+        if (u)
+          $c.append('<img src="'+u+'">');
       }
       else
         $c.text(v);
