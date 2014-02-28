@@ -6,7 +6,24 @@ html {
 * {
     font-family: 'Helvetica Neue', sans-serif;
     letter-spacing: .02em;
+        -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+
 }
+
+/*Webkit: prevent flickers
+Having flickering problems in Webkit? Use -webkit-backface-visibility. See this question for some discussions on this.
+*/
+.box {
+  -webkit-backface-visibility: hidden;
+}
+.box {
+  -webkit-transition: translate3d(0,0,0);
+}
+
+
+
 
 body {
     background-color: #fff;
@@ -35,11 +52,7 @@ input.small {
     width: 100px;
 }
 
-input, button {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-}
+
 
 a {
     color: #48adff;
@@ -67,8 +80,7 @@ button:disabled {
 }
 
 .btn-right {
-    position: fixed;
-    right: 20px;
+   float: right;
 }
 
 .padded {
@@ -96,6 +108,8 @@ button:disabled {
     z-index: 99999919199991991991;
 }
 
+
+
 .options {
     font-size: 18px;
     padding: 9px 0 0 20px;
@@ -104,6 +118,13 @@ button:disabled {
 #extra-options {
 }
 
+.nav-item {
+    padding-right: 10px;
+    cursor:pointer;
+}
+.nav-item:hover {
+    color: #48adff;
+}
 .user {
     position: fixed;
     top: 12px;
@@ -116,22 +137,23 @@ button:disabled {
     font-size: 20px;
 }
 
-/* form */
 
-.form .form {
-}
-
-.form-controls {
-    position: fixed;
-    top: 40px;
-    left: 0;
+.form-controls, .browse-controls {
+    position:relative;
     width: 100%;
     height: 35px;
     background-color: #fff;
     color: #333;
     border-bottom: 1px solid #ccc;
-    padding: 8px 25px 0 20px;
+    padding: 3px 0 0 0;
 }
+
+
+/* form */
+
+.form .form {
+}
+
 
 .control-group {
     padding-top: 20px;
@@ -154,8 +176,7 @@ button:disabled {
 
 .model {
     width: 300px;
-    height: 30px;
-    padding: 8px;
+    padding: 8px 12px 24px 8px;
     margin: 5px 0 5px 0;
     font-size: 12px;
     background-color: #48adff;
@@ -164,6 +185,8 @@ button:disabled {
 }
 
 /* browser */
+
+
 .browser {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -173,17 +196,7 @@ button:disabled {
     user-select: none;
 }
 
-.browse-controls {
-    position: fixed;
-    top: 40px;
-    left: 0;
-    width: 100%;
-    height: 35px;
-    background-color: #fff;
-    color: #333;
-    border-bottom: 1px solid #ccc;
-    padding: 8px 25px 0 20px;
-}
+
 
 .title {
     float: left;
@@ -237,7 +250,7 @@ button:disabled {
 .hcol, .ccol {
     float: left;
     border-left: 1px solid #ddd;
-    padding: 4px 2px 4px 4px;
+    padding: 13px 8px 8px 8px;
 }
 
 .hcol {
@@ -247,6 +260,7 @@ button:disabled {
 
 .ccol {
     font-size: 12px;
+
 }
 
 .over {
@@ -304,7 +318,7 @@ button:disabled {
 
 .layer {
     position: absolute;
-    top: 30px;
+    top: 40px;
     left: 0px;
     width: 100%;
     height: 100%;
@@ -320,11 +334,8 @@ button:disabled {
 }
 
 .c {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-    position: relative;
-    padding: 70px 20px 40px 20px;
+    position:relative;
+    padding: 0px 20px 40px 20px;
     background-color: white;
     -webkit-box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);
     -moz-box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);

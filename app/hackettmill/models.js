@@ -34,7 +34,7 @@ exports.models = {
         {name: "code", widget: "input", options: {className: "large", width: "20%"}},
       {end: "row" },
       {begin: "row"},
-        {name: "resources", widget: "upload", options: {type: "Resource"}},
+        {name: "resources", widget: "upload", options: {type: "Resource", array: true}},
       {end: "row" },
       {name: "description", widget: "rich_text"},
       {begin: "section"},

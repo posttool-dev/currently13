@@ -564,11 +564,10 @@ var form_fields = {
     });
     function update_ui() {
       $el.empty();
-      $el.append("<span class='nowrap'>"+_d.title+"</span>");
+      $el.append(_d.title);
     }
 
     $el.dblclick(function () {
-      console.log(self.data)
       self.emit('select', self.data);
     })
   },
@@ -580,7 +579,7 @@ var form_fields = {
       return $el;
     };
 
-    var f = new form_fields.add_remove(form_fields.model_field);
+    var f = new form_fields.add_remove(form_fields.model_field, options);
     f.bubble_listener(self);
     $el.append(f.$el());
 
@@ -625,7 +624,7 @@ var form_fields = {
     };
 
     var $list = $("<div></div>");
-    options = $.extend({add: true, browse: true}, options);
+    options = $.extend({add: true, browse: true, array: true}, options);
     var $actions = $("<div></div>");
     var $add = $("<span><i class='fa fa-plus-circle'></i> create</span>").css({'cursor': 'pointer'});
     var $browse = $("<span><i class='fa fa-play-circle '></i> browse</span>").css({'cursor': 'pointer'});
@@ -647,20 +646,29 @@ var form_fields = {
 
     Object.defineProperty(this, "data", {
       get: function () {
-        var vals = [];
-        $list.children().each(function (i, e) {
-          var o = $(e).data("__obj__");
-          vals.push(o.data._id);
-        });
-        return vals;
+        if (options.array) {
+          var vals = [];
+          $list.children().each(function (i, e) {
+            var o = $(e).data("__obj__");
+            vals.push(o.data._id);
+          });
+          return vals;
+        } else {
+          $list.children().each(function (i, e) {
+            var o = $(e).data("__obj__");
+            return o.data._id;
+          });
+        }
       },
       set: function (o) {
         $list.empty();
         if (!o)
           return;
-        for (var i = 0; i < o.length; i++) {
-          self.push(o[i]);
-        }
+        if (options.array)
+          for (var i = 0; i < o.length; i++)
+            self.push(o[i]);
+        else
+            self.push(o);
       }
     });
 

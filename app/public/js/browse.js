@@ -158,7 +158,7 @@ function browse_browse(type, filters, order, page, pagesize) {
     $pager.empty();
     $pager.append('<span>'+ total +' total </span>');
     if (total > pagesize)
-      for (var i = 0; i < total / pagesize; i++)
+      for (var i = Math.max(0, page - 1); i < Math.min(page + 2, total / pagesize); i++)
         $pager.append(make_page(i, total));
 //    $pager.append('<span> <button>&gt;</button>  </span>');
 //    var top = Math.min(page*pagesize+pagesize, total);
