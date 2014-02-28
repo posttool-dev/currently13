@@ -23,6 +23,16 @@ exports.init = function (meta, resource_class_name, user_class_name) {
     var schema = mongoose.Schema(schema_data);
     add_fields_and_methods(schema, p);
     meta[p].schema = schema;
+    if (!meta[p].browse)
+    {
+      meta[p].browse = create_browse_info(p);
+      console.log('Added generated browse for '+p);
+    }
+    if (!meta[p].form)
+    {
+      meta[p].form = create_form_info(p);
+      console.log('Added generated form for '+p);
+    }
     console.log(">", p);
   }
   Resource = mongoose.model(resource_class_name, Meta[resource_class_name].schema);
@@ -31,11 +41,15 @@ exports.init = function (meta, resource_class_name, user_class_name) {
 
 exports.browse = function(type)
 {
+  if (!Meta[type])
+    throw new Error('no '+type);
   return Meta[type].browse;
 };
 
 exports.form = function(type)
 {
+  if (!Meta[type])
+    throw new Error('no '+type);
   return Meta[type].form;
 };
 
@@ -110,7 +124,8 @@ exports.get_schema_info = function(schema)
 {
   var d = {};
   schema.eachPath(function (path, mtype) {
-    d[path] = get_path_info(path, mtype);
+    if (path.charAt(0)!='_')
+      d[path] = get_path_info(path, mtype);
   });
   return d;
 }
@@ -191,3 +206,44 @@ exports.get_names = function (field_info) {
     return elem.name;
   });
 };
+
+
+
+
+
+
+/// default form/browser meta data
+
+create_browse_info = function(type)
+{
+  var si = exports.get_schema_info(Meta[type].schema);
+  var s = [];
+  for (var p in si)
+  {
+    s.push({name: si[p].name, cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"})
+  }
+  return s;
+}
+
+
+
+create_form_info = function(type)
+{
+  var si = exports.get_schema_info(Meta[type].schema);
+  var s = [];
+  for (var p in si)
+  {
+    s.push({name: si[p].name, widget: "input"});
+  }
+  return s;
+}
+
+
+/*
+
+      {name: "title", widget: "input"},
+      {name: "subtitle", widget: "input"},
+      {name: "body", widget: "rich_text"},
+      {name: "pages", widget: "choose_create", options: {type: "Page", array: true}}
+
+ */
