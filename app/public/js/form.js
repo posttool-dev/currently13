@@ -50,7 +50,7 @@ function form_form(type, id) {
   }
 
   function create_field(d) {
-    var f = new indicated_field(d.name, d.label ? d.label : d.name, d.widget);
+    var f = new indicated_field(d);
     f.add_listener('change', function () {
       $save.prop('disabled', false);
       self.emit('change');
@@ -151,9 +151,12 @@ function form_form(type, id) {
 }
 
 
-function indicated_field(name, label, type)//, settings_callback)
+function indicated_field(d)//, settings_callback)
 {
   var self = this;
+  var name = d.name;
+  var label = d.label ? d.label : d.name;
+  var type = d.widget;
   var $el = $$('control-group');
   self.$el = function () {
     return $el;
@@ -163,7 +166,7 @@ function indicated_field(name, label, type)//, settings_callback)
   var $label = $('<label></label>').addClass('control-label').attr('for', name).text(label);
   if (!form_fields[type + "_field"])
     throw Error("no field for " + type);
-  var field = new form_fields[type + "_field"]();
+  var field = new form_fields[type + "_field"](d.options);
   form_make_listener(field);
   field.bubble_listener(self);
   self.field = field;
@@ -246,23 +249,12 @@ function indicated_field(name, label, type)//, settings_callback)
 }
 
 
-function form_field_create(self, $el, tag_name, clz) {
-  if (typeof $el != 'undefined' && $el != null)
-    return $el;
-  tag_name = tag_name || "div";
-  $el = $("<" + tag_name + "/>");
-  $el.data('__obj__', self);
-  if (clz)
-    $el.addClass(clz);
-  return $el;
-}
-
 
 var form_fields = {
 
-  boolean_field: function ($el) {
+  boolean_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field boolean');
+    var $el = $$('field boolean');
     self.$el = function () {
       return $el;
     }
@@ -294,9 +286,9 @@ var form_fields = {
     });
   },
 
-  number_field: function ($el) {
+  number_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field number');
+    var $el = $$('field number');
     this.$el = function () {
       return $el;
     }
@@ -325,9 +317,9 @@ var form_fields = {
     });
   },
 
-  input_field: function ($el) {
+  input_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field string');
+    var $el = $$('field string');
     this.$el = function () {
       return $el;
     }
@@ -357,10 +349,10 @@ var form_fields = {
   },
 
 
-  code_field: function ($el) {
+  code_field: function (options) {
     // super
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field code');
+    var $el = $$('field code');
     self.$el = function () {
       return $el;
     }
@@ -391,9 +383,9 @@ var form_fields = {
 
   },
 
-  rich_text_field: function ($el, props) {
+  rich_text_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field rich-text');
+    var $el = $$('field rich-text');
     self.$el = function () {
       return $el;
     }
@@ -425,9 +417,9 @@ var form_fields = {
 
   },
 
-  date_field: function ($el) {
+  date_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field date');
+    var $el = $$('field date');
     this.$el = function () {
       return $el;
     }
@@ -455,12 +447,13 @@ var form_fields = {
     });
   },
 
-  upload_field: function ($el) {
+  upload_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field resource');
+    var $el = $$('field resource');
     this.$el = function () {
       return $el;
     }
+    console.log(options)
 
     var $progress = $$('progress');
     var $progressbar = $$('bar', { css: { width: '0%' }, parent: $progress });
@@ -474,8 +467,15 @@ var form_fields = {
     var _d = null;
     Object.defineProperty(this, "data", {
       get: function () {
-        if (_d) return _d._id;
-        return null;
+        if (!_d)
+          return null;
+        if (options.array) {
+          var v = [];
+          for (var i = 0; i < _d.length; i++)
+            v.push(_d[i]._id);
+          return v;
+        }
+        return _d._id;
       },
       set: function (n) {
         _d = n;
@@ -485,11 +485,11 @@ var form_fields = {
 
     function update_ui() {
       $info.empty();
-      // if (is_array)
-      for (var i=0; i<_d.length; i++)
-        get_upload_row(_d[i]);
-      // else
-      //   get_upload_row(_d);
+      if (options.array)
+        for (var i=0; i<_d.length; i++)
+          get_upload_row(_d[i]);
+        else
+           get_upload_row(_d);
       if (_d)
         $btn.hide();
       else
@@ -544,9 +544,9 @@ var form_fields = {
     });
   },
 
-  model_field: function ($el) {
+  model_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'span', 'model');
+    var $el = $$('model');
     form_make_listener(self);
     self.$el = function () {
       return $el;
@@ -573,14 +573,14 @@ var form_fields = {
     })
   },
 
-  choose_create_field: function ($el) {
+  choose_create_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el);
+    var $el = $$();
     this.$el = function () {
       return $el;
     };
 
-    var f = new form_fields.add_remove($el, form_fields.model_field);
+    var f = new form_fields.add_remove(form_fields.model_field);
     f.bubble_listener(self);
     $el.append(f.$el());
 
@@ -600,7 +600,7 @@ var form_fields = {
 
   many_reference_field: function ($el) {
     $el = form_field_create(self, $el);
-    var f = new form_fields.add_remove($el, form_fields.model_field);
+    var f = new form_fields.add_remove(form_fields.model_field);
     $el.append(f.$el());
     this.$el = function () {
       return $el;
@@ -616,10 +616,10 @@ var form_fields = {
     });
   },
 
-  add_remove: function ($el, clazz, options) {
+  add_remove: function (clazz, options) {
     var self = this;
     form_make_listener(self);
-    $el = form_field_create(self, $el);
+    var $el = $$();
     this.$el = function () {
       return $el;
     };
@@ -715,60 +715,60 @@ var form_fields = {
 
   },
 
-  group_field: function () {
-    var self = this;
-    var $el = $("<div></div>").addClass("group row");
-    this.$el = function () {
-      return $el;
-    }
-
-    var _d = {};
-    Object.defineProperty(this, "data", {
-      get: function () {
-        return _d;
-      },
-      set: function (n) {
-        _d = n;
-        update_ui();
-      }
-    });
-    function update_ui() {
-      for (var p in _c)
-        _c[p].data = _d[p];
-    }
-
-    var _c = {};
-    this.append = function (c) {
-      $el.append(c.$el());
-      _c[c.name] = _c;
-      c.change(function () {
-        _d[c.name] = c.data;
-        self.emit('change');
-      })
-    }
-
-  },
-
-  break_field: function () {
-    var $el = $("<div></div>").addClass("clearfix");
-    this.$el = function () {
-      return $el;
-    }
-
-    var _d = null;
-    Object.defineProperty(this, "data", {
-      get: function () {
-        return _d;
-      },
-      set: function (n) {
-        _d = n;
-        update_ui();
-      }
-    });
-    function update_ui() {
-    }
-
-  }
+//  group_field: function () {
+//    var self = this;
+//    var $el = $("<div></div>").addClass("group row");
+//    this.$el = function () {
+//      return $el;
+//    }
+//
+//    var _d = {};
+//    Object.defineProperty(this, "data", {
+//      get: function () {
+//        return _d;
+//      },
+//      set: function (n) {
+//        _d = n;
+//        update_ui();
+//      }
+//    });
+//    function update_ui() {
+//      for (var p in _c)
+//        _c[p].data = _d[p];
+//    }
+//
+//    var _c = {};
+//    this.append = function (c) {
+//      $el.append(c.$el());
+//      _c[c.name] = _c;
+//      c.change(function () {
+//        _d[c.name] = c.data;
+//        self.emit('change');
+//      })
+//    }
+//
+//  },
+//
+//  break_field: function () {
+//    var $el = $("<div></div>").addClass("clearfix");
+//    this.$el = function () {
+//      return $el;
+//    }
+//
+//    var _d = null;
+//    Object.defineProperty(this, "data", {
+//      get: function () {
+//        return _d;
+//      },
+//      set: function (n) {
+//        _d = n;
+//        update_ui();
+//      }
+//    });
+//    function update_ui() {
+//    }
+//
+//  }
 }
 
 
