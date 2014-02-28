@@ -32,27 +32,50 @@
 
 
     var layers = new layers_layers();
-    var browser = new browse_browse("<%= type %>");
-    browser.add_listener('select', function (f, r) {
-        if (ctrlKeyDown)
+    function add_root_browser(type)
+    {
+        var browser = new browse_browse(type);
+        browser.add_listener('select', function (f, r) {
+            if (ctrlKeyDown)
+            {
+                var url = '/cms/update/' + type + '/' + r._id;
+                var win = window.open(url, ctrlKeyDown ? '_blank' : '_self');
+                win.focus();
+            }
+            else
+            {
+                var ff = form(type, r._id);
+                ff.add_listener('close', function (e, r) {
+                   layers.pop_layer();
+                });
+            }
+        });
+        layers.add_layer(browser, '/cms/browse/<%= type %>');
+    }
+
+    var type = "<%= type %>";
+    window.addEventListener("popstate", function(e) {
+        var s = e.state ? e.state : location.pathname;
+        if (layers.is_empty())
         {
-            var url = '/cms/update/<%= type %>/' + r._id;
-            var win = window.open(url, ctrlKeyDown ? '_blank' : '_self');
-            win.focus();
+            add_root_browser(type);
+        }
+        else if (layers.find(s) != -1)
+        {
+            layers.pop_to(s);
         }
         else
         {
-            var root_form = form("<%=type%>", r._id);
-            root_form.add_listener('close', function (e, r) {
-               layers.pop_layer();
-            });
+            layers.clear_layers();
+            var p = s.split('/');
+            if (p[1] == 'browse')
+                add_root_browser(p[2])
+            else if (p[1] == 'create')
+                form(p[2])
+            else if (p[1] == 'update')
+                form(p[2], p[3]);
         }
     });
-    layers.add_layer(browser, '/cms/browse/<%= type %>');
-
-//    window.addEventListener("popstate", function(e) {
-//        layers.pop_layer();
-//    });
 
 
 

@@ -1,7 +1,5 @@
 
 
-
-
 function layers_layers(){
   var self = this;
   var $el = $$('layers');
@@ -26,12 +24,47 @@ function layers_layers(){
     $layer.append($lens, $c);
     $el.append($layer);
     update_ui();
-    history.pushState(null, f.toString(), f.url());
+    history.pushState(f.url(), f.toString(), f.url());
   }
+
+  self.is_empty = function()
+  {
+    return $el.children().length == 0;
+  }
+
+  self.find = function (url) {
+    var c = $el.children();
+    for (var i = 0; i < c.length; i++) {
+      var $c = $(c[i]);
+      var f = $c.data('__obj__');
+
+      if (url == f.url()) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  self.clear_layers = function()
+  {
+    $el.empty();
+    update_ui();
+  }
+
 
   self.pop_layer = function()
   {
     $el.children().last().remove();
+    update_ui();
+  }
+
+  self.pop_to = function (url) {
+    var i = self.find(url);
+    var c = $el.children();
+    var x = c.length - i - 1;
+    console.log('popto', x);
+    for (var i=0; i<x; i++)
+      c.last().remove();
     update_ui();
   }
 
