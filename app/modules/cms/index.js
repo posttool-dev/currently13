@@ -167,11 +167,9 @@ exports.form =
 // image and resource handling
 
 
-exports.get_preview_url = function(r)
+exports.get_preview_url = function(e)
 {
-  if (!r || !r.meta || !r.meta.public_id)
-    return null;
-  return cloudinary.url(r.meta.public_id + ".jpg", { width: 200, height: 150 });
+  return cloudinary.url(e.public_id + ".jpg", { width: 200, height: 150 });
 };
 
 
@@ -179,13 +177,14 @@ exports.upload = function (req, res) {
   var file = req.files.file;
   var do_save = function (e) {
     // create a resource with path & return id
-    var r = new Resource();
+    var r = new meta.Resource();
     r.filename = file.name;
     r.path = file.path;
     r.size = file.size;
     r.creator = req.session.user._id;
     r.meta = e;
-    r.meta.thumb = exports.get_preview_url();
+    if (e)
+      r.meta.thumb = exports.get_preview_url(e);
     r.save(function (err, s) {
       res.json(s);
     });
@@ -205,7 +204,7 @@ exports.upload = function (req, res) {
 
 
 exports.delete_resource = function (req, res) {
-  var q = Resource.findOne({_id: req.params.id});
+  var q = meta.Resource.findOne({_id: req.params.id});
   q.exec(function (err, r) {
     if (r) {
       cloudinary.uploader.destroy(r.meta.public_id, function (result) {

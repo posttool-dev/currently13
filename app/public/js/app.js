@@ -24,17 +24,17 @@ function form(type, id) {
 }
 
 function add_object(for_field, r) {
+  layers.pop_layer();
   if (r.created) {
     for_field.push(r);
     for_field.emit('change');
   }
-  layers.pop_layer();
 }
 
 function update_object(for_field, r) {
+  layers.pop_layer();
   if (r.created) {
     for_field.update(r);
     for_field.emit('change');
   }
-  layers.pop_layer();
 }

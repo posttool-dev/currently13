@@ -82,6 +82,7 @@ function layers_layers(){
         $c.css({position: 'absolute'});
       else
         $c.css({position: 'fixed'});
+      $c.css({x: 0});
     }
 
     var $x = $("#extra-options");
@@ -96,6 +97,12 @@ function layers_layers(){
         $x.append($r);
       })(f);
     }
+
+    $("#control-bar").empty();
+    var f = $el.children().last().data('__obj__');
+    if (f)
+      $("#control-bar").append(f.$controls());
+    $("#control-bar").css({x: 0});
   }
 
   function history_push()
@@ -118,6 +125,7 @@ function layers_layers(){
           var $c = $(c[i]);
           $c.transition({x: i * 100});
         }
+        $("#control-bar").transition({x: (i-1) * 100});
       },
       function () {
         var c = $el.children();
@@ -125,6 +133,7 @@ function layers_layers(){
           var $c = $(c[i]);
           $c.transition({x: 0});
         }
+        $("#control-bar").transition({x: 0});
       });
   }
 

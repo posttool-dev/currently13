@@ -16,11 +16,38 @@ function form_form(type, id) {
   var _modified = null;
   var idx = {};
 
-  var $controls = $$('form-controls', {parent: $(document.body)});
-//  var $title = $$('title', {el: 'span', parent: $controls}).text(type);
-  var $save = $$('btn btn-primary', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
-  var $time = $$('time', {el: 'span', parent: $controls}).text('Last modified...');
-  var $delete = $$('btn btn-right', {el: 'button', parent: $controls}).text('X');
+
+  self.$controls = function () {
+    var $controls = $$('form-controls');
+    //  var $title = $$('title', {el: 'span', parent: $controls}).text(type);
+    self.$save = $$('btn btn-primary', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
+    self.$time = $$('time', {el: 'span', parent: $controls});
+    update_ui();
+    var $delete = $$('btn btn-right', {el: 'button', parent: $controls}).text('X');
+    self.$save.click(function () {
+      $.ajax({
+        url: self.url(),
+        data: { val: JSON.stringify(self.data) },
+        method: 'post',
+        success: function (o) {
+          if (o.name && o.name.indexOf("Error") != -1)
+            self.error(o);
+          else {
+            self.update(o);
+            history.pushState(self.url(), self.toString(), self.url());
+
+          }
+        },
+        error: function (o) {
+          console.error(o);
+        }
+      })
+    });
+    $delete.click(function(){
+      self.emit('close', self.data);
+    });
+    return $controls;
+  }
   var $form = $$('form', {parent: $el});
 
   function set_meta(meta_data) {
@@ -52,7 +79,7 @@ function form_form(type, id) {
   function create_field(d) {
     var f = new indicated_field(d);
     f.add_listener('change', function () {
-      $save.prop('disabled', false);
+      self.$save.prop('disabled', false);
       self.emit('change');
     });
     // for reference fields
@@ -85,34 +112,34 @@ function form_form(type, id) {
         if (idx[p])
           idx[p].data = n[p];
       }
-      // todo updateui
-      if (n.modified)
-        $time.text(' Last modified ' + timeSince(new Date(n.modified)) + ' ago.');
-      else
-        $time.text(' New record.');
+      update_ui();
     }
   });
 
+  function update_ui()
+  {
+      if (_modified)
+        self.$time.text(' Last modified ' + timeSince(new Date(_modified)) + ' ago.');
+      else
+        self.$time.text(' New record.');
+
+  }
   self.error = function (o) {
-      $time.text(' ERROR - see fields for details');
+      self.$time.text(' ERROR - see fields for details');
     idx[o.path].error = JSON.stringify(o);
   }
 
   self.update = function (o) {
-    if (location.href.indexOf('cms/create') != -1)
-      location.href = '/cms/update/' + type + '/' + o._id;
-    else
-    {
-      self.data = o;
-      $save.prop('disabled', true);
-    }
+    self.data = o;
+    self.$save.prop('disabled', true);
+
   }
 
   self.url = function()
   {
       var url = '/cms';
-      if (id)
-        url += '/update/' + type + '/' + id;
+      if (_id)
+        url += '/update/' + type + '/' + _id;
       else
         url += '/create/' + type;
     return url;
@@ -127,27 +154,7 @@ function form_form(type, id) {
     self.data = o.object;
   });
 
-  $save.click(function () {
-    $.ajax({
-      url: self.url(),
-      data: { val: JSON.stringify(self.data) },
-      method: 'post',
-      success: function (o) {
-        if (o.name && o.name.indexOf("Error") != -1)
-          self.error(o);
-        else {
-          self.update(o);
-        }
-      },
-      error: function (o) {
-        console.error(o);
-      }
-    })
-  });
 
-  $delete.click(function(){
-    self.emit('close', self.data);
-  });
 }
 
 
@@ -490,13 +497,14 @@ var form_fields = {
           get_upload_row(_d[i]);
         else
            get_upload_row(_d);
-      if (_d)
+      if (_d && !options.array)
         $btn.hide();
       else
         $btn.show();
     }
 
     function get_upload_row(row) {
+      console.log(row);
       if (!row || !row.meta)
         return;
       var $e = $$('resource');
@@ -534,8 +542,11 @@ var form_fields = {
       done: function (e, edata) {
         $progress.hide();
         $info.show();
+        if (options.array)
+          _d.push(edata.result);
+        else
+          _d = edata.result;
         get_upload_row(edata.result);
-        _d = edata.result;
         self.emit('change');
       },
       error: function (e) {

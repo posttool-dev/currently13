@@ -9,7 +9,6 @@ var Meta = null;
 
 //var User = null;
 var Resource = null;
-exports.Resource = Resource;
 
 /**
  holds on to meta info
@@ -37,6 +36,7 @@ exports.init = function (meta, resource_class_name, user_class_name) {
   }
   Resource = mongoose.model(resource_class_name, Meta[resource_class_name].schema);
 //    User = mongoose.model(user_class_name, Meta[user_class_name].schema);
+exports.Resource = Resource;
 };
 
 exports.browse = function(type)

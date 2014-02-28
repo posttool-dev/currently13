@@ -105,7 +105,7 @@ button:disabled {
     background-color: #04061a;
     color: #eee;
     border-bottom: 1px solid #48adff;
-    z-index: 99999919199991991991;
+    z-index: 15;
 }
 
 
@@ -133,12 +133,9 @@ button:disabled {
     font-size: 13px;
 }
 
-.heading {
-    font-size: 20px;
-}
 
 
-.form-controls, .browse-controls {
+#control-bar {
     position: fixed;
     top: 40px;
     left: 0;
@@ -148,7 +145,14 @@ button:disabled {
     color: #333;
     border-bottom: 1px solid #ccc;
     padding: 3px 0 0 18px;
+    z-index: 12;
 }
+
+
+.heading {
+    font-size: 20px;
+}
+
 
 
 /* form */
@@ -299,7 +303,10 @@ button:disabled {
 }
 
 .order {
-    font-weight: bold;
+    font-weight: bolder;
+    color:#000;
+    letter-spacing: .1em;
+    text-decoration: underline;
 }
 
 .time {
@@ -321,8 +328,8 @@ button:disabled {
 
 .layer {
     position: absolute;
-    top: 40px;
-    left: 0px;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
 }
@@ -338,7 +345,7 @@ button:disabled {
 
 .c {
     position:relative;
-    padding: 40px 20px 40px 20px;
+    padding: 80px 20px 40px 20px;
     background-color: white;
     -webkit-box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);
     -moz-box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);
