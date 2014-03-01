@@ -51,18 +51,17 @@ exports.c = function (req, res, next) {
       if (req.virtuals)
       {
         var keys = Object.keys(req.virtuals);
-        console.log(keys)
-        for (var p in req.virtuals)
-        {
-          var q = m[p];
-          q.exec(function(err,r){
-            console.log("!!",p, err,r);
+        req.related = {};
+        utils.process_list(keys, function (e, n) {
+          var q = m[e];
+          q.exec(function (err, r) {
+            req.related[e] = r;
+            n();
           });
-        }
+        }, next);
       }
-
-
-      next();
+      else
+        next();
     }
   });
 };
@@ -150,6 +149,7 @@ exports.form =
       title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
       type: req.type,
       object: req.object || new req.model(),
+      related: req.related,
       form: req.form})
   },
 

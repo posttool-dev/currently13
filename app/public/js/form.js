@@ -152,6 +152,7 @@ function form_form(type, id) {
   $$ajax(url).done(function (o) {
     set_meta(o.form);
     self.data = o.object;
+    console.log(o.related)
   });
 
 
