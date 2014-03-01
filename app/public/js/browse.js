@@ -126,7 +126,6 @@ function browse_browse(type) {
       $lh = $e;
      update_data();
     });
-    console.log("T", m)
     return $e;
   }
 

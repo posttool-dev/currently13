@@ -460,7 +460,6 @@ var form_fields = {
     this.$el = function () {
       return $el;
     }
-    console.log(options)
 
     var $progress = $$('progress');
     var $progressbar = $$('bar', { css: { width: '0%' }, parent: $progress });
@@ -504,7 +503,6 @@ var form_fields = {
     }
 
     function get_upload_row(row) {
-      console.log(row);
       if (!row || !row.meta)
         return;
       var $e = $$('resource');
