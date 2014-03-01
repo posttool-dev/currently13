@@ -182,6 +182,11 @@ exports.models = {
         {type: ObjectId, ref: 'Essay'}
       ],
       catalog: {type: ObjectId, ref: 'Catalog'}
+    },
+    virtuals: {
+      artists: function(){
+        return mongoose.model('Artist').find({work: { $in: this.images }});
+      }
     }
   }
 }
