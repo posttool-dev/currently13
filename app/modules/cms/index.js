@@ -34,6 +34,7 @@ exports.b = function (req, res, next) {
   var type = req.params.type;
   req.type = type;
   req.schema = meta.schema(type);
+  req.virtuals = meta.virtuals(type);
   req.model = meta.model(type);
   req.browser = meta.browse(type);
   req.form = meta.form(type);
@@ -42,10 +43,25 @@ exports.b = function (req, res, next) {
 
 /* if an id was specified, find and populate a view of the model, with thumbnail references */
 exports.c = function (req, res, next) {
+
   expand(req.schema, req.model, req.params.id, function (err, m) {
     if (err) next(err);
     else {
       req.object = m;
+      if (req.virtuals)
+      {
+        var keys = Object.keys(req.virtuals);
+        console.log(keys)
+        for (var p in req.virtuals)
+        {
+          var q = m[p];
+          q.exec(function(err,r){
+            console.log("!!",p, err,r);
+          });
+        }
+      }
+
+
       next();
     }
   });

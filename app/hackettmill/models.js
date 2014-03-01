@@ -21,6 +21,11 @@ exports.models = {
       materials: String,
       dimensions: String
     },
+    virtuals: {
+      artists: function(){
+        return mongoose.model('Artist').find({work: { $in: [this. _id]}});
+      }
+    },
     browse: [
       {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},
       {name: "code", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
@@ -60,6 +65,11 @@ exports.models = {
       work: [
         {type: ObjectId, ref: 'Inventory'}
       ]
+    },
+    virtuals: {
+      exhibits: function(){
+        return mongoose.model('Exhibition').find({images: { $in: this.work }});
+      }
     },
     browse: [
       {name: "first_name", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},

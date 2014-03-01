@@ -17,11 +17,18 @@ var Resource = null;
 exports.init = function (meta, resource_class_name, user_class_name) {
   Meta = meta;
   for (var p in  meta) {
+    console.log(">", p);
     var schema_data = meta[p].schema;
     validate_meta(p, schema_data, meta[p].browse, meta[p].form);
-    var schema = mongoose.Schema(schema_data);
+    var schema = new mongoose.Schema(schema_data);
+    if (meta[p].virtuals)
+      for (var q in meta[p].virtuals)
+      {
+        schema.virtual(q).get(meta[p].virtuals[q]);
+      }
     add_fields_and_methods(schema, p);
     meta[p].schema = schema;
+    meta[p].model = mongoose.model(p, schema);
     if (!meta[p].browse)
     {
       meta[p].browse = create_browse_info(p);
@@ -32,11 +39,11 @@ exports.init = function (meta, resource_class_name, user_class_name) {
       meta[p].form = create_form_info(p);
       console.log('Added generated form for '+p);
     }
-    console.log(">", p);
   }
   Resource = mongoose.model(resource_class_name, Meta[resource_class_name].schema);
-//    User = mongoose.model(user_class_name, Meta[user_class_name].schema);
-exports.Resource = Resource;
+  exports.Resource = Resource;
+  // User = mongoose.model(user_class_name, Meta[user_class_name].schema);
+
 };
 
 exports.browse = function(type)
@@ -58,9 +65,14 @@ exports.schema = function(type)
   return Meta[type].schema;
 };
 
+exports.virtuals = function(type)
+{
+  return Meta[type].virtuals;
+};
+
 exports.model = function(type)
 {
-  return mongoose.model(type, Meta[type].schema);
+  return mongoose.model(type);
 };
 
 exports.info = function(type)
