@@ -8,16 +8,14 @@ var cms = require('../modules/cms'), process_list = cms.utils.process_list;
 var data = {};
 var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
 
-var use_existing_images = true; // false will destroy images at cloudinary & table of resources
-
+var use_existing_images = false; // false will destroy images at cloudinary & table of resources
+var prefix = 'dev0';
 
 exports.migrate_data = function () {
   if (use_existing_images)
     migrate0();
   else
-    cloudinary.api.resources(function (items) {
-      process_list(items.resources, delete_resource, migrate_delete_resources0, 20);
-    }, {max_results: 500});
+    cloudinary.api.delete_resources_by_prefix(prefix, migrate_delete_resources0);
 }
 
 
@@ -134,7 +132,7 @@ function create_resource(rd, next) {
             console.log(r.meta.public_id, r.meta.thumb);
             next();
           });
-        });
+        }, { public_id: prefix+'/'+p});
     }
   });
 }
