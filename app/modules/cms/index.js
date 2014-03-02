@@ -48,6 +48,17 @@ exports.c = function (req, res, next) {
     if (err) next(err);
     else {
       req.object = m;
+      for (var p in req.models)
+      {
+        var refs = meta.get_references(req.models[p]);
+        for (var i=0; i<refs.length; i++)
+        {
+          if (refs[i].type == req.type)
+          {
+            console.log(p, refs)
+          }
+        }
+      }
       if (req.virtuals)
       {
         var keys = Object.keys(req.virtuals);
