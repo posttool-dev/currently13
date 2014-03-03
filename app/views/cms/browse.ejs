@@ -1,25 +1,9 @@
 <% include ../head %>
-
-<script src="/js/util.js"></script>
-<script src="/js/layers.js"></script>
-<script src="/js/form.js"></script>
-<script src="/js/browse.js"></script>
-<script src="/js/app.js"></script>
-
-<script src="/js/lib/ck/ckeditor.js"></script>
-<script src="/js/lib/codemirror.js"></script>
-<script src="/js/lib/jquery.fileupload.js"></script>
-<script src="/js/lib/jquery.iframe-transport.js"></script>
-
-<link href="/css/upload.css" rel="stylesheet">
-<link href="/css/codemirror.css" rel="stylesheet">
-
+<% include head %>
 <% include ../head1 %>
 <% include ../nav %>
 
-<div class="padded">
-   <div id="browser"></div>
-</div>
+<div id="browser"></div>
 
 <script>
 
@@ -32,28 +16,52 @@
 
 
     var layers = new layers_layers();
-    var browser = new browse_browse("<%= type %>");
-    browser.add_listener('select', function (f, r) {
-        if (ctrlKeyDown)
+    function add_root_browser(type)
+    {
+        var browser = new browse_browse(type);
+        browser.add_listener('select', function (f, r) {
+            if (ctrlKeyDown)
+            {
+                var url = '/cms/update/' + type + '/' + r._id;
+                var win = window.open(url, ctrlKeyDown ? '_blank' : '_self');
+                win.focus();
+            }
+            else
+            {
+                var ff = form(type, r._id);
+                ff.add_listener('close', function (e, r) {
+                   layers.pop_layer();
+                });
+            }
+        });
+        layers.add_layer(browser);
+    }
+
+    var type = "<%= type %>";
+    window.addEventListener("popstate", function(e) {
+        var s = e.state ? e.state : location.pathname;
+        var f = layers.find(s) ;
+        if (f != -1)
         {
-            var url = '/cms/update/<%= type %>/' + r._id;
-            var win = window.open(url, ctrlKeyDown ? '_blank' : '_self');
-            win.focus();
+            console.log('found', e.state);
+            if (f==0 && layers.size() == 1)
+                history.back();
+            else
+                layers.pop_to(s);
         }
         else
         {
-            var root_form = form("<%=type%>", r._id);
-            root_form.add_listener('close', function (e, r) {
-               layers.pop_layer();
-            });
+            console.log('create',e.state)
+            layers.clear_layers();
+            var p = s.substring(1).split('/');
+            console.log(p);
+            if (p[1] == 'browse')
+                add_root_browser(p[2])
+            else if (p[1] == 'create')
+                form(p[2])
+            else if (p[1] == 'update')
+                form(p[2], p[3]);
         }
-    });
-    layers.add_layer(browser);
-
-    window.addEventListener("popstate", function(e) {
-        if (e.state == 1)
-            layers.pop_layer();
-
     });
 
 

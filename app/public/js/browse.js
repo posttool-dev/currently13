@@ -1,4 +1,4 @@
-function browse_browse(type, filters, order, page, pagesize) {
+function browse_browse(type) {
   var self = this;
   self.type = type;
   self.toString = function(){ return 'Browse '+type; }
@@ -6,13 +6,15 @@ function browse_browse(type, filters, order, page, pagesize) {
   var schema;
   var bmeta;
   var bmeta_idx;
-  var row_height = 40;
-  if (!page)
-    page = 0;
-  if (!pagesize)
-    pagesize = 20;
+  var row_height = zcookie.get('row-height-'+type, 40);;
+  var filters = zcookie.get('filters-'+type, {});
+  var page = zcookie.get('page-'+type, 0);
+  var pagesize = zcookie.get('pagesize-'+type, 20);
+  var order = zcookie.get('order-'+type, null);
+  var total = 0;
+
+
   var p; // number of fields/90 (for initial cell percent width)
-  var filters = [];
   //
   var $el;
   var $filters;
@@ -21,7 +23,7 @@ function browse_browse(type, filters, order, page, pagesize) {
   var $rhead;
   var $rbody;
   var $pager;
-  this.$el = function () {
+  self.$el = function () {
     return init_ui();
   }
   form_make_listener(self);
@@ -31,15 +33,20 @@ function browse_browse(type, filters, order, page, pagesize) {
       return $el;
     $el = $$('browser');
 
-    var $controls = $$('browse-controls', {parent: $el});
-//    var $title = $$('title', {el: 'span', parent: $controls}).text('Browse ' + type);
+    self.$controls = function () {
+      var $controls = $$('browse-controls');
+      // var $title = $$('title', {el: 'span', parent: $controls}).text('Browse ' + type);
+      $filters = $$('filters', {parent: $controls});
+      $pager = $$('pager', {parent: $controls});
+      var $create = $$('btn btn-right', {el: 'button', parent: $controls}).text('CREATE');
+      $create.click(function(){
+           location.href = '/cms/create/'+ type ;
+      });
+      create_pager();
+      update_filters();
+      return $controls;
+    }
 
-    $filters = $$('filters', {parent: $controls});
-    $pager = $$('pager', {parent: $controls});
-    var $create = $$('btn btn-right', {el: 'button', parent: $controls}).text('CREATE');
-    $create.click(function(){
-         location.href = '/cms/create/'+ type ;
-    })
 
     $filter_config = $$('filter-config', {parent: $el});
     $results = $$('results', {parent: $el});
@@ -64,7 +71,6 @@ function browse_browse(type, filters, order, page, pagesize) {
     for (var i = 0; i < bmeta.length; i++)
       $r.append(create_header_col(bmeta[i]));
     $rhead.append($r);
-    update_filters();
   }
 
 
@@ -74,14 +80,15 @@ function browse_browse(type, filters, order, page, pagesize) {
     var d = JSON.stringify({condition: filters, order: order, offset: page * pagesize, limit: pagesize});
     $$ajax('/cms/browse/' + type, d, 'post').done(function (o) {
       //could keep a memory copy of all results at offsets
-      update_ui(o.results, o.count)
+      total = o.count;
+      update_ui(o.results)
+      create_pager();
     });
   }
 
-  function update_ui(results, total) {
+  function update_ui(results) {
     for (var i = 0; i < results.length; i++)
       $rbody.append(create_row(results[i]));
-    create_pager(total);
   }
 
 
@@ -90,19 +97,34 @@ function browse_browse(type, filters, order, page, pagesize) {
     var $e = $$('hcol nowrap');
     $e.css({width: p})
     $e.text(m.name);
+    var hilight = function () {
+      if (!order)
+        return;
+      if (order == m.name)
+      {
+        $e.addClass('order asc');
+        $lh = $e;
+      }
+      else if (order.substring(1) == m.name)
+      {
+        $e.addClass('order desc');
+        $lh = $e;
+      }
+    }
+    hilight();
     $e.click(function () {
-      if ($lh)
-        $lh.removeClass('order asc desc');
-      $lh = $e;
       if (order == m.name) {
-        $lh.addClass('order desc');
         order = '-' + m.name;
       }
       else {
-        $lh.addClass('order asc');
         order = m.name;
       }
-      update_data();
+      zcookie.set('order-'+type, order);
+      if ($lh)
+        $lh.removeClass('order asc desc');
+      hilight();
+      $lh = $e;
+     update_data();
     });
     return $e;
   }
@@ -153,13 +175,13 @@ function browse_browse(type, filters, order, page, pagesize) {
 //    $pager.append('<button>n</button>');
 //  }
 
-  function create_pager(total)
+  function create_pager()
   {
 //    $pager.append('<span> <button>&lt;</button>  </span>');
     $pager.empty();
     $pager.append('<span>'+ total +' total </span>');
     if (total > pagesize)
-      for (var i = 0; i < total / pagesize; i++)
+      for (var i = Math.max(0, page - 1); i < Math.min(page + 2, total / pagesize); i++)
         $pager.append(make_page(i, total));
 //    $pager.append('<span> <button>&gt;</button>  </span>');
 //    var top = Math.min(page*pagesize+pagesize, total);
@@ -178,7 +200,8 @@ function browse_browse(type, filters, order, page, pagesize) {
     $p.text((i*pagesize+1)+'-'+top);
     $p.click(function () {
       page = i;
-      $lp.removeClass('selected');
+      if ($lp)
+        $lp.removeClass('selected');
       $lp = $p;
       $lp.addClass('selected');
       update_data();
@@ -220,7 +243,9 @@ function browse_browse(type, filters, order, page, pagesize) {
     $e.append($a);
     $a.click(function () {
       delete filters[p];
+      zcookie.set('filters-'+type, filters);
       update_filters();
+      update_data();
       if (filters_open)
         create_filter_ui();
     });
@@ -262,6 +287,7 @@ function browse_browse(type, filters, order, page, pagesize) {
       filters[name] = {};
       filters[name][cond] = val;
     }
+    zcookie.set('filters-'+type, filters);
     update_filters();
     update_data();
   }

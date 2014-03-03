@@ -9,7 +9,6 @@ var Meta = null;
 
 //var User = null;
 var Resource = null;
-exports.Resource = Resource;
 
 /**
  holds on to meta info
@@ -18,24 +17,46 @@ exports.Resource = Resource;
 exports.init = function (meta, resource_class_name, user_class_name) {
   Meta = meta;
   for (var p in  meta) {
+    console.log(">", p);
     var schema_data = meta[p].schema;
     validate_meta(p, schema_data, meta[p].browse, meta[p].form);
-    var schema = mongoose.Schema(schema_data);
+    var schema = new mongoose.Schema(schema_data);
+    if (meta[p].virtuals)
+      for (var q in meta[p].virtuals)
+      {
+        schema.virtual(q).get(meta[p].virtuals[q]);
+      }
     add_fields_and_methods(schema, p);
     meta[p].schema = schema;
-    console.log(">", p);
+    meta[p].model = mongoose.model(p, schema);
+    if (!meta[p].browse)
+    {
+      meta[p].browse = create_browse_info(p);
+      console.log('Added generated browse for '+p);
+    }
+    if (!meta[p].form)
+    {
+      meta[p].form = create_form_info(p);
+      console.log('Added generated form for '+p);
+    }
   }
   Resource = mongoose.model(resource_class_name, Meta[resource_class_name].schema);
-//    User = mongoose.model(user_class_name, Meta[user_class_name].schema);
+  exports.Resource = Resource;
+  // User = mongoose.model(user_class_name, Meta[user_class_name].schema);
+
 };
 
 exports.browse = function(type)
 {
+  if (!Meta[type])
+    throw new Error('no '+type);
   return Meta[type].browse;
 };
 
 exports.form = function(type)
 {
+  if (!Meta[type])
+    throw new Error('no '+type);
   return Meta[type].form;
 };
 
@@ -46,9 +67,14 @@ exports.schema = function(type)
   return Meta[type].schema;
 };
 
+exports.virtuals = function(type)
+{
+  return Meta[type].virtuals;
+};
+
 exports.model = function(type)
 {
-  return mongoose.model(type, Meta[type].schema);
+  return mongoose.model(type);
 };
 
 exports.info = function(type)
@@ -112,7 +138,8 @@ exports.get_schema_info = function(schema)
 {
   var d = {};
   schema.eachPath(function (path, mtype) {
-    d[path] = get_path_info(path, mtype);
+    if (path.charAt(0)!='_')
+      d[path] = get_path_info(path, mtype);
   });
   return d;
 }
@@ -193,3 +220,49 @@ exports.get_names = function (field_info) {
     return elem.name;
   });
 };
+
+
+
+
+
+
+/// default form/browser meta data
+
+create_browse_info = function(type)
+{
+  var si = exports.get_schema_info(Meta[type].schema);
+  var s = [];
+  for (var p in si)
+  {
+      s.push({name: si[p].name, cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"})
+  }
+  return s;
+}
+
+
+
+create_form_info = function(type)
+{
+  var si = exports.get_schema_info(Meta[type].schema);
+  var s = [];
+  for (var p in si)
+  {
+    if (p == 'creator' || p == 'created' || p == 'modified' || p == 'state')
+      continue;
+    if (si[p].type == 'Reference')
+      s.push({name: si[p].name, widget: "choose_create", options: {type: si[p].ref, array: si[p].is_array}});
+    else
+      s.push({name: si[p].name, widget: "input"});
+  }
+  return s;
+}
+
+
+/*
+
+      {name: "title", widget: "input"},
+      {name: "subtitle", widget: "input"},
+      {name: "body", widget: "rich_text"},
+      {name: "pages", widget: "choose_create", options: {type: "Page", array: true}}
+
+ */

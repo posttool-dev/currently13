@@ -16,11 +16,38 @@ function form_form(type, id) {
   var _modified = null;
   var idx = {};
 
-  var $controls = $$('form-controls', {parent: $el});
-//  var $title = $$('title', {el: 'span', parent: $controls}).text(type);
-  var $save = $$('btn btn-primary', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
-  var $time = $$('time', {el: 'span', parent: $controls}).text('Last modified...');
-  var $delete = $$('btn btn-right', {el: 'button', parent: $controls}).text('X');
+
+  self.$controls = function () {
+    var $controls = $$('form-controls');
+    //  var $title = $$('title', {el: 'span', parent: $controls}).text(type);
+    self.$save = $$('btn btn-primary', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
+    self.$time = $$('time', {el: 'span', parent: $controls});
+    update_ui();
+    var $delete = $$('btn btn-right', {el: 'button', parent: $controls}).text('X');
+    self.$save.click(function () {
+      $.ajax({
+        url: self.url(),
+        data: { val: JSON.stringify(self.data) },
+        method: 'post',
+        success: function (o) {
+          if (o.name && o.name.indexOf("Error") != -1)
+            self.error(o);
+          else {
+            self.update(o);
+            history.pushState(self.url(), self.toString(), self.url());
+
+          }
+        },
+        error: function (o) {
+          console.error(o);
+        }
+      })
+    });
+    $delete.click(function(){
+      self.emit('close', self.data);
+    });
+    return $controls;
+  }
   var $form = $$('form', {parent: $el});
 
   function set_meta(meta_data) {
@@ -50,9 +77,9 @@ function form_form(type, id) {
   }
 
   function create_field(d) {
-    var f = new indicated_field(d.name, d.label ? d.label : d.name, d.widget);
+    var f = new indicated_field(d);
     f.add_listener('change', function () {
-      $save.prop('disabled', false);
+      self.$save.prop('disabled', false);
       self.emit('change');
     });
     // for reference fields
@@ -85,34 +112,34 @@ function form_form(type, id) {
         if (idx[p])
           idx[p].data = n[p];
       }
-      // todo updateui
-      if (n.modified)
-        $time.text(' Last modified ' + timeSince(new Date(n.modified)) + ' ago.');
-      else
-        $time.text(' New record.');
+      update_ui();
     }
   });
 
+  function update_ui()
+  {
+      if (_modified)
+        self.$time.text(' Last modified ' + timeSince(new Date(_modified)) + ' ago.');
+      else
+        self.$time.text(' New record.');
+
+  }
   self.error = function (o) {
-      $time.text(' ERROR - see fields for details');
+      self.$time.text(' ERROR - see fields for details');
     idx[o.path].error = JSON.stringify(o);
   }
 
   self.update = function (o) {
-    if (location.href.indexOf('cms/create') != -1)
-      location.href = '/cms/update/' + type + '/' + o._id;
-    else
-    {
-      self.data = o;
-      $save.prop('disabled', true);
-    }
+    self.data = o;
+    self.$save.prop('disabled', true);
+
   }
 
   self.url = function()
   {
       var url = '/cms';
-      if (id)
-        url += '/update/' + type + '/' + id;
+      if (_id)
+        url += '/update/' + type + '/' + _id;
       else
         url += '/create/' + type;
     return url;
@@ -125,35 +152,19 @@ function form_form(type, id) {
   $$ajax(url).done(function (o) {
     set_meta(o.form);
     self.data = o.object;
+    console.log(o.related)
   });
 
-  $save.click(function () {
-    $.ajax({
-      url: self.url(),
-      data: { val: JSON.stringify(self.data) },
-      method: 'post',
-      success: function (o) {
-        if (o.name && o.name.indexOf("Error") != -1)
-          self.error(o);
-        else {
-          self.update(o);
-        }
-      },
-      error: function (o) {
-        console.error(o);
-      }
-    })
-  });
 
-  $delete.click(function(){
-    self.emit('close', self.data);
-  });
 }
 
 
-function indicated_field(name, label, type)//, settings_callback)
+function indicated_field(d)//, settings_callback)
 {
   var self = this;
+  var name = d.name;
+  var label = d.label ? d.label : d.name;
+  var type = d.widget;
   var $el = $$('control-group');
   self.$el = function () {
     return $el;
@@ -163,7 +174,7 @@ function indicated_field(name, label, type)//, settings_callback)
   var $label = $('<label></label>').addClass('control-label').attr('for', name).text(label);
   if (!form_fields[type + "_field"])
     throw Error("no field for " + type);
-  var field = new form_fields[type + "_field"]();
+  var field = new form_fields[type + "_field"](d.options);
   form_make_listener(field);
   field.bubble_listener(self);
   self.field = field;
@@ -246,23 +257,12 @@ function indicated_field(name, label, type)//, settings_callback)
 }
 
 
-function form_field_create(self, $el, tag_name, clz) {
-  if (typeof $el != 'undefined' && $el != null)
-    return $el;
-  tag_name = tag_name || "div";
-  $el = $("<" + tag_name + "/>");
-  $el.data('__obj__', self);
-  if (clz)
-    $el.addClass(clz);
-  return $el;
-}
-
 
 var form_fields = {
 
-  boolean_field: function ($el) {
+  boolean_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field boolean');
+    var $el = $$('field boolean');
     self.$el = function () {
       return $el;
     }
@@ -294,9 +294,9 @@ var form_fields = {
     });
   },
 
-  number_field: function ($el) {
+  number_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field number');
+    var $el = $$('field number');
     this.$el = function () {
       return $el;
     }
@@ -325,9 +325,9 @@ var form_fields = {
     });
   },
 
-  input_field: function ($el) {
+  input_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field string');
+    var $el = $$('field string');
     this.$el = function () {
       return $el;
     }
@@ -357,10 +357,10 @@ var form_fields = {
   },
 
 
-  code_field: function ($el) {
+  code_field: function (options) {
     // super
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field code');
+    var $el = $$('field code');
     self.$el = function () {
       return $el;
     }
@@ -391,9 +391,9 @@ var form_fields = {
 
   },
 
-  rich_text_field: function ($el, props) {
+  rich_text_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field rich-text');
+    var $el = $$('field rich-text');
     self.$el = function () {
       return $el;
     }
@@ -425,9 +425,9 @@ var form_fields = {
 
   },
 
-  date_field: function ($el) {
+  date_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field date');
+    var $el = $$('field date');
     this.$el = function () {
       return $el;
     }
@@ -455,9 +455,9 @@ var form_fields = {
     });
   },
 
-  upload_field: function ($el) {
+  upload_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'div', 'field resource');
+    var $el = $$('field resource');
     this.$el = function () {
       return $el;
     }
@@ -474,8 +474,15 @@ var form_fields = {
     var _d = null;
     Object.defineProperty(this, "data", {
       get: function () {
-        if (_d) return _d._id;
-        return null;
+        if (!_d)
+          return null;
+        if (options.array) {
+          var v = [];
+          for (var i = 0; i < _d.length; i++)
+            v.push(_d[i]._id);
+          return v;
+        }
+        return _d._id;
       },
       set: function (n) {
         _d = n;
@@ -485,8 +492,12 @@ var form_fields = {
 
     function update_ui() {
       $info.empty();
-      get_upload_row(_d);
-      if (_d)
+      if (options.array)
+        for (var i=0; i<_d.length; i++)
+          get_upload_row(_d[i]);
+        else
+           get_upload_row(_d);
+      if (_d && !options.array)
         $btn.hide();
       else
         $btn.show();
@@ -496,7 +507,7 @@ var form_fields = {
       if (!row || !row.meta)
         return;
       var $e = $$('resource');
-      $e.append(row.meta.thumb);
+      $e.append('<img src="'+row.meta.thumb+'">');
       var $x = $("<div>x</div>");
       $x.click(function () {
         $$ajax(delete_url + row._id).done(function () {
@@ -530,8 +541,11 @@ var form_fields = {
       done: function (e, edata) {
         $progress.hide();
         $info.show();
+        if (options.array)
+          _d.push(edata.result);
+        else
+          _d = edata.result;
         get_upload_row(edata.result);
-        _d = edata.result;
         self.emit('change');
       },
       error: function (e) {
@@ -540,9 +554,9 @@ var form_fields = {
     });
   },
 
-  model_field: function ($el) {
+  model_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el, 'span', 'model');
+    var $el = $$('model');
     form_make_listener(self);
     self.$el = function () {
       return $el;
@@ -560,23 +574,22 @@ var form_fields = {
     });
     function update_ui() {
       $el.empty();
-      $el.append("<span class='nowrap'>"+_d.title+"</span>");
+      $el.append(_d.title);
     }
 
     $el.dblclick(function () {
-      console.log(self.data)
       self.emit('select', self.data);
     })
   },
 
-  choose_create_field: function ($el) {
+  choose_create_field: function (options) {
     var self = this;
-    $el = form_field_create(self, $el);
+    var $el = $$();
     this.$el = function () {
       return $el;
     };
 
-    var f = new form_fields.add_remove($el, form_fields.model_field);
+    var f = new form_fields.add_remove(form_fields.model_field, options);
     f.bubble_listener(self);
     $el.append(f.$el());
 
@@ -596,7 +609,7 @@ var form_fields = {
 
   many_reference_field: function ($el) {
     $el = form_field_create(self, $el);
-    var f = new form_fields.add_remove($el, form_fields.model_field);
+    var f = new form_fields.add_remove(form_fields.model_field);
     $el.append(f.$el());
     this.$el = function () {
       return $el;
@@ -612,16 +625,16 @@ var form_fields = {
     });
   },
 
-  add_remove: function ($el, clazz, options) {
+  add_remove: function (clazz, options) {
     var self = this;
     form_make_listener(self);
-    $el = form_field_create(self, $el);
+    var $el = $$();
     this.$el = function () {
       return $el;
     };
 
     var $list = $("<div></div>");
-    options = $.extend({add: true, browse: true}, options);
+    options = $.extend({add: true, browse: true, array: true}, options);
     var $actions = $("<div></div>");
     var $add = $("<span><i class='fa fa-plus-circle'></i> create</span>").css({'cursor': 'pointer'});
     var $browse = $("<span><i class='fa fa-play-circle '></i> browse</span>").css({'cursor': 'pointer'});
@@ -643,20 +656,29 @@ var form_fields = {
 
     Object.defineProperty(this, "data", {
       get: function () {
-        var vals = [];
-        $list.children().each(function (i, e) {
-          var o = $(e).data("__obj__");
-          vals.push(o.data._id);
-        });
-        return vals;
+        if (options.array) {
+          var vals = [];
+          $list.children().each(function (i, e) {
+            var o = $(e).data("__obj__");
+            vals.push(o.data._id);
+          });
+          return vals;
+        } else {
+          $list.children().each(function (i, e) {
+            var o = $(e).data("__obj__");
+            return o.data._id;
+          });
+        }
       },
       set: function (o) {
         $list.empty();
         if (!o)
           return;
-        for (var i = 0; i < o.length; i++) {
-          self.push(o[i]);
-        }
+        if (options.array)
+          for (var i = 0; i < o.length; i++)
+            self.push(o[i]);
+        else
+            self.push(o);
       }
     });
 
@@ -711,60 +733,60 @@ var form_fields = {
 
   },
 
-  group_field: function () {
-    var self = this;
-    var $el = $("<div></div>").addClass("group row");
-    this.$el = function () {
-      return $el;
-    }
-
-    var _d = {};
-    Object.defineProperty(this, "data", {
-      get: function () {
-        return _d;
-      },
-      set: function (n) {
-        _d = n;
-        update_ui();
-      }
-    });
-    function update_ui() {
-      for (var p in _c)
-        _c[p].data = _d[p];
-    }
-
-    var _c = {};
-    this.append = function (c) {
-      $el.append(c.$el());
-      _c[c.name] = _c;
-      c.change(function () {
-        _d[c.name] = c.data;
-        self.emit('change');
-      })
-    }
-
-  },
-
-  break_field: function () {
-    var $el = $("<div></div>").addClass("clearfix");
-    this.$el = function () {
-      return $el;
-    }
-
-    var _d = null;
-    Object.defineProperty(this, "data", {
-      get: function () {
-        return _d;
-      },
-      set: function (n) {
-        _d = n;
-        update_ui();
-      }
-    });
-    function update_ui() {
-    }
-
-  }
+//  group_field: function () {
+//    var self = this;
+//    var $el = $("<div></div>").addClass("group row");
+//    this.$el = function () {
+//      return $el;
+//    }
+//
+//    var _d = {};
+//    Object.defineProperty(this, "data", {
+//      get: function () {
+//        return _d;
+//      },
+//      set: function (n) {
+//        _d = n;
+//        update_ui();
+//      }
+//    });
+//    function update_ui() {
+//      for (var p in _c)
+//        _c[p].data = _d[p];
+//    }
+//
+//    var _c = {};
+//    this.append = function (c) {
+//      $el.append(c.$el());
+//      _c[c.name] = _c;
+//      c.change(function () {
+//        _d[c.name] = c.data;
+//        self.emit('change');
+//      })
+//    }
+//
+//  },
+//
+//  break_field: function () {
+//    var $el = $("<div></div>").addClass("clearfix");
+//    this.$el = function () {
+//      return $el;
+//    }
+//
+//    var _d = null;
+//    Object.defineProperty(this, "data", {
+//      get: function () {
+//        return _d;
+//      },
+//      set: function (n) {
+//        _d = n;
+//        update_ui();
+//      }
+//    });
+//    function update_ui() {
+//    }
+//
+//  }
 }
 
 

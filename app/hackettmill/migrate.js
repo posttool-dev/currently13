@@ -3,20 +3,21 @@ var csv = require('csv');
 var mongoose = require('mongoose');
 var cloudinary = require('cloudinary');
 
-var meta = require('../modules/cms/meta');
+var cms = require('../modules/cms'), process_list = cms.utils.process_list;
 
 var data = {};
 var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
 
-var use_existing_images = true; // false will destroy images at cloudinary & table of resources
+var use_existing_images = false; // false will destroy images at cloudinary & table of resources
+var prefix = 'dev0';
+
 exports.migrate_data = function () {
   if (use_existing_images)
     migrate0();
   else
-    cloudinary.api.resources(function (items) {
-      process_list(items.resources, delete_resource, migrate_delete_resources0, 20);
-    }, {max_results: 500});
+    cloudinary.api.delete_resources_by_prefix(prefix, migrate_delete_resources0);
 }
+
 
 function migrate_delete_resources0() {
   var R = mongoose.model('Resource');
@@ -27,6 +28,7 @@ function migrate_delete_resources0() {
   });
 }
 
+
 function migrate0() {
   console.log('Reading CSVs');
   fs.readdir(path, function (err, files) {
@@ -34,51 +36,36 @@ function migrate0() {
   });
 }
 
+
 function migrate1()
 {
   process_list(data['Resource'].array, create_resource, migrate2, 20);
 }
 
-function migrate2() {
-  var R = mongoose.model('Inventory');
-  R.find().remove(function (err, c) {
-    process_list(data['Inventory'].array,
-      function (e, next) {
-        create('Inventory', e, next);
-      },
-      migrate3);
+
+function migrate2()
+{
+  var e = ['Inventory','Artist', 'Catalog','Contact','Essay','Exhibition','News','Page'];
+  process_list(e, function (e, next) {
+    repopulate(e, next);
+  }, function () {
+    'hey now'
   });
 }
 
-function migrate3() {
-  var R = mongoose.model('Artist');
+
+
+
+function repopulate(type, complete)
+{
+  var R = mongoose.model(type);
   R.find().remove(function (err, c) {
-    process_list(data['Artist'].array,
-      function (e, next) {
-        create('Artist', e, next);
-      },
-      migrate4);
+  console.log('Repopulating '+type+' ... removed '+c+' old records.');
+    process_list(data[type].array,
+      function(e, next){
+        create(type, e, next);},
+      complete);
   });
-}
-
-function migrate4()
-{
-  console.log('dun')
-}
-
-function migraten(d)
-{
-  for (var p in d)
-  {
-    console.log(p);
-    try {
-      var M = mongoose.model(p);
-      console.log(M.modelName);
-
-    } catch(e){
-      console.error(e);
-    }
-  }
 }
 
 
@@ -139,16 +126,17 @@ function create_resource(rd, next) {
           r.filename = x;
           r.path = p;
           r.meta = e;
-          r.meta.thumb = cloudinary.url(e.public_id + "." + e.format, { width: 300, height: 200, crop: "fill" })
+          r.meta.thumb = cms.get_preview_url(r);
           r.save(function (err, r) {
             rd.model = r;
             console.log(r.meta.public_id, r.meta.thumb);
             next();
           });
-        });
+        }, { public_id: prefix+'/'+p});
     }
   });
 }
+
 
 function delete_resource(r, next)
 {
@@ -165,10 +153,18 @@ function delete_resource(r, next)
   }
 }
 
+
 function create(type, data, next)
 {
-  var i = create_model(type, data);
-  i.save(function (err, i) {
+  var M = mongoose.model(type);
+  var model = new M();
+  var info = cms.meta.info(type);
+  for (var p in info)
+    if (p == 'creator' || p == 'modified' || p == 'created')
+      continue;
+    else if (data[p])
+      model[p] = get_field_val(info[p], data[p]);
+  model.save(function (err, i) {
     if (err)
       console.log(err);
     data.model = i;
@@ -176,18 +172,8 @@ function create(type, data, next)
   });
 }
 
-function create_model(type, data)
-{
-  var M = mongoose.model(type);
-  var model = new M();
-  var info = meta.info(type);
-  for (var p in info)
-    if (p == 'creator' || p == 'modified' || p == 'created')
-      continue;
-    else if (data[p])
-      model[p] = get_field_val(info[p], data[p]);
-  return model;
-}
+
+
 
 function get_field_val(meta, sval)
 {
@@ -208,7 +194,11 @@ function get_field_val(meta, sval)
       else
         return get_ref_val(sval);
     case 'Date':
-      return new Date(sval);
+      var d = sval.split('.');
+      var d6 = d[5].split(' ');
+      var dd = new Date(Number(d[0]),Number(d[1])-1,Number(d[2]),Number(d[3]),Number(d[4]),Number(d6[0]));
+      console.log(d, dd, d6);
+      return dd;
     case 'Number':
       return Number(sval);
     case 'Boolean':
@@ -225,7 +215,6 @@ function get_ref_val(ref_str)
   try {
     var vtype = vv[0].trim();
     var vid = vv[1].trim();
-    console.log(data[vtype].map[vid].model);
     return data[vtype].map[vid].model;
   } catch (e) {
     return null;
@@ -233,32 +222,9 @@ function get_ref_val(ref_str)
 }
 
 
-/* helper for processing lists sequentially */
 
-function process_list(list, target, complete, concurrent)
-{
-  if (!list || list.length == 0)
-  {
-    complete();
-    return;
-  }
-  var c = concurrent ? concurrent : 1;
-  var i = 0;
-  var k = 0;
-  var ff = function(){
-    for (var j=0; j<c && i+j<list.length; j++) f();
-  }
-  var f = function()
-  {
-    var item = list[i];
-    target(item, function(){
-      k++;
-      if (k < list.length)
-        ff();
-      else
-        complete();
-    });
-    i++;
-  }
-  ff();
-}
+
+
+
+/* helper for processing lists sequentially - move to cms utils */
+

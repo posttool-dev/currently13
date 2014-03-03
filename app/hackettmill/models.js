@@ -21,6 +21,11 @@ exports.models = {
       materials: String,
       dimensions: String
     },
+    virtuals: {
+      artists: function(){
+        return mongoose.model('Artist').find({work: { $in: [this. _id]}});
+      }
+    },
     browse: [
       {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},
       {name: "code", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
@@ -34,7 +39,7 @@ exports.models = {
         {name: "code", widget: "input", options: {className: "large", width: "20%"}},
       {end: "row" },
       {begin: "row"},
-        {name: "resources", widget: "upload", options: {type: "Resource"}},
+        {name: "resources", widget: "upload", options: {type: "Resource", array: true}},
       {end: "row" },
       {name: "description", widget: "rich_text"},
       {begin: "section"},
@@ -60,6 +65,11 @@ exports.models = {
       work: [
         {type: ObjectId, ref: 'Inventory'}
       ]
+    },
+    virtuals: {
+      exhibits: function(){
+        return mongoose.model('Exhibition').find({images: { $in: this.work }});
+      }
     },
     browse: [
       {name: "first_name", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},
@@ -162,7 +172,7 @@ exports.models = {
       title: String,
       subtitle: String,
       images: [
-        {type: ObjectId, ref: 'Resource'}
+        {type: ObjectId, ref: 'Inventory'}
       ],
       start_date: Date,
       end_date: Date,
@@ -172,6 +182,11 @@ exports.models = {
         {type: ObjectId, ref: 'Essay'}
       ],
       catalog: {type: ObjectId, ref: 'Catalog'}
+    },
+    virtuals: {
+      artists: function(){
+        return mongoose.model('Artist').find({work: { $in: this.images }});
+      }
     }
   }
 }

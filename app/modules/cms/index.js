@@ -4,6 +4,7 @@ var mongoose = require('mongoose');
 var gfs = null, Grid = require('gridfs-stream');
 var cloudinary = require('cloudinary');
 var meta = require('./meta');
+var utils = require('./utils');
 var use_gfs = false;
 
 Grid.mongo = mongoose.mongo;
@@ -14,11 +15,10 @@ exports.init = function (config, resource_class_name, user_class_name) {
   meta.init(config, resource_class_name, user_class_name);
 }
 
+exports.meta = meta;
+exports.utils = utils;
 
 
-
-
-// setup chain
 
 /* put the meta info in every request */
 
@@ -34,6 +34,7 @@ exports.b = function (req, res, next) {
   var type = req.params.type;
   req.type = type;
   req.schema = meta.schema(type);
+  req.virtuals = meta.virtuals(type);
   req.model = meta.model(type);
   req.browser = meta.browse(type);
   req.form = meta.form(type);
@@ -42,11 +43,36 @@ exports.b = function (req, res, next) {
 
 /* if an id was specified, find and populate a view of the model, with thumbnail references */
 exports.c = function (req, res, next) {
+
   expand(req.schema, req.model, req.params.id, function (err, m) {
     if (err) next(err);
     else {
       req.object = m;
-      next();
+      for (var p in req.models)
+      {
+        var refs = meta.get_references(req.models[p]);
+        for (var i=0; i<refs.length; i++)
+        {
+          if (refs[i].type == req.type)
+          {
+            console.log(p, refs)
+          }
+        }
+      }
+      if (req.virtuals)
+      {
+        var keys = Object.keys(req.virtuals);
+        req.related = {};
+        utils.process_list(keys, function (e, n) {
+          var q = m[e];
+          q.exec(function (err, r) {
+            req.related[e] = r;
+            n();
+          });
+        }, next);
+      }
+      else
+        next();
     }
   });
 };
@@ -59,8 +85,6 @@ expand = function(schema, model, id, next)
   if (refs)
     q.populate(meta.get_names(refs).join(" "));
   q.exec(function (err, m) {
-    if (!err)
-      add_previews(m, refs);
     next(err, m);
   });
 }
@@ -136,6 +160,7 @@ exports.form =
       title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
       type: req.type,
       object: req.object || new req.model(),
+      related: req.related,
       form: req.form})
   },
 
@@ -168,24 +193,10 @@ exports.form =
 
 // image and resource handling
 
-add_previews = function(object, refs)
-{
-  if (!object)
-    return;
-  for (var i = 0; i < refs.length; i++) {
-    if (refs[i].ref == 'Resource') {
-      add_preview(object[refs[i].name]);
-    }
-  }
-};
 
-
-add_preview = function(r)
+exports.get_preview_url = function(e)
 {
-    if (r && r.meta)
-    {
-      r.meta.thumb = cloudinary.url(r.meta.public_id + ".jpg", { width: 100, height: 150, crop: "fill" });
-    }
+  return cloudinary.url(e.public_id + ".jpg", { width: 200, height: 150 });
 };
 
 
@@ -193,32 +204,20 @@ exports.upload = function (req, res) {
   var file = req.files.file;
   var do_save = function (e) {
     // create a resource with path & return id
-    var r = new Resource();
+    var r = new meta.Resource();
     r.filename = file.name;
     r.path = file.path;
     r.size = file.size;
     r.creator = req.session.user._id;
     r.meta = e;
+    if (e)
+      r.meta.thumb = exports.get_preview_url(e);
     r.save(function (err, s) {
-      s.meta.thumb = cloudinary.image(e.public_id + "." + e.format, { width: 100, height: 150, crop: "fill" })
       res.json(s);
     });
   };
   if (use_gfs) {
-    var ws = gfs.createWriteStream({ filename: file.path });
-    ws.on('error', function (e) {
-      res.send('ERR');
-    });
-    var rs = fs.createReadStream(file.path);
-    rs.on('open', function () {
-      rs.pipe(ws);
-    });
-    rs.on('end', function () {
-      do_save(null);
-    });
-    rs.on('error', function (e) {
-      res.send('ERR');
-    });
+    save_gfs(file, do_save);
   }
   else {
     var imageStream = fs.createReadStream(file.path, { encoding: 'binary' });
@@ -232,7 +231,7 @@ exports.upload = function (req, res) {
 
 
 exports.delete_resource = function (req, res) {
-  var q = Resource.findOne({_id: req.params.id});
+  var q = meta.Resource.findOne({_id: req.params.id});
   q.exec(function (err, r) {
     if (r) {
       cloudinary.uploader.destroy(r.meta.public_id, function (result) {
@@ -263,5 +262,24 @@ exports.download = function (req, res) {
   });
 };
 
+
+function save_gfs(file, next)
+{
+    var ws = gfs.createWriteStream({ filename: file.path });
+    ws.on('error', function (e) {
+      next(e);
+    });
+    var rs = fs.createReadStream(file.path);
+    rs.on('open', function () {
+      rs.pipe(ws);
+    });
+    rs.on('end', function () {
+      next(null);
+    });
+    rs.on('error', function (e) {
+      next(e);
+    });
+
+}
 
 
