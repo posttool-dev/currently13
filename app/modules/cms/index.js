@@ -48,23 +48,24 @@ exports.c = function (req, res, next) {
     if (err) next(err);
     else {
       req.object = m;
+      var related = [];
       for (var p in req.models)
       {
-        var refs = meta.get_references(req.models[p]);
+        var refs = meta.get_references(meta.schema(p));
         for (var i=0; i<refs.length; i++)
         {
-          if (refs[i].type == req.type)
+          if (refs[i].ref == req.type)
           {
-            console.log(p, refs)
+            console.log(p, refs[i]);
+            related.push({type:p, field: refs[i]});
           }
         }
       }
-      if (req.virtuals)
+      if (related)
       {
-        var keys = Object.keys(req.virtuals);
         req.related = {};
-        utils.process_list(keys, function (e, n) {
-          var q = m[e];
+        utils.process_list(related, function (e, n) {
+          meta.models(e.type).find({e.field.name: $in: {}})
           q.exec(function (err, r) {
             req.related[e] = r;
             n();
@@ -73,6 +74,21 @@ exports.c = function (req, res, next) {
       }
       else
         next();
+
+//      if (req.virtuals)
+//      {
+//        var keys = Object.keys(req.virtuals);
+//        req.related = {};
+//        utils.process_list(keys, function (e, n) {
+//          var q = m[e];
+//          q.exec(function (err, r) {
+//            req.related[e] = r;
+//            n();
+//          });
+//        }, next);
+//      }
+//      else
+//        next();
     }
   });
 };
