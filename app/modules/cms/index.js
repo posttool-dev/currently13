@@ -82,7 +82,6 @@ related = function (type, id, next) {
     utils.process_list(related, function (ref, n) {
       var c = {};
       c[ref.field.name] = {$in: [id]}
-      console.log(ref.type, c);
       var q = meta.model(ref.type).find(c);
       q.exec(function (err, qr) {
         r[ref.type] = qr;
@@ -264,7 +263,6 @@ exports.delete_resource = function (req, res) {
   q.exec(function (err, r) {
     if (r) {
       cloudinary.uploader.destroy(r.meta.public_id, function (result) {
-        console.log(result);
         res.json(result);
       });
     }

@@ -8,16 +8,10 @@
 </div>
 
 <script>
-    var layers = new layers_layers();
-    var root_form = form("<%=type%>"<% if (id) { %>, "<%=id%>"<% } %>);
-    root_form.add_listener('close', function (e, r) {
-       confirm('really delete?');
-        //todo form.delete();
-    });
-
 
     $(document).ready(function () {
-        $("#workspace").append(layers.$el());
+        var cms = init_cms();
+        $("#workspace").append(cms.$el());
     });
 </script>
 

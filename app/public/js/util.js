@@ -148,7 +148,7 @@ function $$modal(title)
 
 
 
-// component mixins
+// component mixin
 
 
 function form_make_listener(c) {
@@ -177,3 +177,28 @@ function form_make_listener(c) {
 }
 
 
+
+
+// find a property named 'thumb' within the provided object
+
+function find_thumb(v) {
+  if (v == null)
+    return null;
+  if ($.isPlainObject(v)) {
+    if (v.thumb)
+      return v.thumb;
+    for (var p in v) {
+      var f = find_thumb(v[p]);
+      if (f)
+        return f;
+    }
+  } else if ($.isArray(v)) {
+    for (var i = 0; i < v.length; i++) {
+      var f = find_thumb(v[i]);
+      if (f)
+        return f;
+    }
+  } else {
+    return null;
+  }
+}

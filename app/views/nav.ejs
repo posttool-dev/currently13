@@ -9,7 +9,7 @@
         <span id="extra-options"></span>
     </div>
     <div class="user">
-    You are logged in as <%-user.email%> <a href='/user/<%- user._id %>'>Profile</a> <a href='/logout'>Logout</a>
+    Logged in as <a href='/user/<%- user._id %>'><%-user.email%></a> / <a href='/logout'>Logout</a>
     </div>
 <% } else { %>
     <a href='/login'>Login</a> <a href='/register'>Register</a>
@@ -17,6 +17,11 @@
 </div>
 
 <div id="control-bar"></div>
+<div id="info-panel">
+    <div class="cog" id="info-cog"><i class="fa fa-cog"></i></div>
+    <div id="info-panel-content"></div>
+
+</div>
 
 <% if (message) { %>
 <div id="message">

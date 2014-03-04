@@ -4,7 +4,16 @@ function layers_layers(){
   self.$el = function(){
     return $el;
   }
+  var $x = $("#extra-options");
+  var $control_bar = $("#control-bar");
+  var $info_panel = $("#info-panel");
+  var $info_content = $("#info-panel-content");
   init_nav();
+  $("#info-cog").click(function(){
+    toggle_info();
+  });
+
+  $(window).resize(update_widths)
 
   self.add_layer = function(f)
   {
@@ -74,6 +83,7 @@ function layers_layers(){
     update_ui();
   }
 
+
   function update_ui() {
     var c = $el.children();
     for (var i = 0; i < c.length; i++) {
@@ -85,7 +95,6 @@ function layers_layers(){
       $c.css({x: 0});
     }
 
-    var $x = $("#extra-options");
     $x.empty();
     for (var i = 0; i < c.length; i++) {
       var f = $(c[i]).data('__obj__');
@@ -96,13 +105,21 @@ function layers_layers(){
         });
         $x.append($r);
       })(f);
+
+      update_widths();
     }
 
-    $("#control-bar").empty();
+    $control_bar.empty();
+    $info_content.empty();
     var f = $el.children().last().data('__obj__');
     if (f)
-      $("#control-bar").append(f.$controls());
-    $("#control-bar").css({x: 0});
+    {
+      if (f.$controls)
+        $control_bar.append(f.$controls());
+      if (f.$info)
+        $info_content.append(f.$info());
+    }
+    $control_bar.css({x: 0});
   }
 
   function history_push()
@@ -123,9 +140,9 @@ function layers_layers(){
         var c = $el.children();
         for (var i = 0; i < c.length; i++) {
           var $c = $(c[i]);
-          $c.transition({x: i * 100});
+          $c.transition({x: i * 50});
         }
-        $("#control-bar").transition({x: (i-1) * 100});
+        $control_bar.transition({x: (i-1) * 50});
       },
       function () {
         var c = $el.children();
@@ -133,9 +150,43 @@ function layers_layers(){
           var $c = $(c[i]);
           $c.transition({x: 0});
         }
-        $("#control-bar").transition({x: 0});
+        $control_bar.transition({x: 0});
       });
   }
+
+
+  var info_open = true;
+  function toggle_info()
+  {
+    info_open = !info_open;
+    update_info();
+  }
+
+  var info_width = 250;
+  var info_off = 30;
+  function update_info(f)
+  {
+    if (!f)
+      f = 'transition';
+    var cw = info_open ? $(window).width() - info_width : $(window).width() - info_off;
+    cw += 'px';
+    var iw = info_width + 'px';
+    var r = info_open ? '0' : (info_off-info_width) + 'px';
+    var c = $el.children();
+    for (var i = 0; i < c.length; i++) {
+      var $c = $(c[i]);
+      $c[f]({width:cw});
+    }
+    $control_bar[f]({width:cw});
+    $info_panel[f]({right:r, width: iw});
+    $info_content[f]({opacity: info_open ? 1 : 0})
+  }
+
+  function update_widths(){
+    update_info('css');
+  }
+
+
 
   //
   function dhova(entasis, $e, a, b) {

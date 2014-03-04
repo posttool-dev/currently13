@@ -12,84 +12,81 @@ function browse_browse(type) {
   var pagesize = zcookie.get('pagesize-'+type, 20);
   var order = zcookie.get('order-'+type, null);
   var total = 0;
-
-
   var p; // number of fields/90 (for initial cell percent width)
+
   //
-  var $el;
-  var $filters;
-  var $filter_config;
-  var $results;
-  var $rhead;
-  var $rbody;
-  var $pager;
-  self.$el = function () {
-    return init_ui();
-  }
   form_make_listener(self);
-
-  function init_ui() {
-    if ($el)
-      return $el;
-    $el = $$('browser');
-
-    self.$controls = function () {
-      var $controls = $$('browse-controls');
-      // var $title = $$('title', {el: 'span', parent: $controls}).text('Browse ' + type);
-      $filters = $$('filters', {parent: $controls});
-      $pager = $$('pager', {parent: $controls});
-//      var $create = $$('btn btn-right', {el: 'button', parent: $controls}).text('CREATE');
-//      $create.click(function(){
-//           location.href = '/cms/create/'+ type ;
-//      });
-      create_pager();
-      update_filters();
-      return $controls;
-    }
-
-
-    $filter_config = $$('filter-config', {parent: $el});
-    $results = $$('results', {parent: $el});
-    $rhead = $$('header', {parent: $results});
-    $rbody = $$('body', {parent: $results});
-    $$ajax('/cms/schema/' + type, null, 'post').done(function (o) {
-      schema = o;
-      bmeta = o.browser;
-      bmeta_idx = {};
-      for (var i=0; i<bmeta.length; i++)
-        bmeta_idx[bmeta[i].name] = bmeta[i];
-      p = Math.floor(90 / bmeta.length) + '%';
-      init_ui2();
-      update_data();
-    });
+  var $el = $$('browser');
+  self.$el = function () {
     return $el;
   }
 
+  var $controls = $$('browse-controls');
+  self.$controls = function () {
+    update_controls();
+    return $controls;
+  }
 
-  function init_ui2() {
+  var $info = $$('browse-info');
+  self.$info = function () {
+    if (bmeta)
+      update_info();
+    return $info;
+  }
+
+  var $filters;
+  var $results = $$('results', {parent: $el});
+  var $rhead = $$('header', {parent: $results});
+  var $rbody = $$('body', {parent: $results});
+  var $pager;
+
+  $$ajax('/cms/schema/' + type, null, 'post').done(function (o) {
+    schema = o;
+    bmeta = o.browser;
+    bmeta_idx = {};
+    for (var i=0; i<bmeta.length; i++)
+      bmeta_idx[bmeta[i].name] = bmeta[i];
+    p = Math.floor(100 / bmeta.length) + '%';
     var $r = $$('hrow nowrap');
     for (var i = 0; i < bmeta.length; i++)
       $r.append(create_header_col(bmeta[i]));
     $rhead.append($r);
-  }
+    request_data();
+  });
 
 
-  function update_data() {
-    $rbody.empty();
-    $pager.empty();
+  function request_data() {
     var d = JSON.stringify({condition: filters, order: order, offset: page * pagesize, limit: pagesize});
     $$ajax('/cms/browse/' + type, d, 'post').done(function (o) {
-      //could keep a memory copy of all results at offsets
+      $rbody.empty();
       total = o.count;
       update_ui(o.results)
-      create_pager();
     });
   }
 
   function update_ui(results) {
     for (var i = 0; i < results.length; i++)
       $rbody.append(create_row(results[i]));
+    update_controls();
+    update_info();
   }
+
+
+  function update_controls() {
+    $controls.empty();
+    $filters = $$('filters', {parent: $controls});
+    $pager = $$('pager', {parent: $controls});
+    create_pager();
+    update_filters();
+    return $controls;
+  }
+
+
+  function update_info() {
+    create_filter_ui();
+    return $info;
+  }
+
 
 
   var $lh = null; // last header clicked
@@ -124,7 +121,7 @@ function browse_browse(type) {
         $lh.removeClass('order asc desc');
       hilight();
       $lh = $e;
-     update_data();
+     request_data();
     });
     return $e;
   }
@@ -160,27 +157,6 @@ function browse_browse(type) {
     return $r;
   }
 
-  function find_thumb(v) {
-    if (v == null)
-      return null;
-    if ($.isPlainObject(v)) {
-      if (v.thumb)
-        return v.thumb;
-      for (var p in v) {
-        var f = find_thumb(v[p]);
-        if (f)
-          return f;
-      }
-    } else if ($.isArray(v)) {
-      for (var i = 0; i < v.length; i++) {
-        var f = find_thumb(v[i]);
-        if (f)
-          return f;
-      }
-    } else {
-      return null;
-    }
-  }
 
 /* pager */
 
@@ -214,7 +190,7 @@ function browse_browse(type) {
         $lp.removeClass('selected');
       $lp = $p;
       $lp.addClass('selected');
-      update_data();
+      request_data();
     });
     return $p;
   }
@@ -223,24 +199,11 @@ function browse_browse(type) {
 
   /* filters */
 
-  var filters_open = false;
 
   function update_filters() {
     $filters.empty();
-    var getfa = function () {
-      return filters_open ? 'angle-up' : 'angle-down';
-    };
-    var $a = $$icon('filter-tag', {fa: getfa(), label: ' filter', parent: $filters});
     for (var p in filters)
       create_filter_tag(p);
-    $a.click(function () {
-      if (filters_open)
-        $filter_config.empty();
-      else
-        create_filter_ui()
-      filters_open = !filters_open;
-      $a.setfa(getfa());
-    })
   }
 
   function create_filter_tag(p) {
@@ -255,7 +218,7 @@ function browse_browse(type) {
       delete filters[p];
       zcookie.set('filters-'+type, filters);
       update_filters();
-      update_data();
+      request_data();
       if (filters_open)
         create_filter_ui();
     });
@@ -263,10 +226,11 @@ function browse_browse(type) {
   }
 
   function create_filter_ui() {
-    $filter_config.empty();
-    var $x = $$('big', {parent: $filter_config});
+    $info.empty();
+    var $x = $$('big', {parent: $info});
 //      var $apply = $$('btn',{el:'button', parent: $x}).text('apply');
 //      var $cancel = $$('btn',{el:'button', parent: $x}).text('cancel');
+    $$('heading',{parent: $x}).text('Filters');
     var $filter_rows = $$('filter-rows', {parent: $x});
     var c = 0;
     for (var p in filters) {
@@ -286,40 +250,48 @@ function browse_browse(type) {
   {
     page = 0;
     filters = {};
-    var c = $filter_config.find('.filter-rows').children();
+    var c = $info.find('.filter-rows').children();
+    console.log(c);
     for (var i=0; i< c.length; i++)
     {
       var $c = $(c[i]);
-      var cc = $c.children();
-      var name = $(cc[0]).val();
-      var cond = $(cc[1]).val();
-      var val = $(cc[2]).find('input').val(); // todo get val from component c.data
+      var name = $($c.find('.name')).val();
+      var cond = $($c.find('.cond')).val();
+      var val = $($c.find('input')).val();
+      console.log(name, cond, val)
       filters[name] = {};
       filters[name][cond] = val;
     }
     zcookie.set('filters-'+type, filters);
-    update_filters();
-    update_data();
+    //update_filters();
+    request_data();
   }
 
 
   function predicate_row(p, r)
   {
     var $r = $$('pr');
+    var $del = $$icon('del', {fa: 'times-circle', parent: $r});
+    $r.append(' ');
     var $s = $$('name', {el:'select', parent: $r});
     for (var i=0; i< bmeta.length; i++)
       $s.append($("<option>"+ bmeta[i].name+"</option>"));
     if (p)
       $s.val(p);
-    var $t = $$('comp', {el:'select', parent: $r});
+    $r.append('<br>');
+    var $t = $$('cond', {el:'select', parent: $r});
+    $r.append('<br>');
     var $i = $$('i', {el: 'span', parent: $r});
-    var $del = $$icon('', {fa: 'times-circle', parent: $r});
     $del.click(function(){
       $r.remove();
       get_data_from_ui_and_query();
     });
-    $i.keyup(function(){
-      get_data_from_ui_and_query();
+    $i.keyup(function(k){
+      if (k.keyCode == 13)
+        get_data_from_ui_and_query();
+    });
+    $i.change(function(k){
+        get_data_from_ui_and_query();
     });
     function update_t_and_i(){
       $t.empty();
