@@ -575,22 +575,6 @@ var form_fields = {
     }
 
 
-//    function get_upload_row(row) {
-//      if (!row || !row.meta)
-//        return;
-//      var $e = $$('resource');
-//      $e.append('<img src="'+row.meta.thumb+'">');
-//      var $x = $("<div>x</div>");
-//      $x.click(function () {
-//        $$ajax(delete_url + row._id).done(function () {
-//          $btn.show();
-//          $info.empty();
-//        });
-//      })
-//      $e.append($x);
-//      $info.append($e);
-//    }
-
 
     $fileupload.fileupload({
       dataType: 'json',
@@ -614,9 +598,9 @@ var form_fields = {
         $progress.hide();
         $info.show();
         if (options.array)
-          _d.push(edata.result);
+          f.push(edata.result);
         else
-          _d = edata.result;
+          f.update(edata.result);
         update_ui();
         self.emit('change');
       },
@@ -646,10 +630,15 @@ var form_fields = {
     });
     function update_ui() {
       $el.empty();
-      $el.append(new EJS({text: templates[options.type]}).render(_d));
+      if (templates[options.type])
+      {
+        var t = new EJS({text: templates[options.type]}).render(_d);
+        if (t)
+          $el.append('<div class="text">'+t+'</div>');
+      }
       var thumb = find_thumb(_d);
       if (thumb)
-        $el.css({'background-image':'url('+thumb+')'});
+        $el.append('<img src="'+thumb+'">');
     }
 
     $el.dblclick(function () {
@@ -708,26 +697,31 @@ var form_fields = {
       return $el;
     };
 
-    var $list = $("<div></div>");
     options = $.extend({add: true, browse: true, array: true}, options);
-    var $actions = $("<div></div>");
-    var $add = $("<span><i class='fa fa-plus-circle'></i> create</span>").css({'cursor': 'pointer'});
-    var $browse = $("<span><i class='fa fa-play-circle '></i> browse</span>").css({'cursor': 'pointer'});
-    if (options.add)
-      $actions.append($add, '&nbsp;');
-    if (options.browse)
-      $actions.append($browse, '&nbsp;');
+
+    var $list = $("<div></div>");
     $el.append($list);
-    $el.append($actions);
-    $add.click(function () {
-      self.emit('add');
-    });
-    $browse.click(function () {
-      self.emit('browse');
-    });
     $list.sortable({change: function (event, ui) {
       self.emit('change');
     }});
+
+    if (options.add || options.browse)
+    {
+      var $actions = $("<div></div>");
+      var $add = $("<span><i class='fa fa-plus-circle'></i> create</span>").css({'cursor': 'pointer'});
+      var $browse = $("<span><i class='fa fa-play-circle '></i> browse</span>").css({'cursor': 'pointer'});
+      if (options.add)
+        $actions.append($add, '&nbsp;');
+      if (options.browse)
+        $actions.append($browse, '&nbsp;');
+      $el.append($actions);
+      $add.click(function () {
+        self.emit('add');
+      });
+      $browse.click(function () {
+        self.emit('browse');
+      });
+    }
 
     Object.defineProperty(this, "data", {
       get: function () {
@@ -779,17 +773,16 @@ var form_fields = {
     var self = this;
     form_make_listener(self);
 
-    var $el = $("<div></div>").data("__obj__", this);
+    var $el = $$('deletable-row').data("__obj__", this);
     this.$el = function () {
       return $el;
     }
 
-    var $c = $("<span></span>").css({padding: '0 5px 0 0'});
+    var $c = $$('comp');
     var c = new clazz(options);
     c.bubble_listener(self);
-    c.$el().css({display: 'inline-block'})
-    var $x = $("<span></span>").addClass("fa fa-times-circle");
-    $el.append($c, $x);
+    var $x = $$('del').addClass("fa fa-times-circle");
+    $el.append($c, $x, $('<br clear="both">'));
     $c.append(c.$el());
     $x.click(function () {
       self.emit('change');
