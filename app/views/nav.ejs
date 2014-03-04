@@ -2,6 +2,10 @@
 <% if (user) { %>
     <div class="options">
     <a href='/cms'><i class="fa fa-home"></i></a>
+        <%for (var i=0; i<models.length; i++){%>
+            x<%= models[i].name %>
+        <%}%>
+
         <span id="extra-options"></span>
     </div>
     <div class="user">
