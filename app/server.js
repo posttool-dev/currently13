@@ -8,12 +8,13 @@ var fs = require('fs')
   , cms = require('./modules/cms')
   , index = require('./modules/index')
 
+  , config = require('./config')
   , hm = require('./hackettmill/models')
   , hmm = require('./hackettmill/migrate')
   ;
 
 
-mongoose.connect('mongodb://localhost/test', {}, function (err) {
+mongoose.connect(config.mongoConnectString, {}, function (err) {
   if (err) throw err;
   mongoose.connection.on('error', console.error.bind(console, 'connection error:'));
   init_app();
@@ -27,22 +28,19 @@ function init_app() {
   app.use(express.logger('dev'));
   app.use(express.cookieParser());
   app.use(express.session({
-    secret: 'nfuds9543ythhfgjghf$WH*#IRF5euyhtfgxkj',
+    secret: config.sessionSecret,
     store: new MongoStore({db: mongoose.connection.db})
   }));
   app.use(express.urlencoded());
   app.use(express.json());
-  app.use(express.multipart({limit: '1099mb'}));
+  app.use(express.multipart({limit: config.multipartLimit}));
   app.use(express.methodOverride());
   app.use(express.static(__dirname + '/public'));
 
   app.configure('development', function () {
     app.use(express.errorHandler());
-    cloudinary.config({
-      cloud_name: 'hackettmill',
-      api_key: '927166441966584',
-      api_secret: 'nJpv1R7U_-uhuvxiaJar8ihqUBg' });
   });
+  cloudinary.config(config.cloudinaryConfig);
 
   //hmm.migrate_data();
 
@@ -98,7 +96,7 @@ function init_app() {
   app.get('/cms/download/:id', [auth.has_user], cms.download);
   app.get('/cms/delete_resource/:id', [auth.has_user], cms.delete_resource);
 
-  app.listen(3000);
+  app.listen(config.serverPort);
   console.log('App started on port 3000');
 }
 
