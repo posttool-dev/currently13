@@ -73,10 +73,16 @@ exports.models = {
       {name: "modified", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"}
     ],
     form: [
-      {name: "first_name", widget: "input"},
-      {name: "last_name", widget: "input"},
-      {name: "description", widget: "rich_text"},
-      {name: "work", widget: "choose_create", options: {type: "Inventory", array: true}}
+      {begin: "row"},
+        {begin: "col", options: {className: "two-col"}},
+          {name: "first_name", widget: "input"},
+          {name: "last_name", widget: "input"},
+          {name: "description", widget: "rich_text"},
+        {end: "col" },
+        {begin: "col", options: {className: "two-col"}},
+          {name: "work", widget: "choose_create", options: {type: "Inventory", array: true}},
+        {end: "col" },
+      {end: "row"}
     ]
   },
 
@@ -138,7 +144,69 @@ exports.models = {
       email: String,
       phone: String,
       mobile: String
-    }
+    },
+    browse: [
+      { name: 'title',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'overview',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'directions',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'address_line_1',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'address_line_2',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'city',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'state',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'zip',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'email',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+//      { name: 'phone',
+//        cell: 'char',
+//        filters: [ '$regex', 'equals' ],
+//        order: 'asc,desc,default' },
+//      { name: 'mobile',
+//        cell: 'char',
+//        filters: [ '$regex', 'equals' ],
+//        order: 'asc,desc,default' },
+      { name: 'modified',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' }
+    ],
+    form: [
+      { name: 'title', widget: 'input' },
+      { name: 'overview', widget: 'rich_text' },
+      { name: 'directions', widget: 'rich_text' },
+      { name: 'address_line_1', widget: 'input' },
+      { name: 'address_line_2', widget: 'input' },
+      { name: 'city', widget: 'input' },
+      { name: 'zip', widget: 'input' },
+      { name: 'email', widget: 'input' },
+      { name: 'phone', widget: 'input' },
+      { name: 'mobile', widget: 'input' }
+    ]
   },
 
   Essay: {
@@ -149,7 +217,35 @@ exports.models = {
       author: String,
       audio_bio: String,
       body: String
-    }
+    },
+    browse: [
+      { name: 'title1',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'title2',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+
+      { name: 'author',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'modified',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+    ],
+    form: [
+      { name: 'title1', widget: 'input' },
+      { name: 'title2', widget: 'input' },
+      { name: 'title3', widget: 'input' },
+      { name: 'author', widget: 'input' },
+      { name: 'audio_bio', widget: 'input' },
+      { name: 'body', widget: 'input' }
+    ]
+
   },
 
   Catalog: {
@@ -160,7 +256,33 @@ exports.models = {
       images: [
         {type: ObjectId, ref: 'Resource'}
       ]
-    }
+    },
+    browse: [
+      { name: 'title',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'price',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'images',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'modified',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+    ],
+    form: [
+      { name: 'price', widget: 'input' },
+      { name: 'title', widget: 'input' },
+      { name: 'caption', widget: 'input' },
+      { name: 'images',
+        widget: 'choose_create',
+        options: { type: 'Resource', array: true } } ]
+
   },
 
   Exhibition: {
@@ -178,7 +300,56 @@ exports.models = {
         {type: ObjectId, ref: 'Essay'}
       ],
       catalog: {type: ObjectId, ref: 'Catalog'}
-    }
+    },
+    browse: [
+      { name: 'title',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'subtitle',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'start_date',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'end_date',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'opening_date',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'modified',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+    ],
+    form: [
+      { name: 'title', widget: 'input' },
+      { name: 'subtitle', widget: 'input' },
+      { name: 'images',
+        widget: 'choose_create',
+        options: { type: 'Inventory', array: true } },
+      { name: 'essays',
+        widget: 'choose_create',
+        options: { type: 'Essay', array: true } },
+      { name: 'catalog',
+        widget: 'choose_create',
+        options: { type: 'Catalog', array: false } },
+
+      { begin: 'row'},
+        { name: 'start_date', widget: 'date' },
+        { name: 'end_date', widget: 'date' },
+      { end: 'row'},
+      { begin: 'row'},
+        { name: 'opening_date', widget: 'date' },
+        { name: 'opening_length', widget: 'number' },
+      { end: 'row'},
+    ]
+
   }
 }
 

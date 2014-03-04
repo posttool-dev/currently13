@@ -33,11 +33,13 @@ exports.init = function (meta, resource_class_name, user_class_name) {
     {
       meta[p].browse = create_browse_info(p);
       console.log('Added generated browse for '+p);
+      console.log(meta[p].browse);
     }
     if (!meta[p].form)
     {
       meta[p].form = create_form_info(p);
       console.log('Added generated form for '+p);
+      console.log(meta[p].form);
     }
   }
   Resource = mongoose.model(resource_class_name, Meta[resource_class_name].schema);

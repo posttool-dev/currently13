@@ -520,7 +520,10 @@ var form_fields = {
         return new Date(_d);
       },
       set: function (n) {
-        _d = n.substring(0,10);
+        if (n)
+          _d = n.substring(0,10);
+        else
+          _d = '';
         update_ui();
       }
     });
