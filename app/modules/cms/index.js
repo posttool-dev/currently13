@@ -225,7 +225,7 @@ exports.form =
 
 exports.get_preview_url = function(e)
 {
-  return cloudinary.url(e.public_id + ".jpg", { width: 200, height: 150 });
+  return cloudinary.url(e.public_id + ".jpg", { width: 300, height: 200 , crop: 'fit'});
 };
 
 
