@@ -2,6 +2,7 @@ var fs = require('fs')
   , express = require('express'), app = express()
   , mongoose = require('mongoose')
   , cloudinary = require('cloudinary')
+  , MongoStore = require('connect-mongo')(express)
 
   , auth = require('./modules/auth')
   , cms = require('./modules/cms')
@@ -25,7 +26,10 @@ function init_app() {
   app.set('view engine', 'ejs');
   app.use(express.logger('dev'));
   app.use(express.cookieParser());
-  app.use(express.session({secret: 'nfuds9543ythhfgjghf$WH*#IRF5euyhtfgxkj'}));
+  app.use(express.session({
+    secret: 'nfuds9543ythhfgjghf$WH*#IRF5euyhtfgxkj',
+    store: new MongoStore({db: mongoose.connection.db})
+  }));
   app.use(express.urlencoded());
   app.use(express.json());
   app.use(express.multipart({limit: '1099mb'}));
@@ -40,7 +44,11 @@ function init_app() {
       api_secret: 'nJpv1R7U_-uhuvxiaJar8ihqUBg' });
   });
 
-//  hmm.migrate_data();
+  //hmm.migrate_data();
+
+
+
+
 
   // General
 
@@ -76,16 +84,16 @@ function init_app() {
 
   cms.init(hm.models, "Resource", "User");
 
-  app.all('/cms', [auth.has_user, cms.a], cms.show_dashboard);
-  app.get('/cms/browse/:type', [auth.has_user, cms.a, cms.b], cms.browse.get);
-  app.post('/cms/browse/:type', [auth.has_user, cms.a, cms.b], cms.browse.post);
-  app.post('/cms/schema/:type', [auth.has_user, cms.a, cms.b], cms.schema);
-  app.get('/cms/create/:type', [auth.has_user, cms.a, cms.b], cms.form.get);
-  app.post('/cms/create/:type', [auth.has_user, cms.a, cms.b, cms.c], cms.form.post);
-  app.get ('/cms/update/:type/:id', [auth.has_user, cms.a, cms.b, cms.c], cms.form.get);
-  app.post('/cms/update/:type/:id', [auth.has_user, cms.a, cms.b, cms.c], cms.form.post);
-  app.get ('/cms/get/:type', [auth.has_user, cms.a, cms.b], cms.form.get_json);
-  app.get ('/cms/get/:type/:id', [auth.has_user, cms.a, cms.b, cms.c], cms.form.get_json);
+  app.all('/cms', [auth.has_user, cms.add_meta], cms.show_dashboard);
+  app.get('/cms/browse/:type', [auth.has_user, cms.add_meta], cms.browse.get);
+  app.post('/cms/browse/:type', [auth.has_user, cms.add_meta], cms.browse.post);
+  app.post('/cms/schema/:type', [auth.has_user, cms.add_meta], cms.schema);
+  app.get('/cms/create/:type', [auth.has_user, cms.add_meta], cms.form.get);
+  app.post('/cms/create/:type', [auth.has_user, cms.add_meta, cms.add_object], cms.form.post);
+  app.get ('/cms/update/:type/:id', [auth.has_user, cms.add_meta], cms.form.get);
+  app.post('/cms/update/:type/:id', [auth.has_user, cms.add_meta, cms.add_object], cms.form.post);
+  app.get ('/cms/get/:type', [auth.has_user, cms.add_meta], cms.form.get_json);
+  app.get ('/cms/get/:type/:id', [auth.has_user, cms.add_meta, cms.add_object], cms.form.get_json);
   app.post('/cms/upload', [auth.has_user], cms.upload);
   app.get('/cms/download/:id', [auth.has_user], cms.download);
   app.get('/cms/delete_resource/:id', [auth.has_user], cms.delete_resource);

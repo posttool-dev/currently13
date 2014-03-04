@@ -1,4 +1,3 @@
-var uuid = require('node-uuid');
 var fs = require('fs');
 var mongoose = require('mongoose');
 var gfs = null, Grid = require('gridfs-stream');
@@ -22,59 +21,82 @@ exports.utils = utils;
 
 /* put the meta info in every request */
 
-exports.a = function (req, res, next) {
-  req.models = meta.meta();
-  next();
-};
-
-
-/* if a type was specified, put all its meta info in the request */
-
-exports.b = function (req, res, next) {
+exports.add_meta = function (req, res, next) {
+  req.models = res.locals.models = meta.meta();
   var type = req.params.type;
-  req.type = type;
-  req.schema = meta.schema(type);
-  req.virtuals = meta.virtuals(type);
-  req.model = meta.model(type);
-  req.browser = meta.browse(type);
-  req.form = meta.form(type);
+  if (type)
+  {
+    req.type = type;
+    req.schema = meta.schema(type);
+    req.virtuals = meta.virtuals(type);
+    req.model = meta.model(type);
+    req.browser = meta.browse(type);
+    req.form = meta.form(type);
+  }
   next();
 };
 
 /* if an id was specified, find and populate a view of the model, with thumbnail references */
-exports.c = function (req, res, next) {
-
+exports.add_object = function (req, res, next) {
   expand(req.schema, req.model, req.params.id, function (err, m) {
-    if (err) next(err);
-    else {
-      req.object = m;
-      var related = [];
-      for (var p in req.models)
-      {
-        var refs = meta.get_references(meta.schema(p));
-        for (var i=0; i<refs.length; i++)
-        {
-          if (refs[i].ref == req.type)
-          {
-            console.log(p, refs[i]);
-            related.push({type:p, field: refs[i]});
-          }
-        }
-      }
-      if (related)
-      {
-        req.related = {};
-        utils.process_list(related, function (e, n) {
-          meta.models(e.type).find({e.field.name: $in: {}})
-          q.exec(function (err, r) {
-            req.related[e] = r;
-            n();
-          });
-        }, next);
-      }
-      else
+    if (err) {
+      next(err);
+      return;
+    }
+    req.object = m;
+    if (m)
+      related(req.type, m._id, function(r){
+        req.related = r;
         next();
+      });
+    else
+      next();
+  });
+};
 
+
+expand = function(schema, model, id, next)
+{
+  var q = model.findOne({_id: id});
+  var refs = meta.get_references(schema);
+  if (refs)
+
+    q.populate(meta.get_names(refs).join(" "));
+  q.exec(function (err, m) {
+    next(err, m);
+  });
+};
+
+related = function (type, id, next) {
+  var related = [];
+  for (var p in meta.meta()) {
+    var refs = meta.get_references(meta.schema(p));
+    for (var i = 0; i < refs.length; i++) {
+      if (refs[i].ref == type) {
+        related.push({type: p, field: refs[i]});
+      }
+    }
+  }
+  var r = {};
+  if (related) {
+    utils.process_list(related, function (ref, n) {
+      var c = {};
+      c[ref.field.name] = {$in: [id]}
+      console.log(ref.type, c);
+      var q = meta.model(ref.type).find(c);
+      q.exec(function (err, qr) {
+        r[ref.type] = qr;
+        n();
+      });
+    }, function () {
+      next(r);
+    });
+  }
+  else
+    next(r);
+};
+
+// virtuals?
 //      if (req.virtuals)
 //      {
 //        var keys = Object.keys(req.virtuals);
@@ -89,21 +111,14 @@ exports.c = function (req, res, next) {
 //      }
 //      else
 //        next();
-    }
-  });
-};
 
 
-expand = function(schema, model, id, next)
-{
-  var q = model.findOne({_id: id});
-  var refs = meta.get_references(schema);
-  if (refs)
-    q.populate(meta.get_names(refs).join(" "));
-  q.exec(function (err, m) {
-    next(err, m);
-  });
-}
+
+
+
+
+
+
 
 // the 'views'
 
@@ -166,8 +181,7 @@ exports.form =
       title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
       ancestors: [{url:'/cms/browse/'+req.type, name:req.type}],
       type: req.type,
-      id: req.object ? req.object._id : null,
-      object: req.object || new req.model(),
+      id: req.id ? req.id : null,
       form: req.form});
   },
 
@@ -221,8 +235,7 @@ exports.upload = function (req, res) {
   var do_save = function (e) {
     // create a resource with path & return id
     var r = new meta.Resource();
-    r.filename = file.name;
-    r.path = file.path;
+    r.path = file.name;
     r.size = file.size;
     r.creator = req.session.user._id;
     r.meta = e;
