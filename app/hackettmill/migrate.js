@@ -2,6 +2,7 @@ var fs = require('fs');
 var csv = require('csv');
 var mongoose = require('mongoose');
 var cloudinary = require('cloudinary');
+var uuid = require('node-uuid');
 
 var cms = require('../modules/cms'), process_list = cms.utils.process_list;
 
@@ -15,7 +16,11 @@ exports.migrate_data = function () {
   if (use_existing_images)
     migrate0();
   else
-    cloudinary.api.delete_resources_by_prefix(prefix, migrate_delete_resources0);
+    cloudinary.api.delete_resources_by_prefix(prefix, function (c) {
+      console.log('   ... deleted ' + c + ' cloduinary resources');
+      migrate_delete_resources0();
+    });
+
 }
 
 
@@ -123,16 +128,15 @@ function create_resource(rd, next) {
       cloudinary.uploader.upload(url,
         function (e) {
           var r = new R();
-          r.filename = x;
-          r.path = p;
+          r.path = x;
           r.meta = e;
-          r.meta.thumb = cms.get_preview_url(r);
+          r.meta.thumb = cms.get_preview_url(e);
           r.save(function (err, r) {
             rd.model = r;
             console.log(r.meta.public_id, r.meta.thumb);
             next();
           });
-        }, { public_id: prefix+'/'+p});
+        }, { public_id: prefix+'/'+uuid.v4()});
     }
   });
 }
