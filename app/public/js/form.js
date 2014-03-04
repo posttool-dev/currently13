@@ -1,6 +1,11 @@
 var upload_url = "/cms/upload";
 var delete_url = "/cms/delete_resource/";
 
+var templates = {
+  Artist: '<%= first_name %> <%= last_name %>',
+  Inventory: '<%= title %>'
+}
+
 function form_form(type, id) {
   var self = this;
   self.type = type;
@@ -158,11 +163,11 @@ function form_form(type, id) {
   function update_ui()
   {
     if (_modified)
-      self.$time.text(' Last modified ' + timeSince(new Date(_modified)) + ' ago.');
+      self.$time.text(' Last modified ' + timeSince(new Date(_modified)) + '.');
     else
       self.$time.text(' New record.');
     $info_date.empty();
-    $info_date.append('Created '+_created+'<br>Modified '+_modified);
+    $info_date.append('Created '+formatDate(_created)+'<br>Modified '+formatDate(_modified));
     $info_rel.empty();
     var c = 0;
     for (var p in _related)
@@ -174,12 +179,13 @@ function form_form(type, id) {
       {
         (function(type, r)
         {
-          var $m = $$('model');
+          var f = new form_fields.model_field({type:type});
+          f.data = r;
+          $m = f.$el();
           $m.dblclick(function () {
             console.log(r);
             self.emit('select', {type: type, id: r._id});
           });
-          $m.text(r.title);
           $info_rel.append($m);
           c++;
         })(p, _related[p][i]);
@@ -630,6 +636,7 @@ var form_fields = {
   },
 
   model_field: function (options) {
+    console.log(options.type)
     var self = this;
     var $el = $$('model');
     form_make_listener(self);
@@ -649,7 +656,7 @@ var form_fields = {
     });
     function update_ui() {
       $el.empty();
-      $el.append(_d.title);
+      $el.append(new EJS({text: templates[options.type]}).render(_d));
     }
 
     $el.dblclick(function () {
@@ -758,7 +765,7 @@ var form_fields = {
     });
 
     self.push = function(data) {
-      var d = new form_fields.deletable_row(clazz);
+      var d = new form_fields.deletable_row(clazz, options);
       d.data = data;
       d.bubble_listener(self);
       $list.append(d.$el());
@@ -775,7 +782,7 @@ var form_fields = {
 
   },
 
-  deletable_row: function (clazz) {
+  deletable_row: function (clazz, options) {
     var self = this;
     form_make_listener(self);
 
@@ -785,7 +792,7 @@ var form_fields = {
     }
 
     var $c = $("<span></span>").css({padding: '0 5px 0 0'});
-    var c = new clazz();
+    var c = new clazz(options);
     c.bubble_listener(self);
     c.$el().css({display: 'inline-block'})
     var $x = $("<span></span>").addClass("fa fa-times-circle");
