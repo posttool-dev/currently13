@@ -1,16 +1,10 @@
-/* Style tweaks */
-html {
-    overflow-x: hidden; /* Prevent scroll on narrow devices */
-}
 
 * {
     font-family: 'Helvetica Neue', sans-serif;
     letter-spacing: .02em;
-        -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
 
 }
+
 
 /*Webkit: prevent flickers
 Having flickering problems in Webkit? Use -webkit-backface-visibility. See this question for some discussions on this.
@@ -21,6 +15,14 @@ Having flickering problems in Webkit? Use -webkit-backface-visibility. See this 
 .c {
   -webkit-transition: translate3d(0,0,0);
 }
+
+/* want to apply globally, but causes probs with ckeditor */
+.control-group, .controls, input, .hrow, .hcol, .crow, .ccol, #tool-bar, #control-bar {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+.rich-text { padding-right: 10px; } /* to account for being un able to implement boxsizing for ck editor thanks */
 
 
 
@@ -144,7 +146,7 @@ button:disabled {
     background-color: #fff;
     color: #333;
     border-bottom: 1px solid #ccc;
-    padding: 3px 0 0 18px;
+    padding: 4px 25px 0 18px;
     z-index: 12;
 }
 
@@ -163,7 +165,9 @@ button:disabled {
 
 .control-group {
     padding-top: 20px;
+    clear:both;
 }
+
 
 .progress {
     width: 100%;
@@ -189,6 +193,31 @@ button:disabled {
     color: #fff;
     cursor: move;
 }
+
+
+.three-col {
+    width: 75%;
+    padding-right:10px;
+     -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+ }
+
+.two-col {
+    width: 50%;
+    padding-right:10px;
+     -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+ }
+
+.one-col {
+    width: 25%;
+    padding-right:10px;
+     -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+ }
 
 /* browser */
 
@@ -340,7 +369,7 @@ button:disabled {
     height: 100%;
     top: 0;
     left: 0;
-    background-color: rgba(0, 0, 0, .7);
+    background-color: rgba(255,255,255, .7);
 }
 
 .c {
@@ -352,3 +381,17 @@ button:disabled {
     box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);
 
 }
+
+
+.info {
+    position:fixed;
+    top:75px;
+    right: 0px;
+    width: 240px;
+    height: 100%;
+    background-color: #444;
+    color: #ccc;
+    padding: 10px;
+    font-size: 13px;
+}
+

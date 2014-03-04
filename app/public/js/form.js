@@ -11,19 +11,25 @@ function form_form(type, id) {
     return $el;
   }
 
+  var _meta = null;
+  var _related = null;
   var _id = id;
   var _created = null;
   var _modified = null;
-  var idx = {};
+  var _idx = {};
 
+  var info_open = false;
 
   self.$controls = function () {
     var $controls = $$('form-controls');
     //  var $title = $$('title', {el: 'span', parent: $controls}).text(type);
+    var $cancel = $$('btn btn-primary', {el: 'button', parent: $controls}).text('CLOSE');
+    $cancel.click(function(){ self.emit('close'); });
     self.$save = $$('btn btn-primary', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
     self.$time = $$('time', {el: 'span', parent: $controls});
     update_ui();
-    var $delete = $$('btn btn-right', {el: 'button', parent: $controls}).text('X');
+    var $cog = $$('btn-right', {el: 'span', parent: $controls}).html('<i class="fa fa-cog"></i>');
+    $cog.click(toggle_info);
     self.$save.click(function () {
       $.ajax({
         url: self.url(),
@@ -43,37 +49,70 @@ function form_form(type, id) {
         }
       })
     });
-    $delete.click(function(){
-      self.emit('close', self.data);
-    });
+    function toggle_info(){
+      if (info_open)
+      {
+        $form.transition({width: '100%'});
+        $info.transition({width: '20%', right: '-25%'});
+        $cog.transition({right: '-25%'});
+        info_open = false;
+      }
+      else
+      {
+        $form.transition({width: '77%'});
+        $info.transition({width: '20%', right: '0px'});
+        $cog.transition({right: '0px'});
+        info_open = true;
+      }
+  }
     return $controls;
   }
-  var $form = $$('form', {parent: $el});
 
-  function set_meta(meta_data) {
-    idx = {};
+  var $form = $$('form', {parent: $el});
+      $form.transition({width: '100%'});
+
+  var $info = $$('info', {parent: $el}).css({right: '-250px'});
+      $info.transition({width: '20%', right: '-25%'});
+
+  var $info_date = $$('date', {parent: $info});
+  var $info_rel = $$('related', {parent: $info});
+  var $info_logs = $$('logs', {parent: $info});
+
+  function set_meta(meta_data, objects_with_refs_to_me) {
+    _meta = meta_data;
+    _related = objects_with_refs_to_me;
+    _idx = {};
+    //
     $form.empty();
     var $t = $form;
     var s = [];
-    idx = {};
     for (var i = 0; i < meta_data.length; i++) {
       var d = meta_data[i];
       if (d.begin) {
-        var $x = $("<div></div>");
-        $t.append($x);
         s.push($t);
+        var $x = $("<div></div>");
+        if (d.options && d.options.className)
+          $x.addClass(d.options.className);
+        if ($t.data('float'))
+          $x.css({'float':'left'});
+        if (d.begin == 'row')
+          $x.data('float',true);
+        $t.append($x);
         $t = $x;
       }
       else if (d.end) {
         $t = s.pop();
       }
       else {
-        var f = create_field(d);
+       var f = create_field(d);
         var $fel = f.$el();
+        if ($t.data('float'))
+          $fel.css({'float':'left'});
         $t.append($fel);
-        idx[d.name] = f;
+        _idx[d.name] = f;
       }
     }
+    $t.append("<div style='clear:both;'></div>");
   }
 
   function create_field(d) {
@@ -98,8 +137,8 @@ function form_form(type, id) {
   Object.defineProperty(self, "data", {
     get: function () {
       var d = {_id: _id, created: _created, modified: _modified};
-      for (var p in idx)
-        d[p] = idx[p].data;
+      for (var p in _idx)
+        d[p] = _idx[p].data;
       return d;
     },
     set: function (n) {
@@ -109,8 +148,8 @@ function form_form(type, id) {
       _created = n.created;
       _modified = n.modified;
       for (var p in n) {
-        if (idx[p])
-          idx[p].data = n[p];
+        if (_idx[p])
+          _idx[p].data = n[p];
       }
       update_ui();
     }
@@ -118,15 +157,51 @@ function form_form(type, id) {
 
   function update_ui()
   {
-      if (_modified)
-        self.$time.text(' Last modified ' + timeSince(new Date(_modified)) + ' ago.');
-      else
-        self.$time.text(' New record.');
+    if (_modified)
+      self.$time.text(' Last modified ' + timeSince(new Date(_modified)) + ' ago.');
+    else
+      self.$time.text(' New record.');
+    $info_date.empty();
+    $info_date.append('Created '+_created+'<br>Modified '+_modified);
+    $info_rel.empty();
+    var c = 0;
+    for (var p in _related)
+    {
+      if (_related[p].length != 0)
+      $info_rel.append('<h3>'+p+'</h3>');
 
+      for (var i=0; i<_related[p].length; i++)
+      {
+        (function(type, r)
+        {
+          var $m = $$('model');
+          $m.dblclick(function () {
+            console.log(r);
+            self.emit('select', {type: type, id: r._id});
+          });
+          $m.text(r.title);
+          $info_rel.append($m);
+          c++;
+        })(p, _related[p][i]);
+      }
+    }
+    if (c == 0)
+    {
+      $info_rel.append('DELETE OK');
+    }
+    else
+    {
+      $info_rel.append('CANT DELETE - MUST RESOLVE FIRST - click to remove from the preceeding');
+    }
+
+    $info_logs.empty();
+    // ha
   }
+
+
   self.error = function (o) {
       self.$time.text(' ERROR - see fields for details');
-    idx[o.path].error = JSON.stringify(o);
+    _idx[o.path].error = JSON.stringify(o);
   }
 
   self.update = function (o) {
@@ -150,9 +225,9 @@ function form_form(type, id) {
     url += '/' + id;
 
   $$ajax(url).done(function (o) {
-    set_meta(o.form);
+    set_meta(o.form, o.related);
     self.data = o.object;
-    console.log(o.related)
+
   });
 
 

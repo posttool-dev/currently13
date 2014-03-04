@@ -31,9 +31,8 @@
 
 .multi-drop-area {
     padding:5px;
-    min-width: 500px;
-    min-height: 40px;
-    border: 2px solid #ccc;
+    min-height: 50px;
+    border: 1px dotted #777;
     background-color: #eee;
     line-height: 18px;
 }

@@ -21,34 +21,35 @@ exports.models = {
       materials: String,
       dimensions: String
     },
-    virtuals: {
-      artists: function(){
-        return mongoose.model('Artist').find({work: { $in: [this. _id]}});
-      }
-    },
     browse: [
       {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},
       {name: "code", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
-      {name: "resources", cell: "image"},
+      {name: "resources", cell: "image" },
       {name: "year", cell: "string", filters: ["$regex"], order: "asc,desc"},
       {name: "modified", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
     ],
     form: [
       {begin: "row"},
-        {name: "title", widget: "input", options: {className: "large", width: "80%"}},
-        {name: "code", widget: "input", options: {className: "large", width: "20%"}},
-      {end: "row" },
-      {begin: "row"},
-        {name: "resources", widget: "upload", options: {type: "Resource", array: true}},
+        {begin: "col", options: {className: "three-col"}},
+          {name: "title", widget: "input", options: {className: "large", width: "80%"}},
+          {name: "code", widget: "input", options: {className: "large", width: "20%"}},
+        {end: "col" },
+        {begin: "col", options: {className: "one-col"}},
+          {name: "resources", widget: "upload", options: {type: "Resource", array: true}},
+        {end: "col" },
       {end: "row" },
       {name: "description", widget: "rich_text"},
-      {begin: "section"},
-        {name: "use", widget: "input", help: "More details about the use."},
-        {name: "alignment", widget: "input"},
-        {name: "year", widget: "input"},
-        {name: "materials", widget: "input"},
-        {name: "dimensions", widget: "input"},
-      {end: "section"}
+      {begin: "row"},
+        {begin: "col", options: {className: "two-col"}},
+          {name: "use", widget: "input", help: "More details about the use."},
+          {name: "alignment", widget: "input"},
+          {name: "year", widget: "input"},
+        {end: "col" },
+        {begin: "col", options: {className: "two-col"}},
+          {name: "materials", widget: "input"},
+          {name: "dimensions", widget: "input"},
+        {end: "col" },
+      {end: "row"}
     ]
   },
 
