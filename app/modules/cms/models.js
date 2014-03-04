@@ -19,8 +19,8 @@ exports.models = {
     schema: ResourceSchemaInfo,
     browse: [
       {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
-      {name: "caption", cell: "char", filters: ["icontains", "equals"]},
-      {name: "path", cell: "image", filters: ["icontains", "equals"], order: "asc,desc"},
+      {name: "path", cell: "char", filters: ["icontains", "equals"], order: "asc,desc"},
+      {name: "meta", cell: "image"},
     ],
     form: [
       {name: "title", widget: "input"},

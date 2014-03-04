@@ -38,10 +38,10 @@ function browse_browse(type) {
       // var $title = $$('title', {el: 'span', parent: $controls}).text('Browse ' + type);
       $filters = $$('filters', {parent: $controls});
       $pager = $$('pager', {parent: $controls});
-      var $create = $$('btn btn-right', {el: 'button', parent: $controls}).text('CREATE');
-      $create.click(function(){
-           location.href = '/cms/create/'+ type ;
-      });
+//      var $create = $$('btn btn-right', {el: 'button', parent: $controls}).text('CREATE');
+//      $create.click(function(){
+//           location.href = '/cms/create/'+ type ;
+//      });
       create_pager();
       update_filters();
       return $controls;
@@ -147,13 +147,9 @@ function browse_browse(type) {
       var v = r[b.name];
       var $c = $$('ccol nowrap');
       $c.css({width: p});
-      if (bmeta[j].cell == 'image')
+      if (b.cell == 'image')
       {
-        var u;
-        if (Array.isArray(v) && v.length != 0)
-          u = v[0].meta.thumb;
-        else if (v.meta)
-          u = v.meta.thumb;
+        var u = find_thumb(v);;
         if (u)
           $c.append('<img src="'+u+'">');
       }
@@ -164,16 +160,29 @@ function browse_browse(type) {
     return $r;
   }
 
+  function find_thumb(v) {
+    if (v == null)
+      return null;
+    if ($.isPlainObject(v)) {
+      if (v.thumb)
+        return v.thumb;
+      for (var p in v) {
+        var f = find_thumb(v[p]);
+        if (f)
+          return f;
+      }
+    } else if ($.isArray(v)) {
+      for (var i = 0; i < v.length; i++) {
+        var f = find_thumb(v[i]);
+        if (f)
+          return f;
+      }
+    } else {
+      return null;
+    }
+  }
+
 /* pager */
-//
-//  function create_pager2(total) {
-//    $pager.append('<span>Show rows: <input class="small" value="' + pagesize + '"></span>');
-//    $pager.append('<span>Go to: <input class="small" value="' + page + '"></span>');
-//    var top = Math.min(page * pagesize + pagesize, total);
-//    $pager.append('<span>' + (page * pagesize) + '-' + top + ' of ' + total + '</span>');
-//    $pager.append('<button>p</button>');
-//    $pager.append('<button>n</button>');
-//  }
 
   function create_pager()
   {
@@ -198,6 +207,7 @@ function browse_browse(type) {
     }
     var top = Math.min(i*pagesize+pagesize, total);
     $p.text((i*pagesize+1)+'-'+top);
+    $p.text(i+1);
     $p.click(function () {
       page = i;
       if ($lp)
