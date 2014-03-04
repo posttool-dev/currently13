@@ -242,17 +242,29 @@ select:active {
 }
 
 .model {
-    min-width: 150px;
-    max-width: 300px;
-    height: 25px;
-    padding: 8px 12px 24px 8px;
-    margin: 5px 0 5px 0;
     font-size: 12px;
     background-color: #48adff;
     color: #fff;
     cursor: move;
+    margin: 2px 0 6px 0;
 }
 
+.model .text {
+    padding: 10px 40px 25px 10px;
+}
+
+.deletable-row {
+}
+
+.deletable-row .comp {
+    float:left;
+
+}
+
+.deletable-row .del {
+    float:left;
+    margin-left: 5px;
+}
 
 .three-col {
     width: 75%;
