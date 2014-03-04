@@ -4,7 +4,6 @@ var cms = require('../modules/cms/models');
 
 exports.models = {
 
-  Resource: cms.models.Resource,
 
   /* hackett mill calls their catalog of art "inventory" */
   Inventory: {
@@ -86,50 +85,79 @@ exports.models = {
     ]
   },
 
-  /* pages */
-  Page: {
+
+
+  Exhibition: {
     schema: {
       title: String,
       subtitle: String,
-      body: String,
-      pages: [
-        {type: ObjectId, ref: 'Page'}
-      ]
+      images: [
+        {type: ObjectId, ref: 'Inventory'}
+      ],
+      start_date: Date,
+      end_date: Date,
+      opening_date: Date,
+      opening_length: String,
+      essays: [
+        {type: ObjectId, ref: 'Essay'}
+      ],
+      catalog: {type: ObjectId, ref: 'Catalog'}
     },
     browse: [
-      {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
-      {name: "subtitle", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},
-      {name: "modified", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"}
-
+      { name: 'title',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'subtitle',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'start_date',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'end_date',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'opening_date',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
+      { name: 'modified',
+        cell: 'char',
+        filters: [ '$regex', 'equals' ],
+        order: 'asc,desc,default' },
     ],
     form: [
-      {name: "title", widget: "input"},
-      {name: "subtitle", widget: "input"},
-      {name: "body", widget: "rich_text"},
-      {name: "pages", widget: "choose_create", options: {type: "Page", array: true}}
+      { name: 'title', widget: 'input' },
+      { name: 'subtitle', widget: 'input' },
+      {begin: "row"},
+        {begin: "col", options: {className: "two-col"}},
+          { name: 'images',
+            widget: 'choose_create',
+            options: { type: 'Inventory', array: true } },
+        {end: "col" },
+        {begin: "col", options: {className: "two-col"}},
+          { name: 'start_date', widget: 'date' },
+          { name: 'end_date', widget: 'date' },
+          { name: 'opening_date', widget: 'date' },
+          { name: 'opening_length', widget: 'number' },
+          { name: 'essays',
+            widget: 'choose_create',
+            options: { type: 'Essay', array: true } },
+          { name: 'catalog',
+            widget: 'choose_create',
+            options: { type: 'Catalog', array: false } },
+        {end: "col" },
+      { end: 'row'},
+
     ]
+
   },
 
-  /* news */
-  News: {
-    schema: {
-      title: String,
-      subtitle: String,
-      body: String,
-      release_date: Date
-    },
-    browse: [
-      {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
-      {name: "release_date", cell: "date", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
-      {name: "modified", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"}
-    ],
-    form: [
-      {name: "title", widget: "input"},
-      {name: "subtitle", widget: "input"},
-      {name: "body", widget: "rich_text"},
-      {name: "release_date", widget: "date"}
-    ]
-  },
+
+
 
   Contact: {
     schema: {
@@ -285,72 +313,58 @@ exports.models = {
 
   },
 
-  Exhibition: {
+
+
+
+
+  /* pages */
+  Page: {
     schema: {
       title: String,
       subtitle: String,
-      images: [
-        {type: ObjectId, ref: 'Inventory'}
-      ],
-      start_date: Date,
-      end_date: Date,
-      opening_date: Date,
-      opening_length: String,
-      essays: [
-        {type: ObjectId, ref: 'Essay'}
-      ],
-      catalog: {type: ObjectId, ref: 'Catalog'}
+      body: String,
+      pages: [
+        {type: ObjectId, ref: 'Page'}
+      ]
     },
     browse: [
-      { name: 'title',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'subtitle',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'start_date',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'end_date',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'opening_date',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'modified',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
+      {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
+      {name: "subtitle", cell: "char", filters: ["$regex", "equals"], order: "asc,desc"},
+      {name: "modified", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"}
+
     ],
     form: [
-      { name: 'title', widget: 'input' },
-      { name: 'subtitle', widget: 'input' },
-      { name: 'images',
-        widget: 'choose_create',
-        options: { type: 'Inventory', array: true } },
-      { name: 'essays',
-        widget: 'choose_create',
-        options: { type: 'Essay', array: true } },
-      { name: 'catalog',
-        widget: 'choose_create',
-        options: { type: 'Catalog', array: false } },
-
-      { begin: 'row'},
-        { name: 'start_date', widget: 'date' },
-        { name: 'end_date', widget: 'date' },
-      { end: 'row'},
-      { begin: 'row'},
-        { name: 'opening_date', widget: 'date' },
-        { name: 'opening_length', widget: 'number' },
-      { end: 'row'},
+      {name: "title", widget: "input"},
+      {name: "subtitle", widget: "input"},
+      {name: "body", widget: "rich_text"},
+      {name: "pages", widget: "choose_create", options: {type: "Page", array: true}}
     ]
+  },
 
-  }
+  /* news */
+  News: {
+    schema: {
+      title: String,
+      subtitle: String,
+      body: String,
+      release_date: Date
+    },
+    browse: [
+      {name: "title", cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"},
+      {name: "release_date", cell: "date", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
+      {name: "modified", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"}
+    ],
+    form: [
+      {name: "title", widget: "input"},
+      {name: "subtitle", widget: "input"},
+      {name: "body", widget: "rich_text"},
+      {name: "release_date", widget: "date"}
+    ]
+  },
+
+
+    Resource: cms.models.Resource,
+
 }
 
 

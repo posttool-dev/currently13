@@ -60,7 +60,6 @@ expand = function(schema, model, id, next)
   var q = model.findOne({_id: id});
   var refs = meta.get_references(schema);
   if (refs)
-
     q.populate(meta.get_names(refs).join(" "));
   q.exec(function (err, m) {
     next(err, m);

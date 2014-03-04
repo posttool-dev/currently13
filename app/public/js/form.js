@@ -777,6 +777,7 @@ var form_fields = {
     form_make_listener(self);
 
     var $el = $$('deletable-row').data("__obj__", this);
+    $el.css({width:'100%'});
     this.$el = function () {
       return $el;
     }
