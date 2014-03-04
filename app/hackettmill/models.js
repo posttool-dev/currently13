@@ -30,11 +30,11 @@ exports.models = {
     ],
     form: [
       {begin: "row"},
-        {begin: "col", options: {className: "three-col"}},
+        {begin: "col", options: {className: "two-col"}},
           {name: "title", widget: "input", options: {className: "large", width: "80%"}},
           {name: "code", widget: "input", options: {className: "large", width: "20%"}},
         {end: "col" },
-        {begin: "col", options: {className: "one-col"}},
+        {begin: "col", options: {className: "two-col"}},
           {name: "resources", widget: "upload", options: {type: "Resource", array: true}},
         {end: "col" },
       {end: "row" },

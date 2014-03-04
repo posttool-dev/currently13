@@ -66,19 +66,22 @@ a:hover {
 }
 
 button {
-    border: 0;
-    background-color: #444;
-    padding: 5px;
+    font-weight: bold;
+    background-color: #48adff;
+    padding: 4px 9px 5px 8px;
+    margin-right:6px;
     color: #fff;
     cursor: pointer;
+    border: 0;
+
 }
 
 button:hover:enabled {
-    background-color: #111;
+    background-color: #b7e0ff;
 }
 
 button:disabled {
-    opacity: .3;
+    opacity: .4;
 }
 
 .btn-right {
