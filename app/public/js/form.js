@@ -14,6 +14,7 @@ function form_form(type, id) {
   var _created = null;
   var _modified = null;
   var _idx = {};
+  var _dirty = false;
 
   form_make_listener(self);
 
@@ -72,6 +73,7 @@ function form_form(type, id) {
   function create_field(d) {
     var f = new indicated_field(d);
     f.add_listener('change', function () {
+      _dirty = true;
       self.$save.prop('disabled', false);
       self.emit('change');
     });
@@ -91,12 +93,14 @@ function form_form(type, id) {
   function update_controls()
   {
     $controls.empty();
-        //  var $title = $$('title', {el: 'span', parent: $controls}).text(type);
-    var $cancel = $$('btn btn-primary', {el: 'button', parent: $controls}).text('CLOSE');
-    $cancel.click(function(){
-      self.emit('close');
-    });
-    self.$save = $$('btn btn-primary', {el: 'button', parent: $controls}).prop('disabled', true).text('SAVE');
+    //  var $title = $$('title', {el: 'span', parent: $controls}).text(type);
+    //    var $cancel = $$('btn btn-primary', {el: 'button', parent: $controls}).text('CLOSE');
+    //    $cancel.click(function(){
+    //      self.emit('close', self.data);
+    //    });
+    self.$save = $$('btn btn-primary', {el: 'button', parent: $controls}).text('SAVE');
+    if (!_dirty)
+      self.$save.prop('disabled', true);
     self.$time = $$('time', {el: 'span', parent: $controls});
     self.$save.click(function () {
       $.ajax({
@@ -109,7 +113,7 @@ function form_form(type, id) {
           else {
             self.update(o);
             history.pushState(self.url(), self.toString(), self.url());
-
+            self.emit('save', o);
           }
         },
         error: function (o) {
@@ -221,9 +225,9 @@ function form_form(type, id) {
   }
 
   self.update = function (o) {
+    _dirty = false
     self.data = o;
     self.$save.prop('disabled', true);
-
   }
 
   self.url = function()
@@ -236,17 +240,25 @@ function form_form(type, id) {
     return url;
   }
 
-  var url = '/cms/get/' + type;
-  if (id)
-    url += '/' + id;
-
-  $$ajax(url).done(function (o) {
-    _meta = o.form;
-    _related =  o.related;
-    _idx = {};
-    update_form();
-    self.data = o.object;
-  });
+  self.refresh = function()
+  {
+    if (_dirty)
+    {
+      console.log('cant refresh yet... dir');
+      return;
+    }
+    var url = '/cms/get/' + type;
+    if (id)
+      url += '/' + id;
+    $$ajax(url).done(function (o) {
+      _meta = o.form;
+      _related =  o.related;
+      _idx = {};
+      update_form();
+      self.data = o.object;
+    });
+  };
+  self.refresh();
 
 
 }

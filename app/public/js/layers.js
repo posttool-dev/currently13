@@ -8,7 +8,7 @@ function layers_layers(){
   var $control_bar = $("#control-bar");
   var $info_panel = $("#info-panel");
   var $info_content = $("#info-panel-content");
-  init_nav();
+
   $("#info-cog").click(function(){
     toggle_info();
   });
@@ -72,6 +72,7 @@ function layers_layers(){
     pop_child();
     history_push();
     update_ui();
+    refresh_last();
   }
 
   self.pop_to = function (url) {
@@ -81,6 +82,7 @@ function layers_layers(){
       pop_child();
     history_push();
     update_ui();
+    refresh_last();
   }
 
 
@@ -88,8 +90,10 @@ function layers_layers(){
     var c = $el.children();
     for (var i = 0; i < c.length; i++) {
       var $c = $(c[i]);
+//      var lp = (i*50)+'px';
+//      var wp = (available_width - (i*50)) + 'px';
       if (i == c.length - 1)
-        $c.css({position: 'absolute'});
+        $c.css({position: 'absolute'}); //, left: lp, width: wp
       else
         $c.css({position: 'fixed'});
       $c.css({x: 0});
@@ -134,15 +138,21 @@ function layers_layers(){
     $c.remove();
   }
 
+  function refresh_last()
+  {
+    var f = $el.children().last().data('__obj__');
+    f.refresh();
+  }
+
   function init_nav()
   {
-    dhova(400, $("#tool-bar"), function () {
+    dhova(2400, $("#tool-bar"), function () {
         var c = $el.children();
         for (var i = 0; i < c.length; i++) {
           var $c = $(c[i]);
-          $c.transition({x: i * 50});
+          $c.transition({x: i * 150});
         }
-        $control_bar.transition({x: (i-1) * 50});
+        $control_bar.transition({x: (i-1) * 150});
       },
       function () {
         var c = $el.children();
@@ -153,6 +163,7 @@ function layers_layers(){
         $control_bar.transition({x: 0});
       });
   }
+  init_nav();
 
 
   var info_open = true;
@@ -162,14 +173,15 @@ function layers_layers(){
     update_info();
   }
 
+  var available_width = 0;
   var info_width = 250;
   var info_off = 30;
   function update_info(f)
   {
     if (!f)
       f = 'transition';
-    var cw = info_open ? $(window).width() - info_width : $(window).width() - info_off;
-    cw += 'px';
+    available_width = info_open ? $(window).width() - info_width : $(window).width() - info_off;
+    var cw = available_width + 'px';
     var iw = info_width + 'px';
     var r = info_open ? '0' : (info_off-info_width) + 'px';
     var c = $el.children();

@@ -161,7 +161,7 @@ related = function (type, id, next) {
 // the 'views'
 
 exports.show_dashboard = function (req, res, next) {
-  var q = models.Log.find({user: req.session.user._id}, null, {order: 'time'});
+  var q = models.Log.find({user: req.session.user._id}, null, {sort: '-time'});
   q.populate('user');
   q.exec(function (err, logs) {
     utils.process_list(logs, function (log, n) {

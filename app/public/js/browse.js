@@ -64,6 +64,9 @@ function browse_browse(type) {
     });
   }
 
+  self.refresh = request_data;
+
+
   function update_ui(results) {
     for (var i = 0; i < results.length; i++)
       $rbody.append(create_row(results[i]));
