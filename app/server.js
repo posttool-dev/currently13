@@ -92,6 +92,8 @@ function init_app() {
   app.post('/cms/update/:type/:id', [auth.has_user, cms.add_meta, cms.add_object], cms.form.post);
   app.get ('/cms/get/:type', [auth.has_user, cms.add_meta], cms.form.get_json);
   app.get ('/cms/get/:type/:id', [auth.has_user, cms.add_meta, cms.add_object], cms.form.get_json);
+  app.post('/cms/delete_references/:type/:id', [auth.has_user, cms.add_meta, cms.add_object], cms.form.delete_references);
+  app.post('/cms/delete/:type/:id', [auth.has_user, cms.add_meta, cms.add_object], cms.form.delete);
   app.post('/cms/upload', [auth.has_user], cms.upload);
   app.get('/cms/download/:id', [auth.has_user], cms.download);
   app.get('/cms/delete_resource/:id', [auth.has_user], cms.delete_resource);

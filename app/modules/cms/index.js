@@ -35,8 +35,13 @@ exports.add_meta = function (req, res, next) {
   next();
 };
 
-/* if an id was specified, find and populate a view of the model, with thumbnail references */
+/* find and populate a "deep" view of the model as well as all "related" entities */
 exports.add_object = function (req, res, next) {
+  if (!req.params.id)
+  {
+    next();
+    return;
+  }
   expand(req.type, req.params.id, function (err, m) {
     if (err) {
       next(err);
@@ -46,6 +51,8 @@ exports.add_object = function (req, res, next) {
     if (m)
       related(req.type, m._id, function(r){
         req.related = r;
+        req.related_count = r._count;
+        delete r._count;
         next();
       });
     else
@@ -53,23 +60,19 @@ exports.add_object = function (req, res, next) {
   });
 };
 
-
 expand = function(type, id, next)
 {
   var q = meta.model(type).findOne({_id: id});
   q.exec(function (err, m) {
     populate_deep(type, m, function(){
-
         next(err, m);
     });
-
   });
 };
 
-
 populate_deep = function(type, instance, next, seen)
 {
-  if (type == 'User')
+  if (type == 'User' || !instance)
   {
     next();
     return;
@@ -101,8 +104,6 @@ populate_deep = function(type, instance, next, seen)
         populate_deep(r.ref, o[r.name], n, seen);
     }, next);
   });
-
-
 }
 
 
@@ -116,14 +117,15 @@ related = function (type, id, next) {
       }
     }
   }
-  var related_records = {};
+  var related_records = { _count: 0 };
   if (related_refs) {
     utils.process_list(related_refs, function (ref, n) {
       var c = {};
       c[ref.field.name] = {$in: [id]}
       var q = meta.model(ref.type).find(c);
       q.exec(function (err, qr) {
-        related_records[ref.type] = qr;
+        related_records._count += qr.length;
+        related_records[ref.type] = {field: ref.field, results: qr, query: q};
         n();
       });
     }, function () {
@@ -204,6 +206,7 @@ exports.browse = {
   }
 };
 
+
 exports.schema = function (req, res, next) {
   res.json({schema: meta.get_schema_info(req.schema), browser: req.browser});
 };
@@ -221,11 +224,16 @@ exports.form =
   },
 
   get_json: function(req,res) {
+    var related = {};
+    for (var p in req.related)
+    {
+      related[p] = req.related[p].results;
+    }
     res.json({
       title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
       type: req.type,
       object: req.object || new req.model(),
-      related: req.related,
+      related: related,
       form: req.form})
   },
 
@@ -237,10 +245,7 @@ exports.form =
     }
     if (!s.creator)
       s.creator = req.session.user._id;
-//    if (req.model == meta.Resource && s.meta)
-//    {
-//      console.log("REES");
-//    }
+    //emit('presave',s)
     s.save(function (err, s) {
       if (err)
         res.json(err);
@@ -253,6 +258,39 @@ exports.form =
         });
       }
     });
+  },
+
+  delete_references: function(req, res, next) {
+    if (req.related_count == 0)
+      res.json({});
+    else
+    {
+      var to_update = [];
+      for (var p in req.related)
+      {
+        if (req.related[p].results.length == 0)
+          continue;
+        var f = req.related[p].field;
+        var o = {};
+        o[f.name] = req.object._id;
+        to_update.push({o: o, p: p});
+      }
+      var info = [];
+      utils.process_list(to_update,function(e,n){
+          meta.model(e.p).update(e.o, {$pull: e.o}, { multi: true }, function(err,x){
+            info.push('Removed '+x+' reference(s) from '+ e.p+".");
+            n();
+        });
+      }, function(){
+        res.json(info)
+      })
+    }
+  },
+
+  delete: function(req, res, next) {
+     req.object.remove(function(err,m){
+       res.json(m);
+     });
   }
 };
 

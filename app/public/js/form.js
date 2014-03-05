@@ -128,6 +128,7 @@ function form_form(type, id) {
     $info.empty();
     var $info_date = $$('date', {parent: $info});
     var $info_rel = $$('related', {parent: $info});
+    var $info_del = $$('delete', {parent: $info});
     var $info_logs = $$('logs', {parent: $info});
     $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'<br><br>');
     var c = 0;
@@ -152,15 +153,34 @@ function form_form(type, id) {
         })(p, _related[p][i]);
       }
     }
+    function add_delete_btn()
+    {
+      var $delete = $$('delete', {el:'button'}).text('DELETE RECORD');
+      $info_del.append($delete);
+      $delete.click(function(){
+        $$ajax('/cms/delete/'+type+'/'+id, null, 'post').done(function(r){
+          self.emit('close');
+        });
+      });
+
+    }
     if (c == 0)
     {
-      var $delete = $$('delete', {el:'button'}).text('DELETE');
-      $info_rel.append($delete);
+      add_delete_btn();
     }
     else
     {
       var $delete = $$('delete', {el:'button'}).text('REMOVE REFERENCES');
-      $info_rel.append($delete);
+      $delete.click(function(){
+        $$ajax('/cms/delete_references/'+type+'/'+id, null, 'post').done(function(r){
+          _related = {};
+          $info_rel.empty();
+          $info_rel.append(r);
+          $info_del.empty();
+          add_delete_btn();
+        });
+      });
+      $info_del.append($delete);
     }
 
     // logs
