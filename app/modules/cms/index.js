@@ -28,7 +28,6 @@ exports.add_meta = function (req, res, next) {
   {
     req.type = type;
     req.schema = meta.schema(type);
-    req.virtuals = meta.virtuals(type);
     req.model = meta.model(type);
     req.browser = meta.browse(type);
     req.form = meta.form(type);
@@ -38,7 +37,7 @@ exports.add_meta = function (req, res, next) {
 
 /* if an id was specified, find and populate a view of the model, with thumbnail references */
 exports.add_object = function (req, res, next) {
-  expand(req.schema, req.model, req.params.id, function (err, m) {
+  expand(req.type, req.params.id, function (err, m) {
     if (err) {
       next(err);
       return;
@@ -55,52 +54,93 @@ exports.add_object = function (req, res, next) {
 };
 
 
-expand = function(schema, model, id, next)
+expand = function(type, id, next)
 {
-  var q = model.findOne({_id: id});
-  var refs = meta.get_references(schema);
-  if (refs)
-    q.populate(meta.get_names(refs).join(" "));
+  var q = meta.model(type).findOne({_id: id});
   q.exec(function (err, m) {
-    next(err, m);
+    populate_deep(type, m, function(){
+
+        next(err, m);
+    });
+
   });
 };
 
+
+populate_deep = function(type, instance, next, seen)
+{
+  if (type == 'User')
+  {
+    next();
+    return;
+  }
+  if (!seen)
+    seen = {};
+  if (seen[instance._id])
+  {
+    next();
+    return;
+  }
+  seen[instance._id] = true;
+  var refs = meta.get_references(meta.schema(type));
+  if (!refs)
+  {
+    next();
+    return;
+  }
+  var opts = [];
+  for (var i=0; i<refs.length; i++)
+    opts.push({path: refs[i].name, model: refs[i].ref});
+  meta.model(type).populate(instance, opts, function(err,o){
+    utils.process_list(refs, function (r, n) {
+      if (r.is_array)
+        utils.process_list(o[r.name], function (v, nn) {
+          populate_deep(r.ref, v, nn, seen);
+        }, n);
+      else
+        populate_deep(r.ref, o[r.name], n, seen);
+    }, next);
+  });
+
+
+}
+
+
 related = function (type, id, next) {
-  var related = [];
+  var related_refs = [];
   for (var p in meta.meta()) {
     var refs = meta.get_references(meta.schema(p));
     for (var i = 0; i < refs.length; i++) {
       if (refs[i].ref == type) {
-        related.push({type: p, field: refs[i]});
+        related_refs.push({type: p, field: refs[i]});
       }
     }
   }
-  var r = {};
-  if (related) {
-    utils.process_list(related, function (ref, n) {
+  var related_records = {};
+  if (related_refs) {
+    utils.process_list(related_refs, function (ref, n) {
       var c = {};
       c[ref.field.name] = {$in: [id]}
       var q = meta.model(ref.type).find(c);
       q.exec(function (err, qr) {
-        r[ref.type] = qr;
+        related_records[ref.type] = qr;
         n();
       });
     }, function () {
-      next(r);
+      next(related_records);
     });
   }
   else
-    next(r);
+    next(related_records);
 };
 
-// virtuals?
-//      if (req.virtuals)
+// queries? piping results?
+//      if (req.queries)
 //      {
-//        var keys = Object.keys(req.virtuals);
+//        var keys = Object.keys(req.queries);
 //        req.related = {};
 //        utils.process_list(keys, function (e, n) {
-//          var q = m[e];
+//          var q = m[e](piped);
 //          q.exec(function (err, r) {
 //            req.related[e] = r;
 //            n();
@@ -109,9 +149,6 @@ related = function (type, id, next) {
 //      }
 //      else
 //        next();
-
-
-
 
 
 
@@ -198,16 +235,17 @@ exports.form =
     for (var p in data) {
       s[p] = data[p];
     }
-    s.creator = req.session.user._id;
-    if (req.model == meta.Resource && s.meta)
-    {
-      console.log("REES");
-    }
+    if (!s.creator)
+      s.creator = req.session.user._id;
+//    if (req.model == meta.Resource && s.meta)
+//    {
+//      console.log("REES");
+//    }
     s.save(function (err, s) {
       if (err)
         res.json(err);
       else {
-        expand(req.schema, req.model, req.params.id, function (err, m) {
+        expand(req.type, req.params.id, function (err, m) {
           if (err)
             next(err);
           else
