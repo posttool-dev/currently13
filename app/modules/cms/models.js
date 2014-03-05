@@ -9,12 +9,9 @@ var ResourceSchemaInfo = {
   mime_type: String,
   meta: mongoose.Schema.Types.Mixed
 };
-//var ResourceSchema = mongoose.Schema(ResourceSchemaInfo);
-//exports.Resource = mongoose.model('Resource', ResourceSchema);
 
 exports.models = {
 
-  /* for blobs */
   Resource: {
     meta: {
       plural: 'Resources'
@@ -36,6 +33,15 @@ exports.models = {
 
 
 // log
+var LogSchema = new mongoose.Schema({
+  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  type: String,
+  id: mongoose.Schema.Types.ObjectId,
+  info: mongoose.Schema.Types.Mixed,
+  time: { type: Date, default: Date.now }
+})
+exports.Log = mongoose.model('Log', LogSchema);
+
 // group
 // transition
 // assignment

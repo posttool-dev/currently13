@@ -4,6 +4,7 @@ var gfs = null, Grid = require('gridfs-stream');
 var cloudinary = require('cloudinary');
 var meta = require('./meta');
 var utils = require('./utils');
+var models = require('./models');
 var use_gfs = false;
 
 Grid.mongo = mongoose.mongo;
@@ -160,10 +161,24 @@ related = function (type, id, next) {
 // the 'views'
 
 exports.show_dashboard = function (req, res, next) {
-  res.render('cms/dashboard', {
-    title: 'CMS Dashboard ',
-    models: req.models
-  });
+  var q = models.Log.find({user: req.session.user._id}, null, {order: 'time'});
+  q.populate('user');
+  q.exec(function (err, logs) {
+    utils.process_list(logs, function (log, n) {
+      meta.model(log.type).findOne({_id: log.id}, function (err, l) {
+        if (!log.info)
+          log.info = {};
+        log.info.object = l;
+        n();
+      });
+    }, function () {
+      res.render('cms/dashboard', {
+        title: 'CMS Dashboard ',
+        models: req.models,
+        logs: logs
+      });
+    });
+  })
 };
 
 
@@ -250,11 +265,21 @@ exports.form =
       if (err)
         res.json(err);
       else {
-        expand(req.type, req.params.id, function (err, m) {
-          if (err)
-            next(err);
-          else
-            res.json(m ? m : s);
+        var log = new models.Log({
+            user: req.session.user._id,
+            type: req.type,
+            id: s._id,
+            info: {}
+          }
+        );
+        log.save(function(err, l){
+          console.log(l);
+          expand(req.type, req.params.id, function (err, m) {
+            if (err)
+              next(err);
+            else
+              res.json(m ? m : s);
+          });
         });
       }
     });
