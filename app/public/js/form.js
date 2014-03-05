@@ -1,13 +1,7 @@
 var upload_url = "/cms/upload";
 var delete_url = "/cms/delete_resource/";
 
-// TODO move to server config
-var templates = {
-  Artist: '<%= first_name %> <%= last_name %>',
-  Inventory: '<%= title %>',
-  Exhibition: '<%= title %>',
-  Essay: '<%= title1 %>'
-}
+
 
 function form_form(type, id) {
   var self = this;
@@ -635,9 +629,11 @@ var form_fields = {
       $el.empty();
       if (templates[options.type])
       {
+        try {
         var t = new EJS({text: templates[options.type]}).render(_d);
         if (t)
           $el.append('<div class="text">'+t+'</div>');
+        } catch (e) {}
       }
       var thumb = find_thumb(_d);
       if (thumb)

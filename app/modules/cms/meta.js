@@ -69,11 +69,6 @@ exports.schema = function(type)
   return Meta[type].schema;
 };
 
-exports.virtuals = function(type)
-{
-  return Meta[type].virtuals;
-};
-
 exports.model = function(type)
 {
   return mongoose.model(type);
@@ -84,9 +79,12 @@ exports.info = function(type)
   return exports.get_schema_info(Meta[type].schema);
 }
 
-exports.meta = function()
+exports.meta = function(type)
 {
-  return Meta;
+  if (type)
+    return Meta[type].meta;
+  else
+    return Meta;
 }
 
 

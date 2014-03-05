@@ -12,6 +12,7 @@ var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
 var use_existing_images = false; // false will destroy images at cloudinary & table of resources
 var prefix = 'dev0';
 
+
 exports.migrate_data = function () {
   if (use_existing_images)
     migrate0();
@@ -54,11 +55,9 @@ function migrate2()
   process_list(e, function (e, next) {
     repopulate(e, next);
   }, function () {
-    'hey now'
+    'Migration complete.'
   });
 }
-
-
 
 
 function repopulate(type, complete)
@@ -133,7 +132,7 @@ function create_resource(rd, next) {
           r.meta.thumb = cms.get_preview_url(e);
           r.save(function (err, r) {
             rd.model = r;
-            console.log(r.meta.public_id, r.meta.thumb);
+            console.log('Uploaded ', r.meta.public_id, r.meta.thumb);
             next();
           });
         }, { public_id: prefix+'/'+uuid.v4()});
@@ -142,21 +141,6 @@ function create_resource(rd, next) {
 }
 
 
-function delete_resource(r, next)
-{
-  if (r && r.public_id)
-  {
-    cloudinary.uploader.destroy(r.public_id, function (result) {
-      console.log('destroy', r.public_id);
-      next();
-    });
-  }
-  else
-  {
-    next();
-  }
-}
-
 
 function create(type, data, next)
 {
@@ -164,10 +148,12 @@ function create(type, data, next)
   var model = new M();
   var info = cms.meta.info(type);
   for (var p in info)
+  {
     if (p == 'creator' || p == 'modified' || p == 'created')
       continue;
     else if (data[p])
       model[p] = get_field_val(info[p], data[p]);
+  }
   model.save(function (err, i) {
     if (err)
       console.log(err);
@@ -175,7 +161,6 @@ function create(type, data, next)
     next();
   });
 }
-
 
 
 
@@ -198,10 +183,9 @@ function get_field_val(meta, sval)
       else
         return get_ref_val(sval);
     case 'Date':
-      var d = sval.split('.');
+      var d = sval.split('.'); // parse non standard date format
       var d6 = d[5].split(' ');
       var dd = new Date(Number(d[0]),Number(d[1])-1,Number(d[2]),Number(d[3]),Number(d[4]),Number(d6[0]));
-      console.log(d, dd, d6);
       return dd;
     case 'Number':
       return Number(sval);
@@ -226,9 +210,4 @@ function get_ref_val(ref_str)
 }
 
 
-
-
-
-
-/* helper for processing lists sequentially - move to cms utils */
 
