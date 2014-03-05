@@ -27,7 +27,7 @@ var zcookie = {
     get: function(key, default_if_null){
         if(!this.exists) return null;
         var value = localStorage.getItem(key);
-        if (default_if_null && !value)
+        if (!value)
             return default_if_null;
         return value && JSON.parse(value);
     },

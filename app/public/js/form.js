@@ -578,7 +578,7 @@ var form_fields = {
     var $fileupload = $$('multi_upload', { el: 'input', parent: $btn,
       data: { url: upload_url },
       attributes: { type: 'file', name: 'file', multiple: 'multiple' }});
-    $el.append($progress, $info, $btn);
+    $el.append($progress, $info, '<br clear="both">', $btn);
 
     var o = $.extend({add: false, browse: false}, options);
     var f = new form_fields.add_remove(form_fields.model_field, o);
@@ -738,7 +738,7 @@ var form_fields = {
 
     if (options.add || options.browse)
     {
-      var $actions = $("<div></div>");
+      var $actions = $("<div style='clear:both;'></div>");
       var $add = $("<span><i class='fa fa-plus-circle'></i> create</span>").css({'cursor': 'pointer'});
       var $browse = $("<span><i class='fa fa-play-circle '></i> browse</span>").css({'cursor': 'pointer'});
       if (options.add)
@@ -805,7 +805,6 @@ var form_fields = {
     form_make_listener(self);
 
     var $el = $$('deletable-row').data("__obj__", this);
-    $el.css({width:'100%'});
     this.$el = function () {
       return $el;
     }

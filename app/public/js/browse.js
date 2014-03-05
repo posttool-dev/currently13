@@ -165,15 +165,23 @@ function browse_browse(type) {
 
   function create_pager()
   {
-//    $pager.append('<span> <button>&lt;</button>  </span>');
     $pager.empty();
     $pager.append('<span>'+ total +' total </span>');
-    if (total > pagesize)
-      for (var i = Math.max(0, page - 1); i < Math.min(page + 2, total / pagesize); i++)
+    if (total > pagesize) {
+      $pager.append(make_page(0, total));
+      var pages = Math.floor(total / pagesize) ;
+      var n = Math.max(1, page - 5);
+      if (n != 1)
+        $pager.append('...');
+      var b = Math.min(page + 7, pages);
+      for (var i = n; i < b; i++)
         $pager.append(make_page(i, total));
-//    $pager.append('<span> <button>&gt;</button>  </span>');
-//    var top = Math.min(page*pagesize+pagesize, total);
-//    $pager.append('<span>&nbsp;&nbsp;|&nbsp;&nbsp;'+(page*pagesize+1)+'-'+top+' of '+ total +'</span>');
+      if (b != pages) {
+        $pager.append('...');
+      }
+        $pager.append(make_page(pages, total));
+
+    }
 
   }
 
@@ -189,6 +197,7 @@ function browse_browse(type) {
     $p.text(i+1);
     $p.click(function () {
       page = i;
+      zcookie.set('page-'+type, page);
       if ($lp)
         $lp.removeClass('selected');
       $lp = $p;
@@ -266,7 +275,8 @@ function browse_browse(type) {
       filters[name][cond] = val;
     }
     zcookie.set('filters-'+type, filters);
-    //update_filters();
+    zcookie.set('page-'+type, 0);
+   //update_filters();
     request_data();
   }
 

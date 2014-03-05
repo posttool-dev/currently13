@@ -254,16 +254,24 @@ select:active {
 }
 
 .deletable-row {
+    width:250px;
+    float:left;
 }
 
 .deletable-row .comp {
     float:left;
-
 }
 
 .deletable-row .del {
     float:left;
     margin-left: 5px;
+}
+
+.deletable-row .model {
+    width:200px;
+    height: 150px;
+    overflow:hidden;
+    float:left;
 }
 
 .three-col {
