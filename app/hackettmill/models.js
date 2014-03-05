@@ -1,18 +1,23 @@
-var mongoose = require('mongoose');
+var mongoose = require("mongoose");
 var ObjectId = mongoose.Schema.Types.ObjectId;
-var cms = require('../modules/cms/models');
+var cms = require("../modules/cms/models");
 
 exports.models = {
 
 
   /* hackett mill calls their catalog of art "inventory" */
   Inventory: {
+    meta: {
+      plural: "Inventory",
+      name: "<%= title %>",
+      dashboard: true
+    },
     schema: {
       title: String,
       code: String,
       description: String,
       resources: [
-        {type: ObjectId, ref: 'Resource'}
+        {type: ObjectId, ref: "Resource"}
       ],
       use: String,
       alignment: String,
@@ -52,18 +57,19 @@ exports.models = {
     ]
   },
 
-  /* the artists */
+
   Artist: {
     meta: {
       plural: "Artists",
-      string: 'first_name last_name'
+      name: "<%= first_name %> <%= last_name %>",
+      dashboard: true
     },
     schema: {
       first_name: String,
       last_name: String,
       description: String,
       work: [
-        {type: ObjectId, ref: 'Inventory'}
+        {type: ObjectId, ref: "Inventory"}
       ]
     },
     browse: [
@@ -88,69 +94,74 @@ exports.models = {
 
 
   Exhibition: {
+    meta: {
+      plural: "Exhibitions",
+      name: "<%= title %>",
+      dashboard: true
+    },
     schema: {
       title: String,
       subtitle: String,
       images: [
-        {type: ObjectId, ref: 'Inventory'}
+        {type: ObjectId, ref: "Inventory"}
       ],
       start_date: Date,
       end_date: Date,
       opening_date: Date,
       opening_length: String,
       essays: [
-        {type: ObjectId, ref: 'Essay'}
+        {type: ObjectId, ref: "Essay"}
       ],
-      catalog: {type: ObjectId, ref: 'Catalog'}
+      catalog: {type: ObjectId, ref: "Catalog"}
     },
     browse: [
-      { name: 'title',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'subtitle',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'start_date',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'end_date',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'opening_date',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'modified',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
+      { name: "title",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "subtitle",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "start_date",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "end_date",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "opening_date",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "modified",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
     ],
     form: [
-      { name: 'title', widget: 'input' },
-      { name: 'subtitle', widget: 'input' },
+      { name: "title", widget: "input" },
+      { name: "subtitle", widget: "input" },
       {begin: "row"},
         {begin: "col", options: {className: "two-col"}},
-          { name: 'images',
-            widget: 'choose_create',
-            options: { type: 'Inventory', array: true } },
+          { name: "images",
+            widget: "choose_create",
+            options: { type: "Inventory", array: true } },
         {end: "col" },
         {begin: "col", options: {className: "two-col"}},
-          { name: 'start_date', widget: 'date' },
-          { name: 'end_date', widget: 'date' },
-          { name: 'opening_date', widget: 'date' },
-          { name: 'opening_length', widget: 'number' },
-          { name: 'essays',
-            widget: 'choose_create',
-            options: { type: 'Essay', array: true } },
-          { name: 'catalog',
-            widget: 'choose_create',
-            options: { type: 'Catalog', array: false } },
+          { name: "start_date", widget: "date" },
+          { name: "end_date", widget: "date" },
+          { name: "opening_date", widget: "date" },
+          { name: "opening_length", widget: "number" },
+          { name: "essays",
+            widget: "choose_create",
+            options: { type: "Essay", array: true } },
+          { name: "catalog",
+            widget: "choose_create",
+            options: { type: "Catalog", array: false } },
         {end: "col" },
-      { end: 'row'},
+      { end: "row"},
 
     ]
 
@@ -160,6 +171,11 @@ exports.models = {
 
 
   Contact: {
+    meta: {
+      plural: "Contacts",
+      name: "<%= title %>",
+      dashboard: true
+    },
     schema: {
       title: String,
       overview: String,
@@ -174,70 +190,74 @@ exports.models = {
       mobile: String
     },
     browse: [
-      { name: 'title',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'overview',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'directions',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'address_line_1',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'address_line_2',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'city',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'state',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'zip',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'email',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-//      { name: 'phone',
-//        cell: 'char',
-//        filters: [ '$regex', 'equals' ],
-//        order: 'asc,desc,default' },
-//      { name: 'mobile',
-//        cell: 'char',
-//        filters: [ '$regex', 'equals' ],
-//        order: 'asc,desc,default' },
-      { name: 'modified',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' }
+      { name: "title",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "overview",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "directions",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "address_line_1",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "address_line_2",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "city",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "state",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "zip",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "email",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+//      { name: "phone",
+//        cell: "char",
+//        filters: [ "$regex", "equals" ],
+//        order: "asc,desc,default" },
+//      { name: "mobile",
+//        cell: "char",
+//        filters: [ "$regex", "equals" ],
+//        order: "asc,desc,default" },
+      { name: "modified",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" }
     ],
     form: [
-      { name: 'title', widget: 'input' },
-      { name: 'overview', widget: 'rich_text' },
-      { name: 'directions', widget: 'rich_text' },
-      { name: 'address_line_1', widget: 'input' },
-      { name: 'address_line_2', widget: 'input' },
-      { name: 'city', widget: 'input' },
-      { name: 'zip', widget: 'input' },
-      { name: 'email', widget: 'input' },
-      { name: 'phone', widget: 'input' },
-      { name: 'mobile', widget: 'input' }
+      { name: "title", widget: "input" },
+      { name: "overview", widget: "rich_text" },
+      { name: "directions", widget: "rich_text" },
+      { name: "address_line_1", widget: "input" },
+      { name: "address_line_2", widget: "input" },
+      { name: "city", widget: "input" },
+      { name: "zip", widget: "input" },
+      { name: "email", widget: "input" },
+      { name: "phone", widget: "input" },
+      { name: "mobile", widget: "input" }
     ]
   },
 
   Essay: {
+    meta: {
+      plural: "Essays",
+      name: "<%= title1 %>"
+    },
     schema: {
       title1: String,
       title2: String,
@@ -247,69 +267,73 @@ exports.models = {
       body: String
     },
     browse: [
-      { name: 'title1',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'title2',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
+      { name: "title1",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "title2",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
 
-      { name: 'author',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'modified',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
+      { name: "author",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "modified",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
     ],
     form: [
-      { name: 'title1', widget: 'input' },
-      { name: 'title2', widget: 'input' },
-      { name: 'title3', widget: 'input' },
-      { name: 'author', widget: 'input' },
-      { name: 'audio_bio', widget: 'input' },
-      { name: 'body', widget: 'input' }
+      { name: "title1", widget: "input" },
+      { name: "title2", widget: "input" },
+      { name: "title3", widget: "input" },
+      { name: "author", widget: "input" },
+      { name: "audio_bio", widget: "input" },
+      { name: "body", widget: "input" }
     ]
 
   },
 
   Catalog: {
+    meta: {
+      plural: "Catalogs",
+      name: "<%= title %>"
+    },
     schema: {
       price: Number,
       title: String,
       caption: String,
       images: [
-        {type: ObjectId, ref: 'Resource'}
+        {type: ObjectId, ref: "Resource"}
       ]
     },
     browse: [
-      { name: 'title',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'price',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'images',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
-      { name: 'modified',
-        cell: 'char',
-        filters: [ '$regex', 'equals' ],
-        order: 'asc,desc,default' },
+      { name: "title",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "price",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "images",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
+      { name: "modified",
+        cell: "char",
+        filters: [ "$regex", "equals" ],
+        order: "asc,desc,default" },
     ],
     form: [
-      { name: 'price', widget: 'input' },
-      { name: 'title', widget: 'input' },
-      { name: 'caption', widget: 'input' },
-      { name: 'images',
-        widget: 'choose_create',
-        options: { type: 'Resource', array: true } } ]
+      { name: "price", widget: "input" },
+      { name: "title", widget: "input" },
+      { name: "caption", widget: "input" },
+      { name: "images",
+        widget: "choose_create",
+        options: { type: "Resource", array: true } } ]
 
   },
 
@@ -319,12 +343,17 @@ exports.models = {
 
   /* pages */
   Page: {
+    meta: {
+      plural: "Pages",
+      name: "<%= title %>",
+      dashboard: true
+    },
     schema: {
       title: String,
       subtitle: String,
       body: String,
       pages: [
-        {type: ObjectId, ref: 'Page'}
+        {type: ObjectId, ref: "Page"}
       ]
     },
     browse: [
@@ -343,6 +372,11 @@ exports.models = {
 
   /* news */
   News: {
+    meta: {
+      plural: "News",
+      name: "<%= title %>",
+      dashboard: true
+    },
     schema: {
       title: String,
       subtitle: String,
@@ -363,7 +397,7 @@ exports.models = {
   },
 
 
-    Resource: cms.models.Resource,
+    Resource: cms.models.Resource
 
 }
 

@@ -16,6 +16,9 @@ exports.models = {
 
   /* for blobs */
   Resource: {
+    meta: {
+      plural: 'Resources'
+    },
     schema: ResourceSchemaInfo,
     browse: [
       {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
