@@ -6,13 +6,7 @@
 <div id="browser"></div>
 
 <script>
-<%
-var t = {};
-for (var p in models)
-    t[p] = models[p].meta.name;
-t = JSON.stringify(t);
-%>
-var templates = <%-t%>;
+
 $(document).ready(function () {
     $("#browser").append(init_cms().$el());
 });

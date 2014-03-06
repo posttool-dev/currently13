@@ -24,13 +24,6 @@
 
 
 <script>
-<%
-var t = {};
-for (var p in models)
-    t[p] = models[p].meta.name;
-t = JSON.stringify(t);
-%>
-var templates = <%-t%>;
 
 
 var $info_logs = $("#info-panel");
@@ -53,10 +46,7 @@ function get_log_row(log) {
     var $r = $$('log-row');
     $$('action', {parent: $r}).text(log.action);
 
-    try {
-        var t = new EJS({text: templates[log.type]}).render(log.info.object);
-    } catch (e) {
-    }
+    var t = render_template(log.type, log.info.object);
     $$('instance', {parent: $r}).text(t).click(function(){ location.href = '/cms/update/'+log.type+'/'+log.id});
 //    if (log.info.diffs) {
 //        for (var p in log.info.diffs) {

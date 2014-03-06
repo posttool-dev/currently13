@@ -14,3 +14,22 @@
 
 <link href="/css/upload.css" rel="stylesheet">
 <link href="/css/codemirror.css" rel="stylesheet">
+
+<script>
+<%
+var t = {};
+for (var p in models)
+    t[p] = models[p].meta.name;
+t = JSON.stringify(t);
+%>
+var __templates = <%-t%>;
+function render_template(type, object)
+{
+    try {
+        return new EJS({text: __templates[type]}).render(object);
+    } catch (e) {
+        console.error(e);
+        return "";
+    }
+}
+</script>

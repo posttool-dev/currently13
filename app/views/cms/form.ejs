@@ -8,13 +8,7 @@
 </div>
 
 <script>
-<%
-var t = {};
-for (var p in models)
-    t[p] = models[p].meta.name;
-t = JSON.stringify(t);
-%>
-var templates = <%-t%>;
+
 $(document).ready(function () {
     var cms = init_cms();
     $("#workspace").append(cms.$el());
