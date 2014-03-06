@@ -202,18 +202,15 @@ function form_form(type, id) {
   {
     var $r = $$('log-row');
     $$('action', {parent: $r}).text(log.action);
-    for (var p in log.info.diffs)
-    {
-      if (log.info.diffs)
-      {
+    if (log.info.diffs) {
+      for (var p in log.info.diffs) {
         var d = log.info.diffs[p];
         if (d.was)
-          $$('diff', {parent: $r}).html("<i>"+p+":</i> "+d.was);
+          $$('diff', {parent: $r}).html("<i>" + p + ":</i> " + d.was);
       }
     }
     $$('time', {parent: $r}).html(timeSince(log.time)+" by <i>"+log.user.email+"</i>");
     return $r;
-
   }
 
   Object.defineProperty(self, "data", {

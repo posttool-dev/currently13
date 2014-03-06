@@ -479,6 +479,8 @@ padding-top: 20px;
     padding:10px 0 10px 0;
 }
 .log-row .email { color: #ccc;  }
+.log-row .instance { color: #48adff; cursor: pointer;}
+.log-row .instance:hover {    color: #79b6ff;}
 .log-row .action {  top: 0; color: #fff; }
 .log-row .diff { font-size: 11px; color: #999;}
 
