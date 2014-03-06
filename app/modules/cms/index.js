@@ -99,9 +99,9 @@ populate_deep = function(type, instance, next, seen)
   for (var i=0; i<refs.length; i++)
     opts.push({path: refs[i].name, model: refs[i].ref});
   meta.model(type).populate(instance, opts, function(err,o){
-    utils.process_list(refs, function (r, n) {
+    utils.forEach(refs, function (r, n) {
       if (r.is_array)
-        utils.process_list(o[r.name], function (v, nn) {
+        utils.forEach(o[r.name], function (v, nn) {
           populate_deep(r.ref, v, nn, seen);
         }, n);
       else
@@ -124,7 +124,7 @@ related = function (type, id, next) {
   }
   var related_records = { _count: 0 };
   if (related_refs) {
-    utils.process_list(related_refs, function (ref, n) {
+    utils.forEach(related_refs, function (ref, n) {
       var c = {};
       c[ref.field.name] = {$in: [id]}
       var q = meta.model(ref.type).find(c);
@@ -146,7 +146,7 @@ related = function (type, id, next) {
 //      {
 //        var keys = Object.keys(req.queries);
 //        req.related = {};
-//        utils.process_list(keys, function (e, n) {
+//        utils.forEach(keys, function (e, n) {
 //          var q = m[e](piped);
 //          q.exec(function (err, r) {
 //            req.related[e] = r;
@@ -323,7 +323,7 @@ exports.form =
         to_update.push({o: o, p: p});
       }
       var info = [];
-      utils.process_list(to_update,function(e,n){
+      utils.forEach(to_update,function(e,n){
           meta.model(e.p).update(e.o, {$pull: e.o}, { multi: true }, function(err,x){
 
             info.push('Removed '+x+' reference(s) from '+ e.p+".");
@@ -354,7 +354,7 @@ get_logs = function(query, options, complete)
   var q = models.Log.find(query, null, options);
   q.populate('user', 'email');
   q.exec(function (err, logs) {
-    utils.process_list(logs, function (log, n) {
+    utils.forEach(logs, function (log, n) {
       meta.model(log.type).findOne({_id: log.id}, function (err, l) {
         if (!log.info)
           log.info = {};

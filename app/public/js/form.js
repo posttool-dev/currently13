@@ -204,25 +204,16 @@ function form_form(type, id) {
     $$('action', {parent: $r}).text(log.action);
     for (var p in log.info.diffs)
     {
-      var d = log.info.diffs[p];
-      if (d.was)
-        $$('diff', {parent: $r}).html("<i>"+p+":</i> "+d.was);
+      if (log.info.diffs)
+      {
+        var d = log.info.diffs[p];
+        if (d.was)
+          $$('diff', {parent: $r}).html("<i>"+p+":</i> "+d.was);
+      }
     }
     $$('time', {parent: $r}).html(timeSince(log.time)+" by <i>"+log.user.email+"</i>");
     return $r;
 
-    /*
-    "user":{"email":"dada","_id":"5308fe4f0b2966cc20b1ca67"},
-    "action":"save",
-    "type":"Inventory",
-    "id":"5314db158d0892b6063ac37b",
-    "info":{
-      "object":{"__v":2,"_id":"5314db158d0892b6063ac37b","alignment":"","code":"OSI-001-AC","created":"2014-03-03T19:42:13.828Z","creator":"5308fe4f0b2966cc20b1ca67","description":"","dimensions":"90 x 45\"","materials":"acrylic on canvas","modified":"2014-03-06T21:18:46.938Z","title":"Pink Ho","use":"not for homepage","year":"1965","resources":["5314da988d0892b6063ac1b6"]},
-      "diffs":{
-        "title":{"was":"Pink Ho 3333","will":"Pink Ho"},
-        "resources":{"was":["5314da988d0892b6063ac1b6"],"will":["5314da988d0892b6063ac1b6"]}}},
-    "_id":"5318e6360f002fca0dfba413","__v":0,"time":"2014-03-06T21:18:46.942Z"}
-     */
   }
 
   Object.defineProperty(self, "data", {

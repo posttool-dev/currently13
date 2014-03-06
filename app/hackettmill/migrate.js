@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 var cloudinary = require('cloudinary');
 var uuid = require('node-uuid');
 
-var cms = require('../modules/cms'), process_list = cms.utils.process_list;
+var cms = require('../modules/cms');
 
 var data = {};
 var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
@@ -38,21 +38,21 @@ function migrate_delete_resources0() {
 function migrate0() {
   console.log('Reading CSVs');
   fs.readdir(path, function (err, files) {
-    process_list(files, read_csv, migrate1);
+    cms.utils.forEach(files, read_csv, migrate1);
   });
 }
 
 
 function migrate1()
 {
-  process_list(data['Resource'].array, create_resource, migrate2, 20);
+  cms.utils.forEach(data['Resource'].array, create_resource, migrate2, 20);
 }
 
 
 function migrate2()
 {
   var e = ['Inventory','Artist', 'Catalog','Contact','Essay','Exhibition','News','Page'];
-  process_list(e, function (e, next) {
+  cms.utils.forEach(e, function (e, next) {
     repopulate(e, next);
   }, function () {
     'Migration complete.'
@@ -65,7 +65,7 @@ function repopulate(type, complete)
   var R = mongoose.model(type);
   R.find().remove(function (err, c) {
   console.log('Repopulating '+type+' ... removed '+c+' old records.');
-    process_list(data[type].array,
+    cms.utils.forEach(data[type].array,
       function(e, next){
         create(type, e, next);},
       complete);
