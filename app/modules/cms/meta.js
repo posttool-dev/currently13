@@ -65,17 +65,21 @@ exports.form = function(type)
 exports.schema = function(type)
 {
   if (!Meta[type])
-    throw new Error('no such type '+type);
+    throw new Error('no '+type);
   return Meta[type].schema;
 };
 
 exports.model = function(type)
 {
+  if (!Meta[type])
+    throw new Error('no '+type);
   return mongoose.model(type);
 };
 
 exports.info = function(type)
 {
+  if (!Meta[type])
+    throw new Error('no '+type);
   return exports.get_schema_info(Meta[type].schema);
 }
 
