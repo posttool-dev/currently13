@@ -22,6 +22,7 @@ exports.utils = utils;
 
 /* put the meta info in every request */
 
+
 exports.add_meta = function (req, res, next) {
   req.models = res.locals.models = meta.meta();
   var type = req.params.type;
@@ -61,6 +62,7 @@ exports.add_object = function (req, res, next) {
   });
 };
 
+
 expand = function(type, id, next)
 {
   var q = meta.model(type).findOne({_id: id});
@@ -70,6 +72,7 @@ expand = function(type, id, next)
     });
   });
 };
+
 
 populate_deep = function(type, instance, next, seen)
 {
@@ -106,6 +109,7 @@ populate_deep = function(type, instance, next, seen)
     }, next);
   });
 }
+
 
 
 related = function (type, id, next) {
@@ -161,25 +165,31 @@ related = function (type, id, next) {
 // the 'views'
 
 exports.show_dashboard = function (req, res, next) {
-  var q = models.Log.find({user: req.session.user._id}, null, {sort: '-time'});
-  q.populate('user');
-  q.exec(function (err, logs) {
-    utils.process_list(logs, function (log, n) {
-      meta.model(log.type).findOne({_id: log.id}, function (err, l) {
-        if (!log.info)
-          log.info = {};
-        log.info.object = l;
-        n();
-      });
-    }, function () {
-      res.render('cms/dashboard', {
+
+  res.render('cms/dashboard', {
         title: 'CMS Dashboard ',
-        models: req.models,
-        logs: logs
+        models: req.models
       });
-    });
-  })
+
+
 };
+
+
+exports.logs_for_user = function(req, res, next) {
+  get_logs({user: req.session.user._id}, {sort: '-time'}, function(logs){
+    res.json(logs);
+  });
+};
+
+exports.logs_for_record = function(req, res, next) {
+  get_logs({type: req.params.type, id: req.params.id }, {sort: '-time'}, function(logs){
+    res.json(logs);
+  });
+}
+
+
+
+
 
 
 exports.browse = {
@@ -255,8 +265,27 @@ exports.form =
   post: function (req, res, next) {
     var s = req.object || new req.model();
     var data = JSON.parse(req.body.val);
-    for (var p in data) {
-      s[p] = data[p];
+    var info = { diffs: {} };
+    var schema_info = meta.get_schema_info(req.schema);
+    for (var i=0; i< req.form.length; i++) {
+      var f = req.form[i].name;
+      if (!f)
+        continue;
+      var v = s[f];
+      var match = false;
+      if (schema_info[f].type == 'Reference')
+      {
+        v = schema_info[f].is_array ? just_ids(v) : just_id(v);
+        match = compare(v, data[f])
+      }
+      else
+        match = (data[f] ==v);
+      if (!match)
+      {
+        if (f != 'modified')//or other auto date fields...!
+          info.diffs[f] = {was: v, will: data[f]}
+        s[f] = data[f];
+      }
     }
     if (!s.creator)
       s.creator = req.session.user._id;
@@ -265,25 +294,18 @@ exports.form =
       if (err)
         res.json(err);
       else {
-        var log = new models.Log({
-            user: req.session.user._id,
-            type: req.type,
-            id: s._id,
-            info: {}
-          }
-        );
-        log.save(function(err, l){
-          console.log(l);
-          expand(req.type, req.params.id, function (err, m) {
+        add_log(req.session.user._id, 'save', req.type, s, info, function () {
+          expand(req.type, req.params.id, function (err, s) {
             if (err)
               next(err);
             else
-              res.json(m ? m : s);
+              res.json(s);
           });
         });
       }
     });
   },
+
 
   delete_references: function(req, res, next) {
     if (req.related_count == 0)
@@ -319,6 +341,69 @@ exports.form =
   }
 };
 
+// logs
+
+
+
+
+get_logs = function(query, options, complete)
+{
+  var q = models.Log.find(query, null, options);
+  q.populate('user', 'email');
+  q.exec(function (err, logs) {
+    utils.process_list(logs, function (log, n) {
+      meta.model(log.type).findOne({_id: log.id}, function (err, l) {
+        if (!log.info)
+          log.info = {};
+        log.info.object = l;
+        n();
+      });
+    }, function(){ complete(logs); });
+  });
+}
+
+
+add_log = function (user_id, action, type, instance, info, callback) {
+  var log = new models.Log({
+      user: user_id,
+      action: action,
+      type: type,
+      id: instance._id,
+      info: info
+    }
+  );
+  log.save(function (err, l) {
+    callback(l);
+  });
+}
+
+// utils
+
+just_ids = function(a)
+{
+  var r = [];
+  for (var i=0; i< a.length; i++)
+    r.push(just_id(a[i]));
+  return r;
+}
+
+
+just_id = function(a)
+{
+  if (a._id)
+    return String(a._id);
+  else
+    return a;
+}
+
+function compare(a, b) {
+  if (a.length != b.length)
+    return false;
+  for (var i = 0; i < a.length; i++)
+    if (a[i] != b[i])
+      return false;
+  return true;
+}
 
 // image and resource handling
 

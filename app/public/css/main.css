@@ -469,5 +469,17 @@ select:active {
 }
 
 
+/*#info-panel*/
+.related-panel, .delete-panel, .logs-panel {
+padding-top: 20px;
+}
+/* logs */
+
+.log-row {
+    padding:10px 0 10px 0;
+}
+.log-row .email { color: #ccc; float: left; }
+.log-row .action { float: right; top: 0; color: #fff; }
+.log-row .diff { font-size: 11px; color: #999; clear: both;}
 
 

@@ -15,6 +15,7 @@ function form_form(type, id) {
   var _modified = null;
   var _idx = {};
   var _dirty = false;
+  var _logs = [];
 
   form_make_listener(self);
 
@@ -98,7 +99,7 @@ function form_form(type, id) {
     //    $cancel.click(function(){
     //      self.emit('close', self.data);
     //    });
-    self.$save = $$('btn btn-primary', {el: 'button', parent: $controls}).text('SAVE');
+    self.$save = $$('save', {el: 'button', parent: $controls}).text('SAVE');
     if (!_dirty)
       self.$save.prop('disabled', true);
     self.$time = $$('time', {el: 'span', parent: $controls});
@@ -130,10 +131,10 @@ function form_form(type, id) {
 
   function update_info() {
     $info.empty();
-    var $info_date = $$('date', {parent: $info});
-    var $info_rel = $$('related', {parent: $info});
-    var $info_del = $$('delete', {parent: $info});
-    var $info_logs = $$('logs', {parent: $info});
+    var $info_date = $$('date-panel', {parent: $info});
+    var $info_rel = $$('related-panel', {parent: $info});
+    var $info_del = $$('delete-panel', {parent: $info});
+    var $info_logs = $$('logs-panel', {parent: $info});
     $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'<br><br>');
     var c = 0;
     for (var p in _related)
@@ -188,7 +189,38 @@ function form_form(type, id) {
     }
 
     // logs
+    $info_logs.empty();
+    $info_logs.append("<h3>Logs</h3>");
+    for (var i=0; i<_logs.length; i++)
+      $info_logs.append(get_log_row(_logs[i]));
+  }
 
+  function get_log_row(log)
+  {
+    var $r = $$('log-row');
+    $$('email', {parent: $r}).text(log.user.email);
+    $$('action', {parent: $r}).text(log.action);
+    for (var p in log.info.diffs)
+    {
+      var d = log.info.diffs[p];
+      if (d.was)
+        $$('diff', {parent: $r}).html("<i>"+p+":</i> "+d.was);
+    }
+    $$('time', {parent: $r}).text(timeSince(log.time));
+    return $r;
+
+    /*
+    "user":{"email":"dada","_id":"5308fe4f0b2966cc20b1ca67"},
+    "action":"save",
+    "type":"Inventory",
+    "id":"5314db158d0892b6063ac37b",
+    "info":{
+      "object":{"__v":2,"_id":"5314db158d0892b6063ac37b","alignment":"","code":"OSI-001-AC","created":"2014-03-03T19:42:13.828Z","creator":"5308fe4f0b2966cc20b1ca67","description":"","dimensions":"90 x 45\"","materials":"acrylic on canvas","modified":"2014-03-06T21:18:46.938Z","title":"Pink Ho","use":"not for homepage","year":"1965","resources":["5314da988d0892b6063ac1b6"]},
+      "diffs":{
+        "title":{"was":"Pink Ho 3333","will":"Pink Ho"},
+        "resources":{"was":["5314da988d0892b6063ac1b6"],"will":["5314da988d0892b6063ac1b6"]}}},
+    "_id":"5318e6360f002fca0dfba413","__v":0,"time":"2014-03-06T21:18:46.942Z"}
+     */
   }
 
   Object.defineProperty(self, "data", {
@@ -227,6 +259,7 @@ function form_form(type, id) {
   self.update = function (o) {
     _dirty = false
     self.data = o;
+    refresh_logs();
     self.$save.prop('disabled', true);
   }
 
@@ -256,11 +289,20 @@ function form_form(type, id) {
       _idx = {};
       update_form();
       self.data = o.object;
+      refresh_logs();
     });
   };
   self.refresh();
 
-
+  function refresh_logs()
+  {
+    if (!_id)
+      return;
+    $$ajax('/cms/logs/'+type+'/'+_id).done(function(r){
+      _logs = r;
+      update_info();
+    });
+  }
 }
 
 

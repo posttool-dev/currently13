@@ -35,6 +35,7 @@ exports.models = {
 // log
 var LogSchema = new mongoose.Schema({
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  action: String,
   type: String,
   id: mongoose.Schema.Types.ObjectId,
   info: mongoose.Schema.Types.Mixed,

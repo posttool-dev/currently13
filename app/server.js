@@ -83,6 +83,8 @@ function init_app() {
   cms.init(hm.models, "Resource", "User");
 
   app.all('/cms', [auth.has_user, cms.add_meta], cms.show_dashboard);
+  app.all('/cms/logs', [auth.has_user, cms.add_meta], cms.logs_for_user);
+  app.all('/cms/logs/:type/:id', [auth.has_user, cms.add_meta], cms.logs_for_record);
   app.get('/cms/browse/:type', [auth.has_user, cms.add_meta], cms.browse.get);
   app.post('/cms/browse/:type', [auth.has_user, cms.add_meta], cms.browse.post);
   app.post('/cms/schema/:type', [auth.has_user, cms.add_meta], cms.schema);
