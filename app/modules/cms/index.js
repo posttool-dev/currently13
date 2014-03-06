@@ -325,11 +325,14 @@ exports.form =
       var info = [];
       utils.process_list(to_update,function(e,n){
           meta.model(e.p).update(e.o, {$pull: e.o}, { multi: true }, function(err,x){
+
             info.push('Removed '+x+' reference(s) from '+ e.p+".");
             n();
         });
       }, function(){
-        res.json(info)
+        add_log(req.session.user._id, 'remove references', req.type, req.object, info, function(){
+          res.json(info);
+        });
       })
     }
   },

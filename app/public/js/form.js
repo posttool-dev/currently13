@@ -135,7 +135,7 @@ function form_form(type, id) {
     var $info_rel = $$('related-panel', {parent: $info});
     var $info_del = $$('delete-panel', {parent: $info});
     var $info_logs = $$('logs-panel', {parent: $info});
-    $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'<br><br>');
+    $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'');
     var c = 0;
     for (var p in _related)
     {
@@ -180,8 +180,10 @@ function form_form(type, id) {
         $$ajax('/cms/delete_references/'+type+'/'+id, null, 'post').done(function(r){
           _related = {};
           $info_rel.empty();
-          $info_rel.append(r);
+          for (var i=0; i< r.length; i++)
+            $info_rel.append(r[i]+"<br>");
           $info_del.empty();
+          refresh_logs();
           add_delete_btn();
         });
       });
@@ -190,7 +192,8 @@ function form_form(type, id) {
 
     // logs
     $info_logs.empty();
-    $info_logs.append("<h3>Logs</h3>");
+    if (_logs.length!=0)
+      $info_logs.append("<h3>Logs</h3>");
     for (var i=0; i<_logs.length; i++)
       $info_logs.append(get_log_row(_logs[i]));
   }
@@ -198,7 +201,6 @@ function form_form(type, id) {
   function get_log_row(log)
   {
     var $r = $$('log-row');
-    $$('email', {parent: $r}).text(log.user.email);
     $$('action', {parent: $r}).text(log.action);
     for (var p in log.info.diffs)
     {
@@ -206,7 +208,7 @@ function form_form(type, id) {
       if (d.was)
         $$('diff', {parent: $r}).html("<i>"+p+":</i> "+d.was);
     }
-    $$('time', {parent: $r}).text(timeSince(log.time));
+    $$('time', {parent: $r}).html(timeSince(log.time)+" by <i>"+log.user.email+"</i>");
     return $r;
 
     /*
