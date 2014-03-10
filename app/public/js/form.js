@@ -691,12 +691,9 @@ var form_fields = {
     });
     function update_ui() {
       $el.empty();
-      if (templates[options.type])
-      {
-        var t = render_template(options.type, _d);
-        if (t)
-          $el.append('<div class="text">'+t+'</div>');
-      }
+      var t = render_template(options.type, _d);
+      if (t)
+        $el.append('<div class="text">'+t+'</div>');
       var thumb = find_thumb(_d);
       if (thumb)
         $el.append('<img src="'+thumb+'">');
