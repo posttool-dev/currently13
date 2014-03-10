@@ -165,7 +165,6 @@ related = function (type, id, next) {
 // the 'views'
 
 exports.show_dashboard = function (req, res, next) {
-
   res.render('cms/dashboard', {
         title: 'CMS Dashboard ',
         models: req.models
@@ -182,6 +181,7 @@ exports.logs_for_user = function(req, res, next) {
 };
 
 exports.logs_for_record = function(req, res, next) {
+  console.log({type: req.params.type, id: req.params.id })
   get_logs({type: req.params.type, id: req.params.id }, {sort: '-time'}, function(logs){
     res.json(logs);
   });

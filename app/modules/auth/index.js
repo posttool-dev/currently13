@@ -54,26 +54,41 @@ exports.register =
         res.redirect('.');
         return;
       }
-      exports.hash(req.body.password, function (err, salt, hash) {
-        if (err) throw err;
-        // store the salt & hash in the "db"
-        user = new User();
-        user.name = req.body.username;
-        user.email = req.body.email;
-        user.salt = salt;
-        user.hash = hash;
-        user.verified = true; // could say false etc
-        user.save(function (err, user) {
+      exports.create_user({name: req.body.username, email: req.body.email, password: req.body.password}, function(err, user){
           req.session.message = err ? 'uhoh ' + err : 'you registered!';
           req.session.user = user;
           if (!user.verified)
             exports.send_mail(user);
           res.redirect('.');
-        });
       });
     });
   }
 };
+
+
+exports.create_user = function(options, complete)
+{
+  var user = new User();
+  exports.set_password(user, options.password, function(){
+    delete options.password;
+    for (var p in options)
+      user[p] = options[p];
+    user.save(function (err, user) {
+      complete(err, user);
+    });
+  });
+}
+
+
+exports.set_password = function(user, password, complete)
+{
+  exports.hash(password, function (err, salt, hash) {
+    if (err) throw err;
+    user.salt = salt;
+    user.hash = hash;
+    complete();
+  });
+}
 
 
 var smtpTransport = nodemailer.createTransport("SMTP",{
@@ -126,7 +141,7 @@ exports.validate_email = function (req, res) {
 
 exports.logout = function (req, res) {
   req.session.destroy(function () {
-    res.redirect('/');
+    res.redirect('/login');
   });
 };
 
