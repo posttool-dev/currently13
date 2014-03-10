@@ -13,6 +13,7 @@ function form_form(type, id) {
   var _id = id;
   var _created = null;
   var _modified = null;
+  var _state = null;
   var _idx = {};
   var _dirty = false;
   var _logs = [];
@@ -126,16 +127,35 @@ function form_form(type, id) {
       self.$time.text(' Last modified ' + timeSince(new Date(_modified)) + '.');
     else
       self.$time.text(' New record.');
-
   }
 
   function update_info() {
     $info.empty();
-    var $info_date = $$('date-panel', {parent: $info});
+    if (_state)
+    {
+      var $state = $$('state-panel', {parent: $info});
+      $state.append("<div>Status: <b>"+get_state_name(_state)+"</b></div>");
+      var $state_change = $$('state-change', {parent:$state});
+      var st = get_state_transitions(_state);
+      if (st)
+      {
+        for (var i=0; i<st.length; i++)
+        {
+          var ss = get_state_name(st[i]);
+          $state_change.append(ss+"<br>");
+        }
+        $state_change.append("<textarea></textarea>");
+        $state_change.append("<button>OK</button> <button>CANCEL</button>");
+        $state.click(function(){
+          $state_change.show();
+        });
+      }
+    }
+//    var $info_date = $$('date-panel', {parent: $info});
     var $info_rel = $$('related-panel', {parent: $info});
     var $info_del = $$('delete-panel', {parent: $info});
     var $info_logs = $$('logs-panel', {parent: $info});
-    $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'');
+//    $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'');
     var c = 0;
     for (var p in _related)
     {
@@ -160,7 +180,7 @@ function form_form(type, id) {
     }
     function add_delete_btn()
     {
-      var $delete = $$('delete', {el:'button'}).text('DELETE RECORD');
+      var $delete = $$('delete', {el:'button'}).text('DELETE');
       $info_del.append($delete);
       $delete.click(function(){
         $$ajax('/cms/delete/'+type+'/'+id, null, 'post').done(function(r){
@@ -193,9 +213,12 @@ function form_form(type, id) {
     // logs
     $info_logs.empty();
     if (_logs.length!=0)
+    {
       $info_logs.append("<h3>Logs</h3>");
-    for (var i=0; i<_logs.length; i++)
-      $info_logs.append(get_log_row(_logs[i]));
+      var $c = $$('logs-panel-c', {parent: $info_logs});
+      for (var i=0; i<_logs.length; i++)
+       $c.append(get_log_row(_logs[i]));
+    }
   }
 
   function get_log_row(log)
@@ -203,11 +226,16 @@ function form_form(type, id) {
     var $r = $$('log-row');
     $$('action', {parent: $r}).text(log.action);
     if (log.info.diffs) {
-      for (var p in log.info.diffs) {
-        var d = log.info.diffs[p];
-        if (d.was)
-          $$('diff', {parent: $r}).html("<i>" + p + ":</i> " + d.was);
-      }
+      for (var p in log.info.diffs)
+      {
+        $$('diff', {el:'span', parent: $r}).text(p+": ");
+        log.info.diffs[p].forEach(function(part){
+          var color = part.added ? 'added' :
+            part.removed ? 'removed' : 'unchanged';
+          $$('diff-'+color, {el:'span', parent: $r}).text(part.value);
+        });
+        $r.append('<br clear="both">');
+     }
     }
     $$('time', {parent: $r}).html(timeSince(log.time)+" by <i>"+log.user.email+"</i>");
     return $r;
@@ -215,7 +243,7 @@ function form_form(type, id) {
 
   Object.defineProperty(self, "data", {
     get: function () {
-      var d = {_id: _id, created: _created, modified: _modified};
+      var d = {_id: _id, created: _created, modified: _modified, state: _state};
       for (var p in _idx)
         d[p] = _idx[p].data;
       return d;
@@ -226,6 +254,7 @@ function form_form(type, id) {
       _id = n._id;
       _created = n.created;
       _modified = n.modified;
+      _state = n.state;
       for (var p in n) {
         if (_idx[p])
           _idx[p].data = n[p];
@@ -267,17 +296,20 @@ function form_form(type, id) {
   {
     if (_dirty)
     {
-      console.log('cant refresh yet... dir');
+      console.log('cant refresh yet... save record...');
       return;
     }
     var url = '/cms/get/' + type;
-    if (id)
-      url += '/' + id;
+    if (_id)
+      url += '/' + _id;
     $$ajax(url).done(function (o) {
       _meta = o.form;
       _related =  o.related;
       _idx = {};
       update_form();
+      console.log(o)
+      if (!_id)
+        delete o.object._id;
       self.data = o.object;
       refresh_logs();
     });

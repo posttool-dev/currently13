@@ -1,4 +1,5 @@
 var fs = require('fs');
+var jsdiff = require('diff');
 var mongoose = require('mongoose');
 var gfs = null, Grid = require('gridfs-stream');
 var cloudinary = require('cloudinary');
@@ -7,12 +8,12 @@ var utils = require('./utils');
 var models = require('./models');
 var use_gfs = false;
 
-Grid.mongo = mongoose.mongo;
-
-exports.init = function (config, resource_class_name, user_class_name) {
-  gfs = new Grid(mongoose.connection.db, mongoose.mongo);
+var workflow_info = null;
+exports.init = function (models, workflow) {
   console.log('current13 0.0.0');
-  meta.init(config, resource_class_name, user_class_name);
+  gfs = new Grid(mongoose.connection.db, mongoose.mongo);
+  meta.init(models);
+  workflow_info = workflow;
 }
 
 exports.meta = meta;
@@ -34,6 +35,10 @@ exports.add_meta = function (req, res, next) {
     req.browser = meta.browse(type);
     req.form = meta.form(type);
   }
+  var group = req.session.user.group;
+  if (req.session.user.admin)
+    group = workflow_info.groups.admin;
+  req.workflow = res.locals.workflow = {states:workflow_info.states, transitions:workflow_info.groups[group].transitions};
   next();
 };
 
@@ -169,8 +174,6 @@ exports.show_dashboard = function (req, res, next) {
         title: 'CMS Dashboard ',
         models: req.models
       });
-
-
 };
 
 
@@ -181,7 +184,6 @@ exports.logs_for_user = function(req, res, next) {
 };
 
 exports.logs_for_record = function(req, res, next) {
-  console.log({type: req.params.type, id: req.params.id })
   get_logs({type: req.params.type, id: req.params.id }, {sort: '-time'}, function(logs){
     res.json(logs);
   });
@@ -271,31 +273,37 @@ exports.form =
       var f = req.form[i].name;
       if (!f)
         continue;
-      var v = s[f];
+      var field_info = schema_info[f];
+      var field_val = s[f];
       var match = false;
-      if (schema_info[f].type == 'Reference')
+      if (field_info.type == 'Reference')
       {
-        v = schema_info[f].is_array ? just_ids(v) : just_id(v);
-        match = compare(v, data[f])
+        field_val = field_info.is_array ? just_ids(field_val) : just_id(field_val);
+        match = compare(field_val, data[f])
       }
       else
-        match = (data[f] ==v);
+        match = (data[f] == field_val) || (data[f] == '' && field_val == null);
       if (!match)
       {
         if (f != 'modified')//or other auto date fields...!
-          info.diffs[f] = {was: v, will: data[f]}
+          info.diffs[f] = jsdiff.diffChars(field_val, data[f]);
         s[f] = data[f];
       }
     }
     if (!s.creator)
       s.creator = req.session.user._id;
+    if (!s.state && workflow_info && workflow_info.states)
+      s.state = workflow_info.states[0].code;
+
     //emit('presave',s)
     s.save(function (err, s) {
       if (err)
+      {
         res.json(err);
+      }
       else {
         add_log(req.session.user._id, 'save', req.type, s, info, function () {
-          expand(req.type, req.params.id, function (err, s) {
+          expand(req.type, s._id, function (err, s) {
             if (err)
               next(err);
             else
@@ -351,7 +359,7 @@ exports.form =
 get_logs = function(query, options, complete)
 {
   var q = models.Log.find(query, null, options);
-  q.populate('user', 'email');
+  q.populate('user', 'name email');
   q.exec(function (err, logs) {
     utils.forEach(logs, function (log, n) {
       meta.model(log.type).findOne({_id: log.id}, function (err, l) {

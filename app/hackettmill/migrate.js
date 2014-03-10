@@ -4,13 +4,14 @@ var mongoose = require('mongoose');
 var cloudinary = require('cloudinary');
 var uuid = require('node-uuid');
 
+var workflow = require('./workflow');
 var cms = require('../modules/cms');
 
 var data = {};
 var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
 
-var use_existing_images = false; // false will destroy images at cloudinary & table of resources
-var prefix = 'dev0';
+var use_existing_images = true; // false will destroy images at cloudinary & table of resources
+var prefix = 'dev1';
 
 
 exports.migrate_data = function () {
@@ -21,7 +22,6 @@ exports.migrate_data = function () {
       console.log('   ... deleted ' + c + ' cloduinary resources');
       migrate_delete_resources0();
     });
-
 }
 
 
@@ -113,7 +113,6 @@ function read_csv(file, next) {
 
 function create_resource(rd, next) {
   var p = rd['path-token'];
-  var x = rd['filename'];
   var url = "http://www.hackettmill.com:81/hm_resources/" + p;
   var R = mongoose.model('Resource');
   R.findOne({path:p}, function(err, r){
@@ -127,7 +126,7 @@ function create_resource(rd, next) {
       cloudinary.uploader.upload(url,
         function (e) {
           var r = new R();
-          r.path = x;
+          r.path = p;
           r.meta = e;
           r.meta.thumb = cms.get_preview_url(e);
           r.save(function (err, r) {
@@ -154,6 +153,7 @@ function create(type, data, next)
     else if (data[p])
       model[p] = get_field_val(info[p], data[p]);
   }
+  model.state = workflow.PUBLISHED;
   model.save(function (err, i) {
     if (err)
       console.log(err);

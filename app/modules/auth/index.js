@@ -200,7 +200,7 @@ exports.form = {
 
 exports.has_user = function(req, res, next)
 {
-    if (req.session.user) {
+    if (req.session.user && req.session.user.active) {
         next();
     } else {
         req.session.message = 'Access denied!';

@@ -1,17 +1,16 @@
-var fs = require('fs')
-  , express = require('express'), app = express()
-  , mongoose = require('mongoose')
-  , cloudinary = require('cloudinary')
-  , MongoStore = require('connect-mongo')(express)
+//var logger = require('./logger')
+var fs = require('fs');
+var express = require('express'), app = express();
+var mongoose = require('mongoose');
+var cloudinary = require('cloudinary');
+var MongoStore = require('connect-mongo')(express);
 
-  , auth = require('./modules/auth')
-  , cms = require('./modules/cms')
-  , index = require('./modules/index')
+var auth = require('./modules/auth');
+var cms = require('./modules/cms');
+var index = require('./modules/index');
 
-  , config = require('./config')
-  , hm = require('./hackettmill/models')
-  , hmm = require('./hackettmill/migrate')
-  ;
+var config = require('./config');
+var hm = require('./hackettmill');
 
 
 mongoose.connect(config.mongoConnectString, {}, function (err) {
@@ -21,11 +20,21 @@ mongoose.connect(config.mongoConnectString, {}, function (err) {
 });
 
 
+//process.on('uncaughtException', function (err) {
+//  console.error('uncaughtException:', err.message)
+//  console.error(err.stack)
+//  process.exit(1)})
+//server.on('error', function (err) {
+//  console.error(err)
+//})
+
+
+
 function init_app() {
 
+  hm.migrate.migrate_data();
 
   app.set('view engine', 'ejs');
-  app.use(express.logger('dev'));
   app.use(express.cookieParser());
   app.use(express.session({
     secret: config.sessionSecret,
@@ -38,13 +47,10 @@ function init_app() {
   app.use(express.static(__dirname + '/public'));
 
   app.configure('development', function () {
+    app.use(express.logger('dev'));
     app.use(express.errorHandler());
   });
   cloudinary.config(config.cloudinaryConfig);
-
-  //hmm.migrate_data();
-
-
 
 
 
@@ -68,8 +74,8 @@ function init_app() {
   auth.on_login = '/cms';
   app.get('/login', auth.login.get);
   app.post('/login', auth.login.post);
-  app.get('/register', auth.register.get);
-  app.post('/register', auth.register.post);
+  //app.get('/register', auth.register.get);
+  //app.post('/register', auth.register.post);
   app.all('/logout', auth.logout);
 
   // User
@@ -80,7 +86,7 @@ function init_app() {
   app.get('/profile', [auth.has_user], auth.form.get);
   app.post('/profile', [auth.has_user], auth.form.post);
 
-  cms.init(hm.models, "Resource", "User");
+  cms.init(hm.models, hm.workflow);
 
   app.all('/cms', [auth.has_user, cms.add_meta], cms.show_dashboard);
   app.all('/cms/logs', [auth.has_user, cms.add_meta], cms.logs_for_user);
@@ -89,7 +95,7 @@ function init_app() {
   app.post('/cms/browse/:type', [auth.has_user, cms.add_meta], cms.browse.post);
   app.post('/cms/schema/:type', [auth.has_user, cms.add_meta], cms.schema);
   app.get('/cms/create/:type', [auth.has_user, cms.add_meta], cms.form.get);
-  app.post('/cms/create/:type', [auth.has_user, cms.add_meta, cms.add_object], cms.form.post);
+  app.post('/cms/create/:type', [auth.has_user, cms.add_meta], cms.form.post);
   app.get ('/cms/update/:type/:id', [auth.has_user, cms.add_meta], cms.form.get);
   app.post('/cms/update/:type/:id', [auth.has_user, cms.add_meta, cms.add_object], cms.form.post);
   app.get ('/cms/get/:type', [auth.has_user, cms.add_meta], cms.form.get_json);

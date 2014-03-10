@@ -14,7 +14,7 @@ var Resource = null;
  holds on to meta info
  adds fields and methods to meta info
  */
-exports.init = function (meta, resource_class_name, user_class_name) {
+exports.init = function (meta) {
   Meta = meta;
   for (var p in  meta) {
     console.log(">", p);
@@ -42,8 +42,7 @@ exports.init = function (meta, resource_class_name, user_class_name) {
       console.log(meta[p].form);
     }
   }
-  Resource = mongoose.model(resource_class_name, Meta[resource_class_name].schema);
-  exports.Resource = Resource;
+  Resource = exports.Resource = mongoose.model('Resource');
   // User = mongoose.model(user_class_name, Meta[user_class_name].schema);
 
 };

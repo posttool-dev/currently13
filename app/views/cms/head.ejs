@@ -33,4 +33,18 @@ function render_template(type, object)
         return "";
     }
 }
+var __states = <%- JSON.stringify(workflow.states) %>;
+function get_state_name(code) {
+    for (var i=0; i<__states.length; i++)
+        if (__states[i].code == code)
+            return __states[i].name;
+    return '';
+}
+var __transitions = <%- JSON.stringify(workflow.transitions) %>;
+function get_state_transitions(code) {
+    for (var i=0; i<__transitions.length; i++)
+        if (__transitions[i].from == code)
+            return __transitions[i].to;
+    return [];
+}
 </script>

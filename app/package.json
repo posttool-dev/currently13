@@ -15,6 +15,7 @@
     "nodemailer": "0.6.0",
     "connect-mongo": "0.4.0",
     "csv": "0.3.7",
-    "prompt": "0.2.12"
+    "prompt": "0.2.12",
+    "diff": "1.0.8"
   }
 }

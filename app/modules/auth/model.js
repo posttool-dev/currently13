@@ -10,7 +10,7 @@ var schema = new mongoose.Schema({
   salt: {type: String},
   created: {type: Date, default: Date.now},
   last_login: {type: Date, default: Date.now},
-  group: {type:Number},
+  group: {type:String},
   admin: {type:Boolean, default: false},
   active: {type:Boolean, default: false}
 });
