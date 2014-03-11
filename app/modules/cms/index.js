@@ -18,6 +18,7 @@ exports.init = function (models, workflow) {
 
 exports.meta = meta;
 exports.utils = utils;
+exports.models = models;
 
 
 
@@ -393,20 +394,25 @@ just_ids = function(a)
 {
   var r = [];
   for (var i=0; i< a.length; i++)
-    r.push(just_id(a[i]));
+    if (a[i])
+      r.push(just_id(a[i]));
   return r;
 }
 
 
 just_id = function(a)
 {
-  if (a._id)
+  if (a && a._id)
     return String(a._id);
   else
     return a;
 }
 
 function compare(a, b) {
+  if (!a && !b)
+    return true;
+  if (!a || !b)
+    return false;
   if (a.length != b.length)
     return false;
   for (var i = 0; i < a.length; i++)
