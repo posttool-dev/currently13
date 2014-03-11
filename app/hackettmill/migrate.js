@@ -40,6 +40,9 @@ function migrate0() {
   fs.readdir(path, function (err, files) {
     cms.utils.forEach(files, read_csv, migrate1);
   });
+  cms.models.Log.remove(function(err,r){
+    console.log("REMOVED LOGS ",err,r);
+  });
 }
 
 
