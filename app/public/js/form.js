@@ -131,6 +131,11 @@ function form_form(type, id) {
 
   function update_info() {
     $info.empty();
+
+//    var $info_date = $$('date-panel', {parent: $info});
+//    $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'');
+
+
     if (_state)
     {
       var $info_state = $$('state-panel', {parent: $info});
@@ -161,8 +166,7 @@ function form_form(type, id) {
         });
       }
     }
-//    var $info_date = $$('date-panel', {parent: $info});
-//    $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'');
+
     var $info_rel = $$('related-panel', {parent: $info});
     var $info_del = $$('delete-panel', {parent: $info});
     var c = 0;
@@ -179,7 +183,7 @@ function form_form(type, id) {
     }
     function add_delete_btn()
     {
-      var $delete = $$('delete', {el:'button'}).text('DELETE');
+      var $delete = $$('delete', {el:'button'}).text('DELETE '+type.toUpperCase()+'...');
       $info_del.append($delete);
       $delete.click(function(){
         $$ajax('/cms/delete/'+type+'/'+id, null, 'post').done(function(r){
