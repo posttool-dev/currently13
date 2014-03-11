@@ -133,50 +133,49 @@ function form_form(type, id) {
     $info.empty();
     if (_state)
     {
-      var $state = $$('state-panel', {parent: $info});
-      $state.append("<div>Status: <b>"+get_state_name(_state)+"</b></div>");
-      var $state_change = $$('state-change', {parent:$state});
+      var $info_state = $$('state-panel', {parent: $info});
+      $info_state.append('<h3>Status</h3>');
+      $info_state.append("<div><i class='fa fa-check-circle-o'></i> "+get_state_name(_state)+"</b></div>");
+      var $state_change_btn = $("<br><button>CHANGE STATUS...</button>");
+      $info_state.append($state_change_btn);
+      var $state_change = $$('state-change', {parent:$info_state}).css({display:'none'});
       var st = get_state_transitions(_state);
       if (st)
       {
         for (var i=0; i<st.length; i++)
         {
           var ss = get_state_name(st[i]);
-          $state_change.append(ss+"<br>");
+          $state_change.append("<i class='fa fa-circle-o'></i> "+ss+"<br>");
         }
         $state_change.append("<textarea></textarea>");
-        $state_change.append("<button>OK</button> <button>CANCEL</button>");
-        $state.click(function(){
+        var $state_change_ok_btn = $("<button>OK</button>");
+        var $state_change_cancel_btn = $("<button>CANCEL</button>");
+        $state_change.append($state_change_ok_btn, " ", $state_change_cancel_btn);
+        $state_change_btn.click(function(){
           $state_change.show();
+          $state_change_btn.hide();
+        });
+        $state_change_cancel_btn.click(function(){
+          $state_change.hide();
+          $state_change_btn.show();
         });
       }
     }
 //    var $info_date = $$('date-panel', {parent: $info});
+//    $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'');
     var $info_rel = $$('related-panel', {parent: $info});
     var $info_del = $$('delete-panel', {parent: $info});
-    var $info_logs = $$('logs-panel', {parent: $info});
-//    $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'');
     var c = 0;
-    for (var p in _related)
-    {
-      if (_related[p].length != 0)
-      $info_rel.append('<h3>'+p+'</h3>');
-
-      for (var i=0; i<_related[p].length; i++)
-      {
-        (function(type, r)
-        {
-          var f = new form_fields.model_field({type:type});
-          f.data = r;
-          var $m = f.$el();
-          $m.dblclick(function () {
-            console.log(r);
-            self.emit('select', {type: type, id: r._id});
-          });
-          $info_rel.append($m);
-          c++;
-        })(p, _related[p][i]);
-      }
+    function add_related_btn(type, r) {
+      var f = new form_fields.model_field({type:type});
+      f.data = r;
+      var $m = f.$el();
+      $m.dblclick(function () {
+        console.log(r);
+        self.emit('select', {type: type, id: r._id});
+      });
+      $info_rel.append($m);
+      c++;
     }
     function add_delete_btn()
     {
@@ -187,14 +186,8 @@ function form_form(type, id) {
           self.emit('close');
         });
       });
-
     }
-    if (c == 0)
-    {
-      add_delete_btn();
-    }
-    else
-    {
+    function add_reference_btn() {
       var $delete = $$('delete', {el:'button'}).text('REMOVE REFERENCES');
       $delete.click(function(){
         $$ajax('/cms/delete_references/'+type+'/'+id, null, 'post').done(function(r){
@@ -209,8 +202,17 @@ function form_form(type, id) {
       });
       $info_del.append($delete);
     }
+    for (var p in _related)
+      for (var i=0; i<_related[p].length; i++)
+        add_related_btn(p, _related[p][i]);
+    if (c == 0)
+      add_delete_btn();
+    else
+      add_reference_btn();
+
 
     // logs
+    var $info_logs = $$('logs-panel', {parent: $info});
     $info_logs.empty();
     if (_logs.length!=0)
     {
