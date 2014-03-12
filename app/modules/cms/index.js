@@ -412,6 +412,18 @@ exports.form =
      req.object.remove(function(err,m){
        res.json(m);
      });
+  },
+
+  status: function(req, res, next) {
+    var original_state = req.object.state;
+    req.object.state = req.body.state;
+    req.object.save(function (err, m) {
+      add_log(req.session.user._id, 'change status', req.type, m,
+        {message: 'From ' + original_state + 'to ' + req.object.state, reason: req.param.reason}, function (info) {
+          // todo find open related requests - notify requestors & close requests
+          res.json(info);
+        });
+    });
   }
 };
 

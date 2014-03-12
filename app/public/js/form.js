@@ -132,28 +132,49 @@ function form_form(type, id) {
   function update_info() {
     $info.empty();
 
-//    var $info_date = $$('date-panel', {parent: $info});
-//    $info_date.append('<label>Created</label><br>'+formatDate(_created)+'<br><br><label>Modified</label><br>'+formatDate(_modified)+'');
-
-
     if (_state)
     {
+      var selected = -1;
+      var $last = $$();
       var $info_state = $$('state-panel', {parent: $info});
       $info_state.append('<h3>Status</h3>');
-      $info_state.append("<div><i class='fa fa-check-circle-o'></i> "+get_state_name(_state)+"</b></div>");
-      var $state_change_btn = $("<br><button>CHANGE STATUS...</button>");
+      var $state_is = $("<div class='state-change-choice'><i class='fa fa-check-circle-o'></i> "+get_state_name(_state)+"</b></div>");
+      $state_is.click(function(){
+        $last.removeClass('selected');
+        $last.find('i').removeClass('fa-check-circle-o');
+        $last.find('i').addClass('fa-circle-o');
+        selected = -1;
+        $last = $$();
+        $state_change_ok_btn.prop('disabled', true);
+      });
+      $info_state.append($state_is);
+      var $state_change_btn = $("<button>CHANGE STATUS...</button>");
       $info_state.append($state_change_btn);
       var $state_change = $$('state-change', {parent:$info_state}).css({display:'none'});
       var st = get_state_transitions(_state);
       if (st)
       {
-        for (var i=0; i<st.length; i++)
+        function add_choice(state)
         {
-          var ss = get_state_name(st[i]);
-          $state_change.append("<i class='fa fa-circle-o'></i> "+ss+"<br>");
+          var ss = get_state_name(state);
+          var $ssc = $("<div class='state-change-choice'><i class='fa fa-circle-o'></i> "+ss+"</div>");
+          $ssc.click(function(){
+            selected = state;
+            $last.removeClass('selected');
+            $last.find('i').removeClass('fa-check-circle-o');
+            $last.find('i').addClass('fa-circle-o');
+            $ssc.addClass('selected');
+            $ssc.find('i').removeClass('fa-circle-o');
+            $ssc.find('i').addClass('fa-check-circle-o');
+            $last = $ssc;
+            $state_change_ok_btn.prop('disabled', false);
+          });
+          $state_change.append($ssc);
         }
+        for (var i=0; i<st.length; i++)
+          add_choice(st[i]);
         $state_change.append("<textarea></textarea>");
-        var $state_change_ok_btn = $("<button>OK</button>");
+        var $state_change_ok_btn = $("<button>CHANGE STATUS</button>").prop('disabled',true);
         var $state_change_cancel_btn = $("<button>CANCEL</button>");
         $state_change.append($state_change_ok_btn, " ", $state_change_cancel_btn);
         $state_change_btn.click(function(){
@@ -164,6 +185,13 @@ function form_form(type, id) {
           $state_change.hide();
           $state_change_btn.show();
         });
+        $state_change_ok_btn.click(function(){
+          $$ajax('/cms/status/'+type+'/'+_id, JSON.stringify({state:selected}), 'post').done(function(r){
+            _state = selected;
+            update_info();
+            refresh_logs();
+          });
+        })
       }
     }
 
@@ -210,9 +238,15 @@ function form_form(type, id) {
       for (var i=0; i<_related[p].length; i++)
         add_related_btn(p, _related[p][i]);
     if (c == 0)
+    {
       add_delete_btn();
+      $info_del.prepend("<h3>Careful</h3>");
+    }
     else
+    {
       add_reference_btn();
+      $info_rel.prepend("<h3>References</h3>");
+    }
 
 
     // logs
@@ -313,7 +347,6 @@ function form_form(type, id) {
       _related =  o.related;
       _idx = {};
       update_form();
-      console.log(o)
       if (!_id)
         delete o.object._id;
       self.data = o.object;
