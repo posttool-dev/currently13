@@ -3,17 +3,58 @@ var jsdiff = require('diff');
 var mongoose = require('mongoose');
 var gfs = null, Grid = require('gridfs-stream');
 var cloudinary = require('cloudinary');
+var auth = require('../auth');
 var meta = require('./meta');
 var utils = require('./utils');
 var models = require('./models');
 var use_gfs = false;
 
 var workflow_info = null;
-exports.init = function (models, workflow) {
+exports.init = function (app, models, workflow) {
   console.log('current13 0.0.0');
   gfs = new Grid(mongoose.connection.db, mongoose.mongo);
   meta.init(models);
   workflow_info = workflow;
+
+  // move session message to request locals
+  // put user in request locals
+  app.use(function (req, res, next) {
+    res.locals.message = req.session.message;
+    delete req.session.message;
+    res.locals.user = req.session.user;
+    res.user = req.session.user;
+    next();
+  });
+  auth.on_login = '/cms';
+  app.get('/login', auth.login.get);
+  app.post('/login', auth.login.post);
+  //app.get('/register', auth.register.get);
+  //app.post('/register', auth.register.post);
+  app.all('/logout', auth.logout);
+  //app.all ('/users', [utils.has_user, utils.is_admin], user.list);
+  //app.get ('/user/:user_id', [utils.has_user, user.load, user.is_user], user.display);
+  //app.get ('/user/:user_id/edit', [utils.has_user, user.load, user.is_user], user.form.get);
+  //app.post('/user/:user_id/edit', [utils.has_user, user.load, user.is_user], user.form.post);
+  app.get('/profile', [auth.has_user], auth.form.get);
+  app.post('/profile', [auth.has_user], auth.form.post);
+  app.all('/cms', [auth.has_user, exports.add_meta], exports.show_dashboard);
+  app.all('/cms/logs', [auth.has_user, exports.add_meta], exports.logs_for_user);
+  app.all('/cms/logs/:type/:id', [auth.has_user, exports.add_meta], exports.logs_for_record);
+  app.get('/cms/browse/:type', [auth.has_user, exports.add_meta], exports.browse.get);
+  app.post('/cms/browse/:type', [auth.has_user, exports.add_meta], exports.browse.post);
+  app.post('/cms/schema/:type', [auth.has_user, exports.add_meta], exports.browse.schema);
+  app.get('/cms/create/:type', [auth.has_user, exports.add_meta], exports.form.get);
+  app.post('/cms/create/:type', [auth.has_user, exports.add_meta], exports.form.post);
+  app.get('/cms/update/:type/:id', [auth.has_user, exports.add_meta], exports.form.get);
+  app.post('/cms/update/:type/:id', [auth.has_user, exports.add_meta, exports.add_object], exports.form.post);
+  app.get('/cms/get/:type', [auth.has_user, exports.add_meta], exports.form.get_json);
+  app.get('/cms/get/:type/:id', [auth.has_user, exports.add_meta, exports.add_object], exports.form.get_json);
+  app.post('/cms/delete_references/:type/:id', [auth.has_user, exports.add_meta, exports.add_object], exports.form.delete_references);
+  app.post('/cms/delete/:type/:id', [auth.has_user, exports.add_meta, exports.add_object], exports.form.delete);
+  app.post('/cms/status/:type/:id', [auth.has_user, exports.add_meta, exports.add_object], exports.form.status);
+  app.post('/cms/upload', [auth.has_user], exports.upload);
+  app.get('/cms/download/:id', [auth.has_user], exports.download);
+  app.get('/cms/delete_resource/:id', [auth.has_user], exports.delete_resource);
 }
 
 exports.meta = meta;
@@ -23,7 +64,6 @@ exports.models = models;
 
 
 /* put the meta info in every request */
-
 
 exports.add_meta = function (req, res, next) {
   req.models = res.locals.models = meta.meta();
@@ -196,6 +236,7 @@ exports.logs_for_record = function(req, res, next) {
 
 
 exports.browse = {
+
   get: function (req, res, next) {
     var conditions = req.body.condition;
     req.model.count(conditions, function (err, count) {
@@ -337,7 +378,6 @@ exports.form =
       }
     });
   },
-
 
   delete_references: function(req, res, next) {
     if (req.related_count == 0)
