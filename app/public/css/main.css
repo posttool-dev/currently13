@@ -17,7 +17,7 @@ Having flickering problems in Webkit? Use -webkit-backface-visibility. See this 
 }
 
 /* want to apply globally, but causes probs with ckeditor */
-.control-group, .controls, input, .hrow, .hcol, .crow, .ccol, #tool-bar, #control-bar, #info-panel {
+.control-group, .controls, input, .hrow, .hcol, .crow, .ccol, #tool-bar, #control-bar, #info-panel, #info-panel textarea  {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -55,7 +55,7 @@ input.small {
     color:#000;
 }
 
-textarea { margin: 0; width: 100%; }
+textarea { margin: 0; width: 100%; min-height: 50px; }
 
 
 a, #info-cog {
@@ -469,7 +469,7 @@ select:active {
 
 }
 
-
+#info-panel h3 { padding-top: 8px; border-top: 1px solid #44475f; }
 /*#info-panel*/
 .related-panel, .delete-panel, .logs-panel {
 padding-top: 20px;
@@ -491,3 +491,6 @@ padding-top: 20px;
 .log-row .diff-removed { font-size: 11px; color: #555; text-decoration: line-through;}
 
 
+.state-change-choice { cursor: pointer; padding-bottom: 4px;}
+.state-change-choice:hover { color: #48adff; }
+.state-change-choice.selected { color: #48adff;}

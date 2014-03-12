@@ -246,6 +246,7 @@ var crypto_iterations = 12000;
  */
 
 exports.hash = function(pwd, salt, fn) {
+  try {
     if (3 == arguments.length) {
         crypto.pbkdf2(pwd, salt, crypto_iterations, crypto_len, function(err, hash) {
             fn(err, hash.toString('base64'));
@@ -261,4 +262,7 @@ exports.hash = function(pwd, salt, fn) {
             });
         });
     }
+  } catch (e) {
+    fn(e);
+  }
 };
