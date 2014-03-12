@@ -211,8 +211,9 @@ exports.browse = {
       });
     });
   },
+
   post: function (req, res, next) {
-    var conditions = req.body.condition;
+    var conditions = process_conditions(req.body.condition);
     var fields = null;
     var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
     req.model.count(conditions, function (err, count) {
@@ -231,13 +232,35 @@ exports.browse = {
           res.json({results: r, count: count});
       });
     });
+  },
+
+  schema: function (req, res, next) {
+    res.json({schema: meta.get_schema_info(req.schema), browser: req.browser});
   }
 };
 
 
-exports.schema = function (req, res, next) {
-  res.json({schema: meta.get_schema_info(req.schema), browser: req.browser});
-};
+process_conditions = function(o)
+{
+  var c = {};
+  for (var p in o)
+  {
+    var op = o[p];
+    if (op.condition.charAt(0) == '$')
+    {
+      c[p] = {};
+      c[p][op.condition] = op.value;
+      if (op.condition == '$regex') {
+        c[p]['$options'] = 'i';
+      }
+    }
+    else if (op.condition == '=')
+    {
+      c[p] = op.value;
+    }
+  }
+  return c;
+}
 
 
 exports.form =

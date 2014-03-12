@@ -95,7 +95,7 @@ function browse_browse(type) {
   var $lh = null; // last header clicked
   function create_header_col(m) {
     var $e = $$('hcol nowrap');
-    $e.css({width: p})
+    $e.css({width: p});
     $e.text(m.name);
     var hilight = function () {
       if (!order)
@@ -270,9 +270,7 @@ function browse_browse(type) {
       var name = $($c.find('.name')).val();
       var cond = $($c.find('.cond')).val();
       var val = $($c.find('input')).val();
-      console.log(name, cond, val)
-      filters[name] = {};
-      filters[name][cond] = val;
+      filters[name] = {condition: cond, value: val};
     }
     zcookie.set('filters-'+type, filters);
     zcookie.set('page-'+type, 0);
@@ -311,18 +309,14 @@ function browse_browse(type) {
       var b = bmeta_idx[$s.val()];
       for (var i=0; i< b.filters.length; i++)
         $t.append($("<option>"+ b.filters[i]+"</option>"));
-      var iv = null;
-      if (r) {
-        for (var q in r)
-        {
-          $t.val(q);
-          iv = r[q];
-        }
-      }
       $i.empty();
       var $ic = $('<input type="text" class="small">')
       $i.append($ic);
-      $ic.val(iv);
+      console.log(p, r)
+      if (r) {
+        $t.val(r.condition);
+        $ic.val(r.value);
+      }
     }
     $s.change(update_t_and_i);
     update_t_and_i();
