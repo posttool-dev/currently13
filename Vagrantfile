@@ -16,7 +16,7 @@ Vagrant::Config.run do |config|
   # config.vm.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/app", "1"]
 
   config.vm.provision :chef_solo do |chef|
-    chef.add_recipe "nodejs"
+    #chef.add_recipe "nodejs"
     chef.add_recipe "mongodb-debs"
     # chef.add_recipe "redis-server"
     chef.json = {
@@ -36,4 +36,10 @@ Vagrant::Config.run do |config|
   config.vm.provision :shell, :inline => "sudo apt-get install -y ruby1.9.3 --no-install-recommends"
   config.vm.provision :shell, :inline => "sudo gem install cf"
   config.vm.provision :shell, :inline => "sudo apt-get install -y graphicsmagick libgraphicsmagick1-dev"
+
+  config.vm.provision :shell, :inline => "sudo apt-get install -y python-software-properties"
+  config.vm.provision :shell, :inline => "sudo add-apt-repository ppa:chris-lea/node.js"
+  config.vm.provision :shell, :inline => "sudo apt-get update"
+  config.vm.provision :shell, :inline => "sudo apt-get install -y nodejs"
+
 end
