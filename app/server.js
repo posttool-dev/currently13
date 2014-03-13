@@ -48,7 +48,7 @@ function init_app() {
   cloudinary.config(config.cloudinaryConfig);
 
   cms.init(app, hm.models, hm.workflow.workflow);
-  // hm.migrate.migrate_data();
+  hm.migrate.migrate_data();
 
   app.get('/', function(req, res)
   {
@@ -78,7 +78,7 @@ function init_app() {
   });
 
   app.listen(config.serverPort);
-  console.log('App started on port 3000');
+  console.log('App started on port '+config.serverPort);
 }
 
 
