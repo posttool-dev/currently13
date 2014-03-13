@@ -3,8 +3,10 @@ Vagrant::Config.run do |config|
   
   config.vm.box_url = "http://files.vagrantup.com/precise32.box"
 
-  config.vm.forward_port 3000, 3000
-  config.vm.forward_port 5000, 5000
+  config.vm.forward_port 80, 8080
+  config.vm.customize ["modifyvm", :id, "--memory", 256]
+  config.vm.network :hostonly, "10.11.12.23"
+  #config.vm.host_name = "dragon"
 
   config.vm.share_folder "app", "/home/vagrant/app", "app"
 
