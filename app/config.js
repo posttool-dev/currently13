@@ -1,6 +1,6 @@
 var config = {
   serverPort: 8080,
-  mongoConnectString: 'mongodb://localhost/test',
+  mongoConnectString: 'mongodb://hackettmill:yo42@oceanic.mongohq.com:10073/app22593278',//mongodb://localhost/test',
   sessionSecret: 'nfuds9543ythhfgjghf$WH*#IRF5euyhtfgxkj',
   multipartLimit: '1099mb',
   cloudinaryConfig: {
