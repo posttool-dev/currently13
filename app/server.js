@@ -81,8 +81,8 @@ function init_app() {
     res.json('ok')
   })
 
-  app.listen(config.serverPort);
-  console.log('App started on port '+config.serverPort);
+  app.listen(process.env.PORT);
+  console.log('App started on port '+process.env.PORT);
 }
 
 
