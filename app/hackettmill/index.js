@@ -1,3 +1,4 @@
-exports.models = require('./models').models;
+exports.models = require('./models');
 exports.migrate = require('./migrate');
 exports.workflow = require('./workflow');
+exports.config = require('./config');

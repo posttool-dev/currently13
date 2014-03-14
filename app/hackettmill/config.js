@@ -1,8 +1,9 @@
 var config = {
-  serverPort: 5000,
-  mongoConnectString: 'mongodb://hackettmill:yo42@oceanic.mongohq.com:10073/app22593278',//mongodb://localhost/test',
+  serverPort: 8080,
+  mongoConnectString: 'mongodb://localhost/test',
   sessionSecret: 'nfuds9543ythhfgjghf$WH*#IRF5euyhtfgxkj',
   multipartLimit: '1099mb',
+  useGfs: false,
   cloudinaryConfig: {
     cloud_name: 'hackettmill',
     api_key: '927166441966584',

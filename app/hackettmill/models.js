@@ -389,8 +389,7 @@ exports.models = {
     ]
   },
 
-
-    Resource: cms.models.Resource
+  Resource: cms.models.Resource
 
 }
 

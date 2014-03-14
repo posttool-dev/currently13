@@ -8,7 +8,7 @@ var ResourceSchemaInfo = {
   description: String,
   path: String,
   size: Number,
-  mime_type: String,
+  mime: String,
   meta: mongoose.Schema.Types.Mixed
 };
 
@@ -16,7 +16,8 @@ exports.models = {
 
   Resource: {
     meta: {
-      plural: 'Resources'
+      plural: 'Resources',
+      dashboard: true
     },
     schema: ResourceSchemaInfo,
     browse: [

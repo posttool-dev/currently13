@@ -3,18 +3,23 @@ var jsdiff = require('diff');
 var mongoose = require('mongoose');
 var gfs = null, Grid = require('gridfs-stream');
 var cloudinary = require('cloudinary');
+var mime = require('mime');
+
 var auth = require('../auth');
 var meta = require('./meta');
 var utils = require('./utils');
 var models = require('./models');
-var use_gfs = false;
 
 var workflow_info = null;
-exports.init = function (app, models, workflow) {
+var config = null;
+exports.init = function (app, p) {
   console.log('current13 0.0.0');
   gfs = new Grid(mongoose.connection.db, mongoose.mongo);
-  meta.init(models);
-  workflow_info = workflow;
+  meta.init(p.models.models);
+  if (p.workflow)
+    workflow_info = p.workflow.workflow;
+  if (p.config)
+    config = p.config;
 
   if (!app)
     return;
@@ -79,10 +84,17 @@ exports.add_meta = function (req, res, next) {
     req.browser = meta.browse(type);
     req.form = meta.form(type);
   }
-  var group = req.session.user.group;
-  if (req.session.user.admin)
-    group = workflow_info.groups.admin;
-  req.workflow = res.locals.workflow = {states:workflow_info.states, transitions:workflow_info.groups[group].transitions};
+  if (workflow_info)
+  {
+    var group = req.session.user.group;
+    if (req.session.user.admin)
+      group = workflow_info.groups.admin;
+    req.workflow = res.locals.workflow = {states:workflow_info.states, transitions:workflow_info.groups[group].transitions};
+  }
+  else
+  {
+    req.workflow = res.locals.workflow = null;
+  }
   next();
 };
 
@@ -510,9 +522,10 @@ exports.get_preview_url = function(e)
 
 exports.upload = function (req, res) {
   var file = req.files.file;
+  var r = new meta.Resource();
+  r.mime = mime.lookup(file.name);
   var do_save = function (e) {
     // create a resource with path & return id
-    var r = new meta.Resource();
     r.path = file.name;
     r.size = file.size;
     r.creator = req.session.user._id;
@@ -520,11 +533,12 @@ exports.upload = function (req, res) {
     if (e)
       r.meta.thumb = exports.get_preview_url(e);
     r.save(function (err, s) {
+      console.log(s);
       res.json(s);
     });
   };
-  if (use_gfs) {
-    save_gfs(file, do_save);
+  if (config.useGfs) {
+    save_gfs(r._id, file, do_save);
   }
   else {
     var imageStream = fs.createReadStream(file.path, { encoding: 'binary' });
@@ -555,11 +569,13 @@ exports.delete_resource = function (req, res) {
 // for gfs
 exports.download = function (req, res) {
   // TODO: set proper mime type + filename, handle errors, etc...
-  var q = Resource.findOne({_id: req.params.id});
+  var q =  meta.Resource.findOne({_id: req.params.id});
   q.exec(function (err, r) {
     if (r) {
+      res.setHeader('Content-Type', r.mime + (r.charset ? '; charset=' + r.charset : ''));
+      res.setHeader('Content-Disposition', 'attachment; filename='+ r.path);
       gfs
-        .createReadStream({ filename: "/thumb" + r.path })
+        .createReadStream({ _id: r._id })
         .pipe(res);
     }
     else {
@@ -569,9 +585,9 @@ exports.download = function (req, res) {
 };
 
 
-function save_gfs(file, next)
+function save_gfs(id, file, next)
 {
-    var ws = gfs.createWriteStream({ filename: file.path });
+    var ws = gfs.createWriteStream({ _id: id, filename: file.path });
     ws.on('error', function (e) {
       next(e);
     });

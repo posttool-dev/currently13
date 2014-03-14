@@ -1,13 +1,15 @@
 var mongoose = require('mongoose');
 var prompt = require('prompt');
 
-var config = require('./config');
 var auth = require('./modules/auth');
 
 prompt.message = "create admin > ".cyan;
 prompt.delimiter = "".grey;
 var prompt_schema = {
     properties: {
+      app: {
+        required: true
+      },
       name: {
         required: true
       },
@@ -27,8 +29,9 @@ var prompt_schema = {
 prompt.start();
 
 prompt.get(prompt_schema, function (err, result) {
-  console.log('  name: ' + result.name);
-  console.log('  email: ' + result.email);
+  var config = require('./'+ result.app+'/config');
+//  console.log('  name: ' + result.name);
+//  console.log('  email: ' + result.email);
   if (result.password != result.confirm)
     throw new Error('Password mismatch!');
 

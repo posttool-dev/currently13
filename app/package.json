@@ -16,6 +16,10 @@
     "connect-mongo": "0.4.0",
     "csv": "0.3.7",
     "prompt": "0.2.12",
-    "diff": "1.0.8"
+    "diff": "1.0.8",
+    "forever": "0.10.11",
+    "fluent-ffmpeg": "1.6.0",
+    "prompt": "0.2.12",
+    "mime": "1.2.11"
   }
 }

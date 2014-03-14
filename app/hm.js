@@ -4,12 +4,12 @@ var express = require('express'), app = express();
 var mongoose = require('mongoose');
 var cloudinary = require('cloudinary');
 var MongoStore = require('connect-mongo')(express);
-var kue = require('kue'), jobs = kue.createQueue();
 
 var cms = require('./modules/cms');
 
-var config = require('./config');
-var hm = require('./hackettmill'), PUBLISHED = hm.workflow.PUBLISHED;
+var hm = require('./hackettmill'),
+  PUBLISHED = hm.workflow.PUBLISHED,
+  config = hm.config;
 
 
 
@@ -50,7 +50,7 @@ function init_app() {
   });
   cloudinary.config(config.cloudinaryConfig);
 
-  cms.init(app, hm.models, hm.workflow.workflow);
+  cms.init(app, hm);
 
   app.get('/', function(req, res)
   {
@@ -80,16 +80,8 @@ function init_app() {
   });
 
   app.get('/pop', function(req, res){
-    var job = jobs.create('migrate', {title:'migrating hm'});
-    job.save();
-    job.on('complete', function(){
-      console.log("Job complete");
-    }).on('failed', function(){
-      console.log("Job failed");
-    }).on('progress', function(progress){
-      process.stdout.write('\r  job #' + job.id + ' ' + progress + '% complete');
-    });
-    res.json({job:job})
+    hm.migrate.migrate_data();
+    res.json('ok');
   });
 
   app.listen(config.serverPort);

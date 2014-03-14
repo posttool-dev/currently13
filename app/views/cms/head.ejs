@@ -35,6 +35,7 @@ function render_template(type, object)
         return "";
     }
 }
+<% if (workflow) { %>
 var __states = <%- JSON.stringify(workflow.states) %>;
 function get_state_name(code) {
     for (var i=0; i<__states.length; i++)
@@ -49,4 +50,5 @@ function get_state_transitions(code) {
             return __transitions[i].to;
     return [];
 }
+<% } %>
 </script>

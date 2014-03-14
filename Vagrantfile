@@ -46,8 +46,5 @@ Vagrant::Config.run do |config|
 end
 
 =begin
-sudo apt-get -y install build-essential checkinstall git libfaac-dev libgpac-dev \
-  libjack-jackd2-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev \
-  libsdl1.2-dev libtheora-dev libva-dev libvdpau-dev libvorbis-dev libx11-dev \
-  libxfixes-dev texi2html yasm zlib1g-dev
+see ffmpeg-install-deps
 =end

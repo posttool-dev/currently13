@@ -49,7 +49,7 @@ make distclean
 
 #LAME
 
-sudo apt-get install libmp3lame-dev
+sudo apt-get -y install libmp3lame-dev
 
 
 cd ~/ffmpeg_sources
@@ -62,7 +62,7 @@ make install
 make distclean
 
 
-# PX
+#  VP8/VP9
 
 cd ~/ffmpeg_sources
 wget http://webm.googlecode.com/files/libvpx-v1.3.0.tar.bz2

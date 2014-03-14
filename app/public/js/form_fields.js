@@ -236,10 +236,7 @@ var form_fields = {
         $btn.hide();
       else
         $btn.show();
-
     }
-
-
 
     $fileupload.fileupload({
       dataType: 'json',
@@ -301,6 +298,8 @@ var form_fields = {
       var thumb = find_thumb(_d);
       if (thumb)
         $el.append('<img src="'+thumb+'">');
+      else
+        $el.append('<a href="/cms/download/'+_d._id+'">'+_d.path+"</a>");
     }
 
     $el.dblclick(function () {
@@ -395,10 +394,12 @@ var form_fields = {
           });
           return vals;
         } else {
+          var val = null;
           $list.children().each(function (i, e) {
             var o = $(e).data("__obj__");
-            return o.data._id;
+            val = o.data._id;
           });
+          return val;
         }
       },
       set: function (o) {
@@ -421,12 +422,7 @@ var form_fields = {
       return d;
     }
     self.update = function(data) {
-      // do all children (refs may have repeats)
-        $list.children().each(function (i, e) {
-          var o = $(e).data("__obj__");
-          if (o.data._id == data._id)
-            o.data = data;
-        });
+      return self.push(data);
     }
 
   },

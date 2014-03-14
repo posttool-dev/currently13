@@ -231,8 +231,6 @@ function browse_browse(type) {
       zcookie.set('filters-'+type, filters);
       update_filters();
       request_data();
-      if (filters_open)
-        create_filter_ui();
     });
     $filters.append($e);
   }
