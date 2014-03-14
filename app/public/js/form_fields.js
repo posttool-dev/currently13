@@ -298,7 +298,7 @@ var form_fields = {
       var thumb = find_thumb(_d);
       if (thumb)
         $el.append('<img src="'+thumb+'">');
-      else
+      else if (options.type == 'Resource')
         $el.append('<a href="/cms/download/'+_d._id+'">'+_d.path+"</a>");
     }
 
