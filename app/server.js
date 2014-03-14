@@ -48,7 +48,6 @@ function init_app() {
   cloudinary.config(config.cloudinaryConfig);
 
   cms.init(app, hm.models, hm.workflow.workflow);
-  hm.migrate.migrate_data();
 
   app.get('/', function(req, res)
   {
@@ -76,6 +75,11 @@ function init_app() {
       res.render('hackettmill/artist', {artist: artist});
     });
   });
+
+  app.get('/pop', function(req, res){
+    hm.migrate.migrate_data();
+    res.json('ok')
+  })
 
   app.listen(config.serverPort);
   console.log('App started on port '+config.serverPort);
