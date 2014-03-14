@@ -13,8 +13,16 @@ var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
 var use_existing_images = true; // false will destroy images at cloudinary & table of resources
 var prefix = 'dev1';
 
-
-exports.migrate_data = function () {
+var _job;
+var _done;
+exports.migrate_data = function (job, done) {
+  if (_job && job)
+  {
+    _done(new Error('migration is in progress'));
+    return;
+  }
+  _job = job;
+  _done = done;
   if (use_existing_images)
     migrate0();
   else
@@ -54,11 +62,19 @@ function migrate1()
 
 function migrate2()
 {
-  var e = ['Inventory','Artist', 'Catalog','Contact','Essay','Exhibition','News','Page'];
-  cms.utils.forEach(e, function (e, next) {
+  var i = 0;
+  var models = ['Inventory','Artist', 'Catalog','Contact','Essay','Exhibition','News','Page'];
+  cms.utils.forEach(models, function (e, next) {
+    if (_job)
+      _job.progress(i, models.length);
     repopulate(e, next);
+    i++;
   }, function () {
-    'Migration complete.'
+    if (_done)
+    {
+      _job = null;
+      _done();
+    }
   });
 }
 
@@ -67,7 +83,9 @@ function repopulate(type, complete)
 {
   var R = mongoose.model(type);
   R.find().remove(function (err, c) {
-  console.log('Repopulating '+type+' ... removed '+c+' old records.');
+    console.log('Repopulating '+type+' ... removed '+c+' old records.');
+    if (_job)
+      _job.log('Repopulating '+type+' ... removed '+c+' old records.');
     cms.utils.forEach(data[type].array,
       function(e, next){
         create(type, e, next);},

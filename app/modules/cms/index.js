@@ -16,6 +16,9 @@ exports.init = function (app, models, workflow) {
   meta.init(models);
   workflow_info = workflow;
 
+  if (!app)
+    return;
+
   // move session message to request locals
   // put user in request locals
   app.use(function (req, res, next) {

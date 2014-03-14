@@ -4,6 +4,7 @@ var express = require('express'), app = express();
 var mongoose = require('mongoose');
 var cloudinary = require('cloudinary');
 var MongoStore = require('connect-mongo')(express);
+var kue = require('kue'), jobs = kue.createQueue();
 
 var cms = require('./modules/cms');
 
@@ -79,12 +80,20 @@ function init_app() {
   });
 
   app.get('/pop', function(req, res){
-    hm.migrate.migrate_data();
-    res.json('ok')
-  })
+    var job = jobs.create('migrate', {title:'migrating hm'});
+    job.save();
+    job.on('complete', function(){
+      console.log("Job complete");
+    }).on('failed', function(){
+      console.log("Job failed");
+    }).on('progress', function(progress){
+      process.stdout.write('\r  job #' + job.id + ' ' + progress + '% complete');
+    });
+    res.json({job:job})
+  });
 
-  app.listen(process.env.PORT);
-  console.log('App started on port '+process.env.PORT);
+  app.listen(config.serverPort);
+  console.log('App started on port '+config.serverPort);
 }
 
 

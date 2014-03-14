@@ -1,6 +1,8 @@
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+  ObjectId = mongoose.Schema.Types.ObjectId;
 
 var ResourceSchemaInfo = {
+  parent: {type: ObjectId, ref: 'Resource'},
   title: String,
   caption: String,
   description: String,

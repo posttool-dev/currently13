@@ -4,6 +4,7 @@ Vagrant::Config.run do |config|
   config.vm.box_url = "http://files.vagrantup.com/precise32.box"
 
   config.vm.forward_port 80, 8080
+  config.vm.forward_port 3001, 3001
   config.vm.customize ["modifyvm", :id, "--memory", 256]
   config.vm.network :hostonly, "10.11.12.23"
   #config.vm.host_name = "dragon"
@@ -43,3 +44,10 @@ Vagrant::Config.run do |config|
   config.vm.provision :shell, :inline => "sudo apt-get install -y nodejs"
 
 end
+
+=begin
+sudo apt-get -y install build-essential checkinstall git libfaac-dev libgpac-dev \
+  libjack-jackd2-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev \
+  libsdl1.2-dev libtheora-dev libva-dev libvdpau-dev libvorbis-dev libx11-dev \
+  libxfixes-dev texi2html yasm zlib1g-dev
+=end
