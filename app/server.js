@@ -30,6 +30,8 @@ mongoose.connect(config.mongoConnectString, {}, function (err) {
 
 function init_app() {
   app.set('view engine', 'ejs');
+  app.set('views',__dirname + '/views');
+
   app.use(express.cookieParser());
   app.use(express.session({
     secret: config.sessionSecret,
