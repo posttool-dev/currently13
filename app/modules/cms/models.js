@@ -23,6 +23,7 @@ exports.models = {
     browse: [
       {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
       {name: "path", cell: "char", filters: ["icontains", "equals"], order: "asc,desc"},
+      {name: "mime", cell: "char"},
       {name: "meta", cell: "image"},
     ],
     form: [

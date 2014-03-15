@@ -295,11 +295,23 @@ var form_fields = {
       var t = render_template(options.type, _d);
       if (t)
         $el.append('<div class="text">'+t+'</div>');
-      var thumb = find_thumb(_d);
-      if (thumb)
-        $el.append('<img src="'+thumb+'">');
-      else if (options.type == 'Resource')
-        $el.append('<a href="/cms/download/'+_d._id+'">'+_d.path+"</a>");
+      if (options.type == 'Resource')
+      {
+        if (_d.mime.indexOf('image') == 0){
+          var thumb = find_thumb(_d);
+          if (thumb)
+            $el.append('<img src="'+thumb+'">');
+        } else if (_d.mime.indexOf('audio') == 0) {
+          var src = '/cms/download/'+_d._id;
+          $el.append('<audio controls><source src="'+src+'" type="'+_d.mime+'"></audio>');
+        } else if (_d.mime.indexOf('video') == 0) {
+          var src = '/cms/download/'+_d._id;
+          $el.append('<video controls><source src="'+src+'" type="'+_d.mime+'"></video>');
+        } else {
+          $el.append('<a href="/cms/download/'+_d._id+'">'+_d.path+"</a>");
+
+        }
+      }
     }
 
     $el.dblclick(function () {
