@@ -3,11 +3,10 @@ var jsdiff = require('diff');
 var mime = require('mime');
 var uuid = require('node-uuid');
 var mongoose = require('mongoose');
-var gfs = null, Grid = require('gridfs-stream');
-var kue;
-var jobs;
-var cloudinary;
 
+var gfs, Grid = require('gridfs-stream');
+var kue, jobs;
+var cloudinary;
 
 var auth = require('../auth');
 var meta = require('./meta');
@@ -19,8 +18,8 @@ var config = null;
 var client = null;
 exports.init = function (app, p) {
   console.log('current13 0.0.0');
-  gfs = new Grid(mongoose.connection.db, mongoose.mongo);
   meta.init(p.models.models);
+
   if (p.workflow)
     workflow_info = p.workflow.workflow;
   if (p.config)
@@ -35,12 +34,13 @@ exports.init = function (app, p) {
     jobs.on('job complete', upload_job_complete);
     console.log('initialed process queue')
   }
-
+  if (config.useGfs) {
+      gfs = new Grid(mongoose.connection.db, mongoose.mongo);
+  }
   if (config.usePkgcloud) {
     client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
     console.log('created pkgcloud storage client')
   }
-
   if (config.cloudinaryConfig) {
     cloudinary = require('cloudinary');
     cloudinary.config(config.cloudinaryConfig);
