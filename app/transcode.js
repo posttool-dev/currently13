@@ -1,10 +1,18 @@
+var fs = require('fs');
+var tmp = require('tmp');
+var uuid = require('node-uuid');
+var kue = require('kue');
 var mongoose = require('mongoose');
+var pkgcloud = require('pkgcloud');
 var ffmpeg = require('fluent-ffmpeg');
 var gm = require('gm');
 
-var kue = require('kue')
- , jobs = kue.createQueue(); // for production: {  disableSearch: true }
+// arg 'app name'
+var p = require('./peter'), config = p.config;
 
+// requires pkgcloud and kue configs
+var client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
+var jobs = kue.createQueue(config.kueConfig);
 
 jobs.process('audio mp3', function(job, done){
   var proc = new ffmpeg({ source: job.data.infile }) /* , nolog: true */
@@ -37,62 +45,65 @@ jobs.process('audio mp3', function(job, done){
 });
 
 
-
-var fs = require('fs');
-var pkgcloud = require('pkgcloud');
-var tmp = require('tmp');
-
-
-
-var p = require('./peter'),
-  config = p.config;
-var client;
-if (config.usePkgcloud)
-  client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
-console.log(client);
-
-jobs.process('image thumb', function (job, done) {
-  console.log('image thumb', job.data);
-
+// image resize
+resize = function (job, width, height, options, done) {
   tmp.file(function (err, path) {
     if (err) throw err;
-    console.log("apapa", path);
     var downloadStream = fs.createWriteStream(path);
-    client.download({
-      container: job.data.container,
-      remote: job.data.filename
-    }).pipe(downloadStream);
-    downloadStream.on('error', function(err){
-      throw new Error(err);
-    });
-    downloadStream.on('end', function () {
-      console.log("here");
-      var writeStream = client.upload({
-        container: job.data.container,
-        remote: path
-      });
-      gm(path)
-        .resize(353, 257)
-        .autoOrient()
-        .write(writeStream, function (err) {
+    client.download({container: job.data.container, remote: job.data.filename},
+      function (err, info) {
+        if (err) throw err;
+        job.log('download complete', info.size);
+        tmp.file(function (err, path2) {
           if (err) throw err;
-          console.log("heaaaaaa", r);
-          done(r);
+          var g = gm(path);
+          g.resize(width, height, options);
+          g.write(path2, function (err) {
+            if (err) throw err;
+            job.log('convert complete', path2);
+            var remote = get_filename(job.data.filename);
+            fs.createReadStream(path2).pipe(client.upload({container: job.data.container, remote: remote},
+              function () {
+                var size = fs.statSync(path2).size;
+                job.log('upload complete', path2, size);
+                fs.unlink(path, function (err) {
+                  if (err) throw err;
+                  fs.unlink(path2, function (err) {
+                    if (err) throw err;
+                    job.log('deleted ' + path + ' ' + path2);
+                    job.set('path', remote, function () {
+                      job.set('size', size, function () {
+                        done();
+                      });
+                    });
+                  })
+                });
+              }));
+          });
         });
-    });
+      }).pipe(downloadStream);
   });
-});
+}
 
+get_filename = function(filename)
+{
+  var didx = filename.lastIndexOf('.');
+  if (didx == -1)
+    return filename + uuid.v1();
+  else
+    return filename.substring(0, didx) + uuid.v1() + filename.substring(didx);
+}
+
+jobs.process('image thumb', function (job, done) {
+  resize(job, 320, 240, null, done);
+});
 
 jobs.process('image medium', function(job, done){
-  console.log(job.data.resource);
-  done();
+  resize(job, 480, 480, null, done);
 });
 
-
 jobs.process('image large', function(job, done){
-  console.log(job.data.resource);
-  done();
+  resize(job, 2300, 1500, null, done);
 });
 
 

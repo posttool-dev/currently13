@@ -1,13 +1,12 @@
 var fs = require('fs');
 var jsdiff = require('diff');
+var mime = require('mime');
 var uuid = require('node-uuid');
 var mongoose = require('mongoose');
 var gfs = null, Grid = require('gridfs-stream');
-var mime = require('mime');
-var kue = require('kue')
- , jobs = kue.createQueue(); // for production: {  disableSearch: true }
-
-var cloudinary = require('cloudinary'); // move to if
+var kue;
+var jobs;
+var cloudinary;
 
 
 var auth = require('../auth');
@@ -30,8 +29,23 @@ exports.init = function (app, p) {
   if (!app)
     return;
 
-  if (config.usePkgcloud)
+  if (config.kueConfig) {
+    kue = require('kue');
+    jobs = kue.createQueue(config.kueConfig);
+    jobs.on('job complete', upload_job_complete);
+    console.log('initialed process queue')
+  }
+
+  if (config.usePkgcloud) {
     client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
+    console.log('created pkgcloud storage client')
+  }
+
+  if (config.cloudinaryConfig) {
+    cloudinary = require('cloudinary');
+    cloudinary.config(config.cloudinaryConfig);
+    console.log('initialized cloudinary api');
+  }
 
   // move session message to request locals
   // put user in request locals
@@ -494,56 +508,68 @@ function compare(a, b) {
 // image and resource handling
 
 
-exports.get_preview_url = function (e) {
-  return cloudinary.url(e.public_id + ".jpg", { width: 300, height: 200, crop: 'fit'});
-};
 
 
-exports.save_resource = function (name, path, mime, size, creator_id, info, complete) {
+exports.save_resource = function (name, path, size, creator_id, info, complete) {
   var r = new meta.Resource();
-  r.mime = mime;
+  r.mime = mime.lookup(name);
   r.path = path;
   r.name = name;
   r.size = size;
   r.creator = creator_id;
   r.meta = info ? info : {};
   if (info && config.cloudinaryConfig)
-    r.meta.thumb = exports.get_preview_url(info);
+    r.meta.thumb = cloudinary.url(e.public_id + ".jpg", { width: 300, height: 200, crop: 'fit'});
   r.save(function (err, s) {
-    complete(s);
+    complete(s); // but dont return
     // if pkgcloud
     var processes = meta.meta().Resource.process;
     if (processes) {
-      var type = mime.split('/')[0];
-      if (processes[mime])
-        processes = processes[mime];
+      var type = r.mime.split('/')[0];
+      if (processes[r.mime])
+        processes = processes[r.mime];
       else
         processes = processes[type];
-      utils.forEach(processes, function (process, next) {
+      for (var i=0; i<processes.length; i++) {
+        var process = processes[i];
         var job_name = type + ' ' + process;
-        console.log("PROCESS", job_name)
-        var job = jobs.create(job_name, {container: config.container, filename: path}).save();
-        job.on('complete',function (jobinfo) {
-          var pr = new info.Resource();
-          pr.parent = r;
-          pr.mime = jobinfo.mime;
-          pr.size = jobinfo.size;
-          pr.creator = creator_id;
-          pr.meta = jobinfo;
-          pr.save(function (err, ps) {
-            console.log("Job '" + job_name + "' complete", err, ps);
-            next();
-          })
-        }).on('failed', function () {
-          console.log("Job '" + job_name + "' failed");
-        });
-      }, function () {
-        console.log("...");
-      });
+        console.log("job create", job_name);
+        jobs.create(job_name, {
+          container: config.container,
+          filename: path,
+          parent: r._id,
+          creator: creator_id}).save();
+      }
     }
   });
   return r;
 }
+
+upload_job_complete = function(id) {
+  console.log('job complete', id);
+  kue.Job.get(id, function(err, job) {
+    job.get('path', function (err, p) {
+      job.get('size', function (err, s) {
+        console.log('  params', p, s);
+        meta.Resource.findOne({_id: job.data.parent}, null, function (err, r) {
+          if (err) throw err;
+          var pr = new meta.Resource();
+          pr.parent = r;
+          pr.mime = p ? mime.lookup(p) : null;
+          pr.path = p;
+          pr.size = s;
+          pr.creator = job.data.creator;
+          pr.meta = {generated: true, job_name: job.name};
+          pr.save(function (err, ps) {
+            if (err) throw err;
+            console.log('removing job');
+            job.remove();
+          });
+        });
+      });
+    });
+  });
+};
 
 
 exports.upload = function (req, res) {
@@ -551,7 +577,7 @@ exports.upload = function (req, res) {
   var filemime = mime.lookup(file.name);
   var path = uuid.v4() + file.name;
   var do_save = function (e) {
-    exports.save_resource(file.name, path, filemime, file.size, req.session.user._id, e, function (s) {
+    exports.save_resource(file.name, path, file.size, req.session.user._id, e, function (s) {
       console.log(s);
       res.json(s);
     });
@@ -579,7 +605,6 @@ exports.upload = function (req, res) {
     });
     imageStream.on('data', cloudStream.write).on('end', cloudStream.end);
   }
-
 };
 
 

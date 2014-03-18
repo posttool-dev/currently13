@@ -2,7 +2,6 @@
 var fs = require('fs');
 var express = require('express'), app = express();
 var mongoose = require('mongoose');
-var cloudinary = require('cloudinary');
 var MongoStore = require('connect-mongo')(express);
 
 var cms = require('./modules/cms');
