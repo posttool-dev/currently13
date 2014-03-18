@@ -84,3 +84,12 @@ exports.models = {
   Resource: cms.models.Resource
 
 }
+
+
+
+
+exports.models.Resource.process = {
+  image: ['thumb', 'medium', 'large'],
+  audio: [],
+  video: []
+}

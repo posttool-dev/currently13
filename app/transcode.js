@@ -1,11 +1,12 @@
 var mongoose = require('mongoose');
 var ffmpeg = require('fluent-ffmpeg');
+var gm = require('gm');
 
 var kue = require('kue')
  , jobs = kue.createQueue(); // for production: {  disableSearch: true }
 
 
-jobs.process('encode mp3', function(job, done){
+jobs.process('audio mp3', function(job, done){
   var proc = new ffmpeg({ source: job.data.infile }) /* , nolog: true */
     .withAudioBitrate('196k')
     .withAudioCodec('libmp3lame')
@@ -35,6 +36,64 @@ jobs.process('encode mp3', function(job, done){
     .saveToFile(job.data.outfile);
 });
 
+
+
+var fs = require('fs');
+var pkgcloud = require('pkgcloud');
+var tmp = require('tmp');
+
+
+
+var p = require('./peter'),
+  config = p.config;
+var client;
+if (config.usePkgcloud)
+  client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
+console.log(client);
+
+jobs.process('image thumb', function (job, done) {
+  console.log('image thumb', job.data);
+
+  tmp.file(function (err, path) {
+    if (err) throw err;
+    console.log("apapa", path);
+    var downloadStream = fs.createWriteStream(path);
+    client.download({
+      container: job.data.container,
+      remote: job.data.filename
+    }).pipe(downloadStream);
+    downloadStream.on('error', function(err){
+      throw new Error(err);
+    });
+    downloadStream.on('end', function () {
+      console.log("here");
+      var writeStream = client.upload({
+        container: job.data.container,
+        remote: path
+      });
+      gm(path)
+        .resize(353, 257)
+        .autoOrient()
+        .write(writeStream, function (err) {
+          if (err) throw err;
+          console.log("heaaaaaa", r);
+          done(r);
+        });
+    });
+  });
+});
+
+
+jobs.process('image medium', function(job, done){
+  console.log(job.data.resource);
+  done();
+});
+
+
+jobs.process('image large', function(job, done){
+  console.log(job.data.resource);
+  done();
+});
 
 
 kue.app.set('title', 'Jobs');

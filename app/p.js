@@ -47,7 +47,6 @@ function init_app() {
     app.use(express.logger('dev'));
     app.use(express.errorHandler());
   });
-//  cloudinary.config(config.cloudinaryConfig);
 
   cms.init(app, p);
 

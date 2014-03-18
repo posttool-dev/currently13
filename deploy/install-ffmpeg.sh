@@ -1,3 +1,4 @@
+#!/bin/sh
 #from https://trac.ffmpeg.org/wiki/UbuntuCompilationGuide
 
 if [ ! -d "~/ffmpeg_sources" ]

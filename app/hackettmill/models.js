@@ -394,6 +394,11 @@ exports.models = {
 }
 
 
+exports.models.Resource.process = {
+  image: ['thumb', 'medium', 'large'],
+  audio: [],
+  video: []
+}
 
 
 
