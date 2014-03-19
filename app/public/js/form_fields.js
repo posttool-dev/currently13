@@ -280,6 +280,7 @@ var form_fields = {
       return $el;
     };
 
+    var is_resource = options.type == 'Resource';
     var _d = null;
     Object.defineProperty(this, "data", {
       get: function () {
@@ -295,7 +296,7 @@ var form_fields = {
       var t = render_template(options.type, _d);
       if (t)
         $el.append('<div class="text">'+t+'</div>');
-      if (options.type == 'Resource')
+      if (is_resource)
       {
         $el.append(form_fields.resource(_d));
       }
@@ -308,27 +309,78 @@ var form_fields = {
 
   resource: function(data)
   {
-      console.log(data);
-      if (data.mime.indexOf('image') == 0){
-        var thumb = find_thumb(data);
+    if (data.mime.indexOf('image') == 0){
+      var thumb = find_thumb(data);
+      if (thumb)
+        return $('<img src="'+thumb+'">');
+      else if (data.children)
+      {
+        var thumb = find_thumb2(data.children);
         if (thumb)
           return $('<img src="'+thumb+'">');
-        else if (data.children)
-        {
-          var thumb = find_thumb2(data.children);
-          if (thumb)
-            return $('<img src="'+thumb+'">');
-        }
-        return $('<img src="'+containerHttp + data.path+'">');
-      } else if (_d.mime.indexOf('audio') == 0) {
-        var src = '/cms/download/'+data._id;
-        return $('<audio controls><source src="'+src+'" type="'+_d.mime+'"></audio>');
-      } else if (_d.mime.indexOf('video') == 0) {
-        var src = '/cms/download/'+data._id;
-        return $('<video controls><source src="'+src+'" type="'+_d.mime+'"></video>');
-      } else {
-        return $('<a href="/cms/download/'+data._id+'">'+_d.path+"</a>");
       }
+      return $('<img src="'+media_path(data) +'">');
+    } else if (data.mime.indexOf('audio') == 0) {
+      return $('<audio controls><source src="'+media_path(data)+'" type="'+data.mime+'"></audio>');
+    } else if (data.mime.indexOf('video') == 0) {
+      return $('<video controls><source src="'+media_path(data)+'" type="'+data.mime+'"></video>');
+    } else {
+      return $('<a href="'+media_path(data)+'">'+data.path+"</a>");
+    }
+  },
+
+  //path
+  // /cms/download/id
+  // http...cloudacity...
+
+  resource_path_field: function(options) {
+    var self = this;
+    var $el = $$('resource-path');
+    self.$el = function () {
+      return $el;
+    };
+
+    var _d = null;
+    Object.defineProperty(this, "data", {
+      get: function () {
+        return _d;
+      },
+      set: function (n) {
+        _d = n;
+        update_ui();
+      }
+    });
+    function update_ui() {
+      $el.empty();
+      console.log(_d)
+      if (_d)
+        $el.append(form_fields.resource(self.form.data));
+    }
+  },
+
+  json_field: function(options) {
+    var self = this;
+    var $el = $$('json');
+    self.$el = function () {
+      return $el;
+    };
+
+    var _d = null;
+    Object.defineProperty(this, "data", {
+      get: function () {
+        return _d;
+      },
+      set: function (n) {
+        _d = n;
+        update_ui();
+      }
+    });
+    function update_ui() {
+      $el.empty();
+      if (_d)
+        $el.append('<pre>'+JSON.stringify(_d)+'</pre>');
+    }
+
   },
 
   choose_create_field: function (options) {

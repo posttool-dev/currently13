@@ -4,9 +4,6 @@ var mongoose = require('mongoose'),
 var ResourceSchemaInfo = {
   parent: {type: ObjectId, ref: 'Resource'},
   children: [{type: ObjectId, ref: 'Resource'}],
-  title: String,
-  caption: String,
-  description: String,
   path: String,
   size: Number,
   mime: String,
@@ -22,15 +19,16 @@ exports.models = {
     },
     schema: ResourceSchemaInfo,
     browse: [
-      {name: "title", cell: "char", filters: ["icontains", "equals"], order: "asc,desc,default"},
-      {name: "path", cell: "char", filters: ["icontains", "equals"], order: "asc,desc"},
-      {name: "mime", cell: "char"},
-      {name: "meta", cell: "image"},
+      {name: "path", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
+      {name: "size", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
+      {name: "mime", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
     ],
     form: [
-      {name: "title", widget: "input"},
-      {name: "caption", widget: "input"},
-      {name: "description", widget: "rich_text"},
+      {name: "path", widget: "resource_path"},
+      {name: "size", widget: "number"},
+      {name: "mime", widget: "input"},
+      {name: "meta", widget: "json"},
+      {name: "children", widget: "choose_create", options: {type: "Resource", array: true, readonly: true}}
     ]
   }
 

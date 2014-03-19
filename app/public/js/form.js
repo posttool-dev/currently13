@@ -74,6 +74,7 @@ function form_form(type, id) {
 
   function create_field(d) {
     var f = new indicated_field(d);
+    f.field.form = self;
     f.add_listener('change', function () {
       _dirty = true;
       self.$save.prop('disabled', false);

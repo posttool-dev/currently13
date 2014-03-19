@@ -19,7 +19,7 @@
 <script src="/js/app.js"></script>
 
 <script>
-var containerHttp = "<%- containerHttp %>/";
+var containerHttp = <% if (containerHttp) { %>"<%- containerHttp %>/";<% } else {%>null<% } %>;
 <%
 var t = {};
 for (var p in models)
