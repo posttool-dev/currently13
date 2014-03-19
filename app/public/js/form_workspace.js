@@ -1,4 +1,4 @@
-function form_field_page_item(node) {
+function form_field_page_item() {
   var self = this;
   var $el = $$('item');
   $el.data('__obj__', self);
@@ -23,6 +23,25 @@ function form_field_page_item(node) {
     if (_d.children)
       $el.append($$('group'));
   }
+
+  var lastCols = null;
+
+  function columns_update_ui() {
+    $el.removeClass(lastCols);
+    lastCols = 'col-1-' + self.info.columns;
+    $el.addClass(lastCols);
+  }
+
+  Object.defineProperty(this, "columns", {
+    get: function () {
+      return  self.info.columns;
+    },
+    set: function (n) {
+      self.info.columns = n;
+      columns_update_ui();
+    }
+  });
+  self.columns = 4;
 };
 
 
@@ -34,7 +53,7 @@ function form_field_page_layout(options) {
     return $el;
   };
 
-  var $tools = $$('tools', {parent: $el, children: [$$('tool').text('item')] });
+  var $tools = $$('tools', {parent: $el, children: [$$('tool').text('container'), $$('tool').text('item')] });
   var $workspace = $$('workspace', {parent: $el})
   var $properties_root = $$("properties", {parent: $el});
   var $path_root = $$("path", {parent: $el});
@@ -118,15 +137,15 @@ function form_field_page_layout(options) {
         if (over_something_in_me) {
           return;
         }
-//        var common_parent = ($lover.parent().data('__obj__') == $litem.parent().parent().data('__obj__')); //todo get ancestor list for both & look there...!
-//        if (!common_parent) {
-//          var lo = $lover.offset();
-//          $at = $("");
-//          $at_arrow.css({'top': lo.top - 15 + 'px', 'left': lo.left - 14 + 'px'});
-//          return;
-//        }
+        var common_parent = ($lover.parent().data('__obj__') == $litem.parent().parent().data('__obj__')); //todo get ancestor list for both & look there...!
+        if (!common_parent) {
+          var lo = $lover.offset();
+          $at = $("");
+          $at_arrow.css({'top': lo.top - 15 + 'px', 'left': lo.left - 14 + 'px'});
+          return;
+        }
       }
-      var io = $litem.offset();
+      var io = $litem.position();
       var right = io.left + $litem.outerWidth() * .5;
       var bottom = io.top + $litem.outerHeight();
       if (p.x > right) {
@@ -232,7 +251,7 @@ function form_field_page_layout(options) {
   // properties
   function update_properties() {
     if (selected_field) {
-      //$path_root.empty().append($ancestors());
+      $path_root.empty().append($ancestors());
       $properties_root.empty().append($properties());
     }
     else {
@@ -277,6 +296,7 @@ function form_field_page_layout(options) {
     $a.append($s);
     for (var i = a.length - 1; i != 0; i--) {
       $a.append(' <i class="fa fa-angle-right"></i> ');
+      console.log(a[i])
       $s = $("<span>" + a[i].info.name + "</span>");
       $s.data('if', a[i]);
       $s.click(function () {
@@ -311,7 +331,7 @@ function form_field_page_layout(options) {
     var $p = selected_field.$el().parent();
     while ($p.length != 0) {
       var f = $p.data('__obj__');
-      if (f)
+      if (f && f.info)
         a.push(f);
       $p = $p.parent();
     }
