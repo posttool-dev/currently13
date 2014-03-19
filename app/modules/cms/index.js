@@ -1,9 +1,12 @@
 var fs = require('fs');
 var jsdiff = require('diff');
-var mongoose = require('mongoose');
-var gfs = null, Grid = require('gridfs-stream');
-var cloudinary = require('cloudinary');
 var mime = require('mime');
+var uuid = require('node-uuid');
+var mongoose = require('mongoose');
+
+var gfs, Grid = require('gridfs-stream');
+var kue, jobs;
+var cloudinary;
 
 var auth = require('../auth');
 var meta = require('./meta');
@@ -12,10 +15,12 @@ var models = require('./models');
 
 var workflow_info = null;
 var config = null;
+var client = null;
+
 exports.init = function (app, p) {
   console.log('current13 0.0.0');
-  gfs = new Grid(mongoose.connection.db, mongoose.mongo);
   meta.init(p.models.models);
+
   if (p.workflow)
     workflow_info = p.workflow.workflow;
   if (p.config)
@@ -23,6 +28,25 @@ exports.init = function (app, p) {
 
   if (!app)
     return;
+
+  if (config.kueConfig) {
+    kue = require('kue');
+    jobs = kue.createQueue(config.kueConfig);
+    jobs.on('job complete', upload_job_complete);
+    console.log('initialed process queue')
+  }
+  if (config.useGfs) {
+      gfs = new Grid(mongoose.connection.db, mongoose.mongo);
+  }
+  if (config.usePkgcloud) {
+    client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
+    console.log('created pkgcloud storage client')
+  }
+  if (config.cloudinaryConfig) {
+    cloudinary = require('cloudinary');
+    cloudinary.config(config.cloudinaryConfig);
+    console.log('initialized cloudinary api');
+  }
 
   // move session message to request locals
   // put user in request locals
@@ -70,29 +94,25 @@ exports.utils = utils;
 exports.models = models;
 
 
-
 /* put the meta info in every request */
 
 exports.add_meta = function (req, res, next) {
   req.models = res.locals.models = meta.meta();
   var type = req.params.type;
-  if (type)
-  {
+  if (type) {
     req.type = type;
     req.schema = meta.schema(type);
     req.model = meta.model(type);
     req.browser = meta.browse(type);
     req.form = meta.form(type);
   }
-  if (workflow_info)
-  {
+  if (workflow_info) {
     var group = req.session.user.group;
     if (req.session.user.admin)
       group = workflow_info.groups.admin;
-    req.workflow = res.locals.workflow = {states:workflow_info.states, transitions:workflow_info.groups[group].transitions};
+    req.workflow = res.locals.workflow = {states: workflow_info.states, transitions: workflow_info.groups[group].transitions};
   }
-  else
-  {
+  else {
     req.workflow = res.locals.workflow = null;
   }
   next();
@@ -100,8 +120,7 @@ exports.add_meta = function (req, res, next) {
 
 /* find and populate a "deep" view of the model as well as all "related" entities */
 exports.add_object = function (req, res, next) {
-  if (!req.params.id)
-  {
+  if (!req.params.id) {
     next();
     return;
   }
@@ -112,7 +131,7 @@ exports.add_object = function (req, res, next) {
     }
     req.object = m;
     if (m)
-      related(req.type, m._id, function(r){
+      related(req.type, m._id, function (r) {
         req.related = r;
         req.related_count = r._count;
         delete r._count;
@@ -124,42 +143,37 @@ exports.add_object = function (req, res, next) {
 };
 
 
-expand = function(type, id, next)
-{
+expand = function (type, id, next) {
   var q = meta.model(type).findOne({_id: id});
   q.exec(function (err, m) {
-    populate_deep(type, m, function(){
-        next(err, m);
+    populate_deep(type, m, function () {
+      next(err, m);
     });
   });
 };
 
 
-populate_deep = function(type, instance, next, seen)
-{
-  if (type == 'User' || !instance)
-  {
+populate_deep = function (type, instance, next, seen) {
+  if (type == 'User' || !instance) {
     next();
     return;
   }
   if (!seen)
     seen = {};
-  if (seen[instance._id])
-  {
+  if (seen[instance._id]) {
     next();
     return;
   }
   seen[instance._id] = true;
   var refs = meta.get_references(meta.schema(type));
-  if (!refs)
-  {
+  if (!refs) {
     next();
     return;
   }
   var opts = [];
-  for (var i=0; i<refs.length; i++)
+  for (var i = 0; i < refs.length; i++)
     opts.push({path: refs[i].name, model: refs[i].ref});
-  meta.model(type).populate(instance, opts, function(err,o){
+  meta.model(type).populate(instance, opts, function (err, o) {
     utils.forEach(refs, function (r, n) {
       if (r.is_array)
         utils.forEach(o[r.name], function (v, nn) {
@@ -170,7 +184,6 @@ populate_deep = function(type, instance, next, seen)
     }, next);
   });
 }
-
 
 
 related = function (type, id, next) {
@@ -202,6 +215,7 @@ related = function (type, id, next) {
     next(related_records);
 };
 
+
 // queries? piping results?
 //      if (req.queries)
 //      {
@@ -219,35 +233,27 @@ related = function (type, id, next) {
 //        next();
 
 
-
-
-
-
 // the 'views'
 
 exports.show_dashboard = function (req, res, next) {
   res.render('cms/dashboard', {
-        title: 'CMS Dashboard ',
-        models: req.models
-      });
+    title: 'CMS Dashboard ',
+    models: req.models
+  });
 };
 
 
-exports.logs_for_user = function(req, res, next) {
-  get_logs({user: req.session.user._id}, {sort: '-time'}, function(logs){
+exports.logs_for_user = function (req, res, next) {
+  get_logs({user: req.session.user._id}, {sort: '-time'}, function (logs) {
     res.json(logs);
   });
 };
 
-exports.logs_for_record = function(req, res, next) {
-  get_logs({type: req.params.type, id: req.params.id }, {sort: '-time'}, function(logs){
+exports.logs_for_record = function (req, res, next) {
+  get_logs({type: req.params.type, id: req.params.id }, {sort: '-time'}, function (logs) {
     res.json(logs);
   });
 }
-
-
-
-
 
 
 exports.browse = {
@@ -255,7 +261,7 @@ exports.browse = {
   get: function (req, res, next) {
     var conditions = req.body.condition;
     req.model.count(conditions, function (err, count) {
-      if (err){
+      if (err) {
         next(err);
         return;
       }
@@ -273,7 +279,7 @@ exports.browse = {
     var fields = null;
     var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
     req.model.count(conditions, function (err, count) {
-      if (err){
+      if (err) {
         next(err);
         return;
       }
@@ -296,22 +302,18 @@ exports.browse = {
 };
 
 
-process_conditions = function(o)
-{
+process_conditions = function (o) {
   var c = {};
-  for (var p in o)
-  {
+  for (var p in o) {
     var op = o[p];
-    if (op.condition.charAt(0) == '$')
-    {
+    if (op.condition.charAt(0) == '$') {
       c[p] = {};
       c[p][op.condition] = op.value;
       if (op.condition == '$regex') {
         c[p]['$options'] = 'i';
       }
     }
-    else if (op.condition == '=')
-    {
+    else if (op.condition == '=') {
       c[p] = op.value;
     }
   }
@@ -324,16 +326,17 @@ exports.form =
   get: function (req, res) {
     res.render('cms/form', {
       title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
-      ancestors: [{url:'/cms/browse/'+req.type, name:req.type}],
+      ancestors: [
+        {url: '/cms/browse/' + req.type, name: req.type}
+      ],
       type: req.type,
       id: req.id ? req.id : null,
       form: req.form});
   },
 
-  get_json: function(req,res) {
+  get_json: function (req, res) {
     var related = {};
-    for (var p in req.related)
-    {
+    for (var p in req.related) {
       related[p] = req.related[p].results;
     }
     res.json({
@@ -349,22 +352,20 @@ exports.form =
     var data = JSON.parse(req.body.val);
     var info = { diffs: {} };
     var schema_info = meta.get_schema_info(req.schema);
-    for (var i=0; i< req.form.length; i++) {
+    for (var i = 0; i < req.form.length; i++) {
       var f = req.form[i].name;
       if (!f)
         continue;
       var field_info = schema_info[f];
       var field_val = s[f];
       var match = false;
-      if (field_info.type == 'Reference')
-      {
+      if (field_info.type == 'Reference') {
         field_val = field_info.is_array ? just_ids(field_val) : just_id(field_val);
         match = compare(field_val, data[f])
       }
       else
         match = (data[f] == field_val) || (data[f] == '' && field_val == null);
-      if (!match)
-      {
+      if (!match) {
         if (f != 'modified')//or other auto date fields...!
           info.diffs[f] = jsdiff.diffChars(field_val, data[f]);
         s[f] = data[f];
@@ -377,8 +378,7 @@ exports.form =
 
     //emit('presave',s)
     s.save(function (err, s) {
-      if (err)
-      {
+      if (err) {
         res.json(err);
       }
       else {
@@ -394,14 +394,12 @@ exports.form =
     });
   },
 
-  delete_references: function(req, res, next) {
+  delete_references: function (req, res, next) {
     if (req.related_count == 0)
       res.json({});
-    else
-    {
+    else {
       var to_update = [];
-      for (var p in req.related)
-      {
+      for (var p in req.related) {
         if (req.related[p].results.length == 0)
           continue;
         var f = req.related[p].field;
@@ -410,26 +408,26 @@ exports.form =
         to_update.push({o: o, p: p});
       }
       var info = [];
-      utils.forEach(to_update,function(e,n){
-          meta.model(e.p).update(e.o, {$pull: e.o}, { multi: true }, function(err,x){
-            info.push('Removed '+x+' reference(s) from '+ e.p+".");
-            n();
+      utils.forEach(to_update, function (e, n) {
+        meta.model(e.p).update(e.o, {$pull: e.o}, { multi: true }, function (err, x) {
+          info.push('Removed ' + x + ' reference(s) from ' + e.p + ".");
+          n();
         });
-      }, function(){
-        add_log(req.session.user._id, 'remove references', req.type, req.object, {messages: info}, function(){
+      }, function () {
+        add_log(req.session.user._id, 'remove references', req.type, req.object, {messages: info}, function () {
           res.json(info);
         });
       })
     }
   },
 
-  delete: function(req, res, next) {
-     req.object.remove(function(err,m){
-       res.json(m);
-     });
+  delete: function (req, res, next) {
+    req.object.remove(function (err, m) {
+      res.json(m);
+    });
   },
 
-  status: function(req, res, next) {
+  status: function (req, res, next) {
     var original_state = req.object.state;
     req.object.state = req.body.state;
     req.object.save(function (err, m) {
@@ -445,10 +443,7 @@ exports.form =
 // logs
 
 
-
-
-get_logs = function(query, options, complete)
-{
+get_logs = function (query, options, complete) {
   var q = models.Log.find(query, null, options);
   q.populate('user', 'name email');
   q.exec(function (err, logs) {
@@ -459,7 +454,9 @@ get_logs = function(query, options, complete)
         log.info.object = l;
         n();
       });
-    }, function(){ complete(logs); });
+    }, function () {
+      complete(logs);
+    });
   });
 }
 
@@ -480,18 +477,16 @@ add_log = function (user_id, action, type, instance, info, callback) {
 
 // utils
 
-just_ids = function(a)
-{
+just_ids = function (a) {
   var r = [];
-  for (var i=0; i< a.length; i++)
+  for (var i = 0; i < a.length; i++)
     if (a[i])
       r.push(just_id(a[i]));
   return r;
 }
 
 
-just_id = function(a)
-{
+just_id = function (a) {
   if (a && a._id)
     return String(a._id);
   else
@@ -514,40 +509,106 @@ function compare(a, b) {
 // image and resource handling
 
 
-exports.get_preview_url = function(e)
-{
-  return cloudinary.url(e.public_id + ".jpg", { width: 300, height: 200 , crop: 'fit'});
+
+
+exports.save_resource = function (name, path, size, creator_id, info, complete) {
+  var r = new meta.Resource();
+  r.mime = mime.lookup(name);
+  r.path = path;
+  r.name = name;
+  r.size = size;
+  r.creator = creator_id;
+  r.meta = info ? info : {};
+  if (info && config.cloudinaryConfig)
+    r.meta.thumb = cloudinary.url(e.public_id + ".jpg", { width: 300, height: 200, crop: 'fit'});
+  r.save(function (err, s) {
+    complete(s); // but dont return
+    // if pkgcloud
+    var processes = meta.meta().Resource.process;
+    if (processes) {
+      var type = r.mime.split('/')[0];
+      if (processes[r.mime])
+        processes = processes[r.mime];
+      else
+        processes = processes[type];
+      for (var i=0; i<processes.length; i++) {
+        var process = processes[i];
+        var job_name = type + ' ' + process;
+        console.log("job create", job_name);
+        jobs.create(job_name, {
+          container: config.container,
+          filename: path,
+          parent: r._id,
+          creator: creator_id}).save();
+      }
+    }
+  });
+  return r;
+}
+
+upload_job_complete = function(id) {
+  console.log('job complete', id);
+  kue.Job.get(id, function(err, job) {
+    job.get('path', function (err, p) {
+      job.get('size', function (err, s) {
+        console.log('  params', p, s);
+        meta.Resource.findOne({_id: job.data.parent}, null, function (err, r) {
+          if (err) throw err;
+          var pr = new meta.Resource();
+          pr.parent = r;
+          pr.mime = p ? mime.lookup(p) : null;
+          pr.path = p;
+          pr.size = s;
+          pr.creator = job.data.creator;
+          pr.meta = {generated: true, job_name: job.name};
+          pr.save(function (err, ps) {
+            if (err) throw err;
+            meta.Resource.update({_id: job.data.parent}, {$push: {children: pr._id}}, function(err, r){
+              if (err) throw err;
+              console.log('removing job');
+              job.remove();
+            });
+          });
+        });
+      });
+    });
+  });
 };
 
 
 exports.upload = function (req, res) {
   var file = req.files.file;
-  var r = new meta.Resource();
-  r.mime = mime.lookup(file.name);
+  var filemime = mime.lookup(file.name);
+  var path = uuid.v4() + file.name;
   var do_save = function (e) {
-    // create a resource with path & return id
-    r.path = file.name;
-    r.size = file.size;
-    r.creator = req.session.user._id;
-    r.meta = e;
-    if (e)
-      r.meta.thumb = exports.get_preview_url(e);
-    r.save(function (err, s) {
+    exports.save_resource(file.name, path, file.size, req.session.user._id, e, function (s) {
       console.log(s);
       res.json(s);
     });
   };
-  if (config.useGfs) {
+  if (config.usePkgcloud) {
+    var imageStream = fs.createReadStream(file.path);
+    imageStream.pipe(client.upload({
+      container: config.container,
+      remote: path,
+      headers: {
+        'content-disposition': filemime
+      }
+    }, function (err, result) {
+      console.log(err, result)
+      do_save(result);
+    }));
+  }
+  else if (config.useGfs) {
     save_gfs(r._id, file, do_save);
   }
-  else {
+  else if (config.cloudinaryConfig) {
     var imageStream = fs.createReadStream(file.path, { encoding: 'binary' });
     var cloudStream = cloudinary.uploader.upload_stream(function (e) {
       do_save(e);
     });
     imageStream.on('data', cloudStream.write).on('end', cloudStream.end);
   }
-
 };
 
 
@@ -569,14 +630,18 @@ exports.delete_resource = function (req, res) {
 // for gfs
 exports.download = function (req, res) {
   // TODO: set proper mime type + filename, handle errors, etc...
-  var q =  meta.Resource.findOne({_id: req.params.id});
+  var q = meta.Resource.findOne({_id: req.params.id});
   q.exec(function (err, r) {
     if (r) {
-      res.setHeader('Content-Type', r.mime + (r.charset ? '; charset=' + r.charset : ''));
-      res.setHeader('Content-Disposition', 'attachment; filename='+ r.path);
-      gfs
-        .createReadStream({ _id: r._id })
-        .pipe(res);
+      if (config.usePkgcloud) {
+
+      } else if (config.useGfs) {
+        res.setHeader('Content-Type', r.mime + (r.charset ? '; charset=' + r.charset : ''));
+        res.setHeader('Content-Disposition', 'attachment; filename=' + r.path);
+        gfs
+          .createReadStream({ _id: r._id })
+          .pipe(res);
+      }
     }
     else {
       res.send('ERR');
@@ -585,22 +650,21 @@ exports.download = function (req, res) {
 };
 
 
-function save_gfs(id, file, next)
-{
-    var ws = gfs.createWriteStream({ _id: id, filename: file.path });
-    ws.on('error', function (e) {
-      next(e);
-    });
-    var rs = fs.createReadStream(file.path);
-    rs.on('open', function () {
-      rs.pipe(ws);
-    });
-    rs.on('end', function () {
-      next(null);
-    });
-    rs.on('error', function (e) {
-      next(e);
-    });
+function save_gfs(id, file, next) {
+  var ws = gfs.createWriteStream({ _id: id, filename: file.path });
+  ws.on('error', function (e) {
+    next(e);
+  });
+  var rs = fs.createReadStream(file.path);
+  rs.on('open', function () {
+    rs.pipe(ws);
+  });
+  rs.on('end', function () {
+    next(null);
+  });
+  rs.on('error', function (e) {
+    next(e);
+  });
 
 }
 

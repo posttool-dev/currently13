@@ -8,9 +8,6 @@ var config = {
     cloud_name: 'hackettmill',
     api_key: '927166441966584',
     api_secret: 'nJpv1R7U_-uhuvxiaJar8ihqUBg'
-  },
-  s3Config: {
-    /* todo */
   }
 }
 
