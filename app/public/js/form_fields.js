@@ -316,10 +316,10 @@ var form_fields = {
         else if (data.children)
         {
           var thumb = find_thumb2(data.children);
-          return $('<img src="'+thumb+'">');
+          if (thumb)
+            return $('<img src="'+thumb+'">');
         }
-        else
-          return $('<img src="'+containerHttp + data.path+'">');
+        return $('<img src="'+containerHttp + data.path+'">');
       } else if (_d.mime.indexOf('audio') == 0) {
         var src = '/cms/download/'+data._id;
         return $('<audio controls><source src="'+src+'" type="'+_d.mime+'"></audio>');
