@@ -78,7 +78,6 @@ exports.models = {
       { name: 'duration', widget: 'input' },
       { name: 'audio', widget: 'upload', options: { type: 'Resource', array: false } }
     ]
-
   },
 
   Resource: cms.models.Resource
@@ -90,6 +89,6 @@ exports.models = {
 
 exports.models.Resource.process = {
   image: ['thumb', 'medium', 'large'],
-  audio: [],
+  audio: ['mp3'],
   video: []
 }
