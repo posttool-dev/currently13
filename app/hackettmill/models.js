@@ -344,7 +344,7 @@ exports.models = {
     schema: {
       title: String,
       subtitle: String,
-      body: String,
+      body: mongoose.Schema.Types.Mixed,
       pages: [
         {type: ObjectId, ref: "Page"}
       ]
@@ -358,7 +358,7 @@ exports.models = {
     form: [
       {name: "title", widget: "input"},
       {name: "subtitle", widget: "input"},
-      {name: "body", widget: "rich_text"},
+      {name: "body", widget: "page"},
       {name: "pages", widget: "choose_create", options: {type: "Page", array: true}}
     ]
   },
