@@ -16,6 +16,7 @@ var models = require('./models');
 var workflow_info = null;
 var config = null;
 var client = null;
+
 exports.init = function (app, p) {
   console.log('current13 0.0.0');
   meta.init(p.models.models);
@@ -562,8 +563,11 @@ upload_job_complete = function(id) {
           pr.meta = {generated: true, job_name: job.name};
           pr.save(function (err, ps) {
             if (err) throw err;
-            console.log('removing job');
-            job.remove();
+            meta.Resource.update({_id: job.data.parent}, {$push: {children: pr._id}}, function(err, r){
+              if (err) throw err;
+              console.log('removing job');
+              job.remove();
+            });
           });
         });
       });

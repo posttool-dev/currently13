@@ -3,6 +3,7 @@ var mongoose = require('mongoose'),
 
 var ResourceSchemaInfo = {
   parent: {type: ObjectId, ref: 'Resource'},
+  children: [{type: ObjectId, ref: 'Resource'}],
   title: String,
   caption: String,
   description: String,
