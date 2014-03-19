@@ -55,6 +55,7 @@ exports.init = function (app, p) {
     delete req.session.message;
     res.locals.user = req.session.user;
     res.user = req.session.user;
+    res.locals.containerHttp = config.containerHttp;
     next();
   });
   auth.on_login = '/cms';
@@ -560,7 +561,7 @@ upload_job_complete = function(id) {
           pr.path = p;
           pr.size = s;
           pr.creator = job.data.creator;
-          pr.meta = {generated: true, job_name: job.name};
+          pr.meta = {generated: true, job_name: job.type};
           pr.save(function (err, ps) {
             if (err) throw err;
             meta.Resource.update({_id: job.data.parent}, {$push: {children: pr._id}}, function(err, r){

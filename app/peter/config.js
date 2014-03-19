@@ -13,6 +13,8 @@ var config = {
       region: 'DFW'
     },
     container: 'dk2',
+    containerHttp: 'http://8eefe7163149f80cdb48-20af715d1692f3e2c7c9be2720e32665.r77.cf1.rackcdn.com',
+    containerHttps: 'https://1add096c32ba3a5dcef7-20af715d1692f3e2c7c9be2720e32665.ssl.cf1.rackcdn.com',
     kueConfig: {
       redis: {
         port: 6379,

@@ -203,3 +203,10 @@ function find_thumb(v) {
   }
 }
 
+function find_thumb2(c){
+  for (var i=0; i< c.length; i++)
+  {
+    if (c[i].meta.job_name == 'image thumb')
+      return containerHttp + c[i].path;
+  }
+}

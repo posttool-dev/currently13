@@ -297,26 +297,38 @@ var form_fields = {
         $el.append('<div class="text">'+t+'</div>');
       if (options.type == 'Resource')
       {
-        if (_d.mime.indexOf('image') == 0){
-          var thumb = find_thumb(_d);
-          if (thumb)
-            $el.append('<img src="'+thumb+'">');
-        } else if (_d.mime.indexOf('audio') == 0) {
-          var src = '/cms/download/'+_d._id;
-          $el.append('<audio controls><source src="'+src+'" type="'+_d.mime+'"></audio>');
-        } else if (_d.mime.indexOf('video') == 0) {
-          var src = '/cms/download/'+_d._id;
-          $el.append('<video controls><source src="'+src+'" type="'+_d.mime+'"></video>');
-        } else {
-          $el.append('<a href="/cms/download/'+_d._id+'">'+_d.path+"</a>");
-
-        }
+        $el.append(form_fields.resource(_d));
       }
     }
 
     $el.dblclick(function () {
       self.emit('select', self.data);
     })
+  },
+
+  resource: function(data)
+  {
+      console.log(data);
+      if (data.mime.indexOf('image') == 0){
+        var thumb = find_thumb(data);
+        if (thumb)
+          return $('<img src="'+thumb+'">');
+        else if (data.children)
+        {
+          var thumb = find_thumb2(data.children);
+          return $('<img src="'+thumb+'">');
+        }
+        else
+          return $('<img src="'+containerHttp + data.path+'">');
+      } else if (_d.mime.indexOf('audio') == 0) {
+        var src = '/cms/download/'+data._id;
+        return $('<audio controls><source src="'+src+'" type="'+_d.mime+'"></audio>');
+      } else if (_d.mime.indexOf('video') == 0) {
+        var src = '/cms/download/'+data._id;
+        return $('<video controls><source src="'+src+'" type="'+_d.mime+'"></video>');
+      } else {
+        return $('<a href="/cms/download/'+data._id+'">'+_d.path+"</a>");
+      }
   },
 
   choose_create_field: function (options) {

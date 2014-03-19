@@ -20,7 +20,7 @@
     "forever": "0.10.11",
     "fluent-ffmpeg": "1.6.0",
     "mime": "1.2.11",
-    "pkgcloud": "",
+    "pkgcloud": "0.9.4",
     "tmp": "0.0.23"
   },
   "devDependencies": {
