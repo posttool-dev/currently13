@@ -21,7 +21,9 @@
     "fluent-ffmpeg": "1.6.0",
     "mime": "1.2.11",
     "pkgcloud": "0.9.4",
-    "tmp": "0.0.23"
+    "tmp": "0.0.23",
+    "winston": "0.7.2",
+    "winston-mongodb": "0.4.3"
   },
   "devDependencies": {
     "grunt": "~0.4.2",

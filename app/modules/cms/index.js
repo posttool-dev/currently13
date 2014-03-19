@@ -13,12 +13,17 @@ var meta = require('./meta');
 var utils = require('./utils');
 var models = require('./models');
 
+var logger = utils.get_logger('cms');
+
 var workflow_info = null;
 var config = null;
 var client = null;
 
+
 exports.init = function (app, p) {
-  console.log('current13 0.0.0');
+  logger.info('together cms 0.0.1');
+
+
   meta.init(p.models.models);
 
   if (p.workflow)
@@ -33,19 +38,19 @@ exports.init = function (app, p) {
     kue = require('kue');
     jobs = kue.createQueue(config.kueConfig);
     jobs.on('job complete', upload_job_complete);
-    console.log('initialed process queue')
+    logger.info('initialed process queue')
   }
   if (config.useGfs) {
-      gfs = new Grid(mongoose.connection.db, mongoose.mongo);
+    gfs = new Grid(mongoose.connection.db, mongoose.mongo);
   }
   if (config.usePkgcloud) {
     client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
-    console.log('created pkgcloud storage client')
+    logger.info('created pkgcloud storage client')
   }
   if (config.cloudinaryConfig) {
     cloudinary = require('cloudinary');
     cloudinary.config(config.cloudinaryConfig);
-    console.log('initialized cloudinary api');
+    logger.info('initialized cloudinary api');
   }
 
   // move session message to request locals
@@ -548,11 +553,11 @@ exports.save_resource = function (name, path, size, creator_id, info, complete) 
 }
 
 upload_job_complete = function(id) {
-  console.log('job complete', id);
+  logger.info('job complete', id);
   kue.Job.get(id, function(err, job) {
     job.get('path', function (err, p) {
       job.get('size', function (err, s) {
-        console.log('  params', p, s);
+        logger.info('  params', p, s);
         meta.Resource.findOne({_id: job.data.parent}, null, function (err, r) {
           if (err) throw err;
           var pr = new meta.Resource();
@@ -566,7 +571,7 @@ upload_job_complete = function(id) {
             if (err) throw err;
             meta.Resource.update({_id: job.data.parent}, {$push: {children: pr._id}}, function(err, r){
               if (err) throw err;
-              console.log('removing job');
+              logger.info('removing job');
               job.remove();
             });
           });
@@ -583,7 +588,7 @@ exports.upload = function (req, res) {
   var path = uuid.v4() + file.name;
   var do_save = function (e) {
     exports.save_resource(file.name, path, file.size, req.session.user._id, e, function (s) {
-      console.log(s);
+      //console.log(s);
       res.json(s);
     });
   };
@@ -596,7 +601,7 @@ exports.upload = function (req, res) {
         'content-disposition': filemime
       }
     }, function (err, result) {
-      console.log(err, result)
+      if (err) throw err;
       do_save(result);
     }));
   }

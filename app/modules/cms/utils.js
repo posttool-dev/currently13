@@ -26,3 +26,17 @@ exports.forEach = function(list, target, complete, concurrent)
   ff();
 }
 
+
+
+var winston = require('winston');
+require('winston-mongodb').MongoDB;
+
+exports.get_logger = function(name)
+{
+  return new winston.Logger({
+    transports: [
+      new winston.transports.Console({colorize: true}),
+      new winston.transports.MongoDB({host: 'localhost', db: 'logs', collection: name})
+    ]
+  });
+}
