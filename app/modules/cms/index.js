@@ -3,6 +3,7 @@ var jsdiff = require('diff');
 var mime = require('mime');
 var uuid = require('node-uuid');
 var mongoose = require('mongoose');
+var formidable = require('formidable');
 
 var gfs, Grid = require('gridfs-stream');
 var kue, jobs;
@@ -40,18 +41,24 @@ exports.init = function (app, p) {
     jobs.on('job complete', upload_job_complete);
     logger.info('initialed process queue')
   }
-  if (config.useGfs) {
-    gfs = new Grid(mongoose.connection.db, mongoose.mongo);
+
+  switch (config.storage) {
+    case "pkgcloud":
+      client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
+      logger.info('created pkgcloud storage client')
+      break
+    case "cloudinary":
+      cloudinary = require('cloudinary');
+      cloudinary.config(config.cloudinaryConfig);
+      logger.info('initialized cloudinary api');
+      break
+    case "gfs":
+    default:
+      gfs = new Grid(mongoose.connection.db, mongoose.mongo);
+      logger.info('initialized gfs storage');
+      break;
   }
-  if (config.usePkgcloud) {
-    client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
-    logger.info('created pkgcloud storage client')
-  }
-  if (config.cloudinaryConfig) {
-    cloudinary = require('cloudinary');
-    cloudinary.config(config.cloudinaryConfig);
-    logger.info('initialized cloudinary api');
-  }
+
 
   // move session message to request locals
   // put user in request locals
@@ -517,28 +524,34 @@ function compare(a, b) {
 
 
 
-exports.save_resource = function (name, path, size, creator_id, info, complete) {
+exports.save_resource = function (name, path, size, creator_id, info, next) {
   var r = new meta.Resource();
+  r.name = name;
   r.mime = mime.lookup(name);
   r.path = path;
-  r.name = name;
   r.size = size;
   r.creator = creator_id;
   r.meta = info ? info : {};
-  if (info && config.cloudinaryConfig)
-    r.meta.thumb = cloudinary.url(e.public_id + ".jpg", { width: 300, height: 200, crop: 'fit'});
+  if (config.storage == 'cloudinary' && info)
+    r.meta.thumb = cloudinary.url(info.public_id + '.jpg', { width: 300, height: 200, crop: 'fit'});
   r.save(function (err, s) {
-    complete(s); // but dont return
-    // if pkgcloud
-    var processes = meta.meta().Resource.process;
-    if (processes) {
+    if (err) throw err;
+    next(s); // but dont return
+    if (config.storage == 'cloudinary') return; // ha
+    var resource_jobs = meta.meta().Resource.jobs;
+    if (resource_jobs) {
+      if (!jobs)
+      {
+        logger.warn('there is no available job kue... not executing '+resource_jobs);
+        return;
+      }
       var type = r.mime.split('/')[0];
-      if (processes[r.mime])
-        processes = processes[r.mime];
+      if (resource_jobs[r.mime])
+        resource_jobs = resource_jobs[r.mime];
       else
-        processes = processes[type];
-      for (var i=0; i<processes.length; i++) {
-        var process = processes[i];
+        resource_jobs = resource_jobs[type];
+      for (var i=0; i<resource_jobs.length; i++) {
+        var process = resource_jobs[i];
         var job_name = type + ' ' + process;
         console.log("job create", job_name);
         jobs.create(job_name, {
@@ -560,16 +573,14 @@ upload_job_complete = function(id) {
         logger.info('  params', p, s);
         meta.Resource.findOne({_id: job.data.parent}, null, function (err, r) {
           if (err) throw err;
-          var pr = new meta.Resource();
-          pr.parent = r;
+          var pr = {};
           pr.mime = p ? mime.lookup(p) : null;
           pr.path = p;
           pr.size = s;
-          pr.creator = job.data.creator;
           pr.meta = {generated: true, job_name: job.type};
           pr.save(function (err, ps) {
             if (err) throw err;
-            meta.Resource.update({_id: job.data.parent}, {$push: {children: pr._id}}, function(err, r){
+            meta.Resource.update({_id: job.data.parent}, {$push: {children: pr}}, function(err, r){
               if (err) throw err;
               logger.info('removing job');
               job.remove();
@@ -581,72 +592,74 @@ upload_job_complete = function(id) {
   });
 };
 
-
-exports.upload = function (req, res) {
-  var file = req.files.file;
-  var filemime = mime.lookup(file.name);
-  var path = uuid.v4() + file.name;
-  var do_save = function (e) {
-    exports.save_resource(file.name, path, file.size, req.session.user._id, e, function (s) {
-      //console.log(s);
-      res.json(s);
-    });
-  };
-  if (config.usePkgcloud) {
-    var imageStream = fs.createReadStream(file.path);
-    imageStream.pipe(client.upload({
-      container: config.container,
+client_upload_params = function(path) {
+  return {container: config.container,
       remote: path,
       headers: {
-        'content-disposition': filemime
-      }
-    }, function (err, result) {
-      if (err) throw err;
-      do_save(result);
-    }));
+        'content-disposition': mime.lookup(path)
+      }}
+};
+exports.upload = function (req, res) {
+  var form = new formidable.IncomingForm();
+  form.onPart = function (part) {
+    if (!part.filename) {
+      form.handlePart(part);
+      return;
+    }
+    console.log(" part", part);
+    var path = uuid.v4() + part.filename;
+    var save_resource = function (meta, next) {
+      exports.save_resource(part.filename, path, part.size, req.session.user._id, meta, next);
+    };
+    switch (config.storage) {
+      case "file":
+        new Error('unimplemented');
+        break;
+      case "pkgcloud":
+        part.pipe(client.upload(client_upload_params(path), function (err) {
+          if (err) throw err;
+          save_resource({}, function (s) {
+            res.json(s);
+          });
+        }));
+        break;
+      case "cloudinary":
+        var cloudStream = cloudinary.uploader.upload_stream(function (e) {
+          save_resource(e, function (s) {
+            res.json(s);
+          });
+        });
+        part.on('data', cloudStream.write).on('end', cloudStream.end);
+        break;
+      case "gfs":
+        save_resource({}, function (s) {
+          save_gfs(s._id, path, function (s) {
+            res.json(s);
+          });
+        });
+        break;
+    }
   }
-  else if (config.useGfs) {
-    save_gfs(r._id, file, do_save);
-  }
-  else if (config.cloudinaryConfig) {
-    var imageStream = fs.createReadStream(file.path, { encoding: 'binary' });
-    var cloudStream = cloudinary.uploader.upload_stream(function (e) {
-      do_save(e);
-    });
-    imageStream.on('data', cloudStream.write).on('end', cloudStream.end);
-  }
+  form.parse(req, function () {});
 };
 
 
 exports.delete_resource = function (req, res) {
   var q = meta.Resource.findOne({_id: req.params.id});
   q.exec(function (err, r) {
+    if (err) throw err;
     if (r) {
-      cloudinary.uploader.destroy(r.meta.public_id, function (result) {
-        res.json(result);
-      });
-    }
-    else {
-      res.send('ERR');
-    }
-  });
-}
-
-
-// for gfs
-exports.download = function (req, res) {
-  // TODO: set proper mime type + filename, handle errors, etc...
-  var q = meta.Resource.findOne({_id: req.params.id});
-  q.exec(function (err, r) {
-    if (r) {
-      if (config.usePkgcloud) {
-
-      } else if (config.useGfs) {
-        res.setHeader('Content-Type', r.mime + (r.charset ? '; charset=' + r.charset : ''));
-        res.setHeader('Content-Disposition', 'attachment; filename=' + r.path);
-        gfs
-          .createReadStream({ _id: r._id })
-          .pipe(res);
+      switch (config.storage) {
+        case "pkgcloud":
+          break
+        case "cloudinary":
+          cloudinary.uploader.destroy(r.meta.public_id, function (result) {
+            res.json(result);
+          });
+          break
+        case "gfs":
+        default:
+          break;
       }
     }
     else {
@@ -656,12 +669,39 @@ exports.download = function (req, res) {
 };
 
 
-function save_gfs(id, file, next) {
-  var ws = gfs.createWriteStream({ _id: id, filename: file.path });
+exports.download = function (req, res) {
+  // TODO: set proper mime type + filename, handle errors, etc...
+  var q = meta.Resource.findOne({_id: req.params.id});
+  q.exec(function (err, r) {
+    if (r) {
+      switch (config.storage) {
+        case "pkgcloud":
+          break
+        case "cloudinary":
+          break
+        case "gfs":
+        default:
+          res.setHeader('Content-Type', r.mime + (r.charset ? '; charset=' + r.charset : ''));
+          res.setHeader('Content-Disposition', 'attachment; filename=' + r.path);
+          gfs
+            .createReadStream({ _id: r._id })
+            .pipe(res);
+          break;
+      }
+    }
+    else {
+      res.send('ERR');
+    }
+  });
+};
+
+
+function save_gfs(id, path, next) {
+  var ws = gfs.createWriteStream({ _id: id, filename: path });
   ws.on('error', function (e) {
     next(e);
   });
-  var rs = fs.createReadStream(file.path);
+  var rs = fs.createReadStream(path);
   rs.on('open', function () {
     rs.pipe(ws);
   });
