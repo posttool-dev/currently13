@@ -39,7 +39,6 @@ function init_app() {
   }));
   app.use(express.urlencoded());
   app.use(express.json());
-  app.use(express.methodOverride());
   app.use(express.static(__dirname + '/public'));
 
   app.configure('development', function () {
