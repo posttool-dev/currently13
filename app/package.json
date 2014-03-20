@@ -23,7 +23,8 @@
     "pkgcloud": "0.9.4",
     "tmp": "0.0.23",
     "winston": "0.7.2",
-    "winston-mongodb": "0.4.3"
+    "winston-mongodb": "0.4.3",
+    "formidable": "1.0.14"
   },
   "devDependencies": {
     "grunt": "~0.4.2",
