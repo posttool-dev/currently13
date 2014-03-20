@@ -2,12 +2,17 @@ var mongoose = require('mongoose'),
   ObjectId = mongoose.Schema.Types.ObjectId;
 
 var ResourceSchemaInfo = {
-  parent: {type: ObjectId, ref: 'Resource'},
-  children: [{type: ObjectId, ref: 'Resource'}],
+  name: String,
   path: String,
   size: Number,
   mime: String,
-  meta: mongoose.Schema.Types.Mixed
+  meta: mongoose.Schema.Types.Mixed,
+  children: [{
+    path: String,
+    size: Number,
+    mime: String,
+    meta: mongoose.Schema.Types.Mixed
+  }]
 };
 
 exports.models = {
