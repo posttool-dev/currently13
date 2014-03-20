@@ -87,7 +87,7 @@ exports.models = {
 
 
 
-exports.models.Resource.process = {
+exports.models.Resource.jobs = {
   image: ['thumb', 'medium', 'large'],
   audio: ['mp3'],
   video: []
