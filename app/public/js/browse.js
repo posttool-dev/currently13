@@ -149,7 +149,7 @@ function browse_browse(type) {
       $c.css({width: p});
       if (b.cell == 'image')
       {
-        var u = find_thumb(v);;
+        var u = find_thumb2(r);;
         if (u)
           $c.append('<img src="'+u+'">');
       }
