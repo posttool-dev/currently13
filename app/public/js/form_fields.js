@@ -238,6 +238,34 @@ var form_fields = {
         $btn.show();
     }
 
+//    $fileupload.change(function (e) {
+//      console.log("HERE")
+//      e.preventDefault();
+//      //$('div.progress').show();
+//      var formData = new FormData();
+//      var file = $fileupload[0].files[0];
+//      formData.append('file', file);
+//      var xhr = new XMLHttpRequest();
+//      xhr.open('post', upload_url, true);
+//      xhr.upload.onprogress = function (e) {
+//        if (e.lengthComputable) {
+//          var percentage = (e.loaded / e.total) * 100;
+//          //$('div.progress div.bar').css('width', percentage + '%');
+//          console.log(percentage);
+//        }
+//      };
+//      xhr.onerror = function (e) {
+//        //showInfo('An error occurred while submitting the form. Maybe your file is too big');
+//        console.error(e);
+//      };
+//      xhr.onload = function () {
+//        console.log(this.statusText);
+//      };
+//
+//      xhr.send(formData);
+//    });
+
+
     $fileupload.fileupload({
       dataType: 'json',
       dropZone: $el,
@@ -249,7 +277,8 @@ var form_fields = {
         $btn.hide();
         edata.submit();
       },
-      progressall: function (e, edata) {
+      progress: function (e, edata) {
+        console.log(edata);
         var progress = parseInt(edata.loaded / edata.total * 100, 10);
         $progress.show();
         $info.hide();
