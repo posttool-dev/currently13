@@ -39,7 +39,6 @@ function init_app() {
   }));
   app.use(express.urlencoded());
   app.use(express.json());
-  app.use(express.multipart({limit: config.multipartLimit}));
   app.use(express.methodOverride());
   app.use(express.static(__dirname + '/public'));
 
