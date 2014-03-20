@@ -182,19 +182,33 @@ function form_make_listener(c) {
 // find a property named 'thumb' within the provided object
 
 function find_thumb(v) {
+  var t = find_obj_by_attr(v, 'thumb');
+  if (t)
+  return t.thumb;
+  else return null;
+}
+
+
+function find_obj_by_attr(v, attr, val) {
   if (v == null)
     return null;
   if ($.isPlainObject(v)) {
-    if (v.thumb)
-      return v.thumb;
+    var prop = find_prop(v, attr);
+    if (prop.found)
+      if (val) {
+        if (prop.value == val)
+          return v;
+      }
+      else
+        return v;
     for (var p in v) {
-      var f = find_thumb(v[p]);
+      var f = find_obj_by_attr(v[p], attr, val);
       if (f)
         return f;
     }
   } else if ($.isArray(v)) {
     for (var i = 0; i < v.length; i++) {
-      var f = find_thumb(v[i]);
+      var f = find_obj_by_attr(v[i], attr, val);
       if (f)
         return f;
     }
@@ -203,16 +217,28 @@ function find_thumb(v) {
   }
 }
 
-function find_thumb2(c){
-  for (var i=0; i< c.length; i++)
-  {
-    if (c[i].meta.job_name == 'image thumb')
-      return media_path(c[i]);
+function find_prop(v, p){
+  var ps = p.split('.');
+  var t = v;
+  for (var i=0; i<ps.length; i++) {
+    if (!t[ps[i]])
+      return {found: false, at: ps[i]};
+    t = t[ps[i]];
   }
+  return {found: true, value: t};
+}
+
+function find_thumb2(c){
+  var f = find_obj_by_attr(c, 'meta.job_name', 'image thumb');
+  if (f) return media_path(f);
+  f = find_obj_by_attr(c, 'mime', 'image/jpeg');
+  return media_path(f);
 }
 
 function media_path(resource)
 {
+  if (!resource)
+    return null;
   if (containerHttp)
     return containerHttp + resource.path;
   else
