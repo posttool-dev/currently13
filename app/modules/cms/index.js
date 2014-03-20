@@ -45,7 +45,7 @@ exports.init = function (app, p) {
   switch (config.storage) {
     case "pkgcloud":
       client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
-      logger.info('created pkgcloud storage client')
+      logger.info('created pkgcloud storage client');
       break
     case "cloudinary":
       cloudinary = require('cloudinary');
@@ -524,10 +524,10 @@ function compare(a, b) {
 
 
 
-exports.save_resource = function (name, path, size, creator_id, info, next) {
+exports.save_resource = function (name, path, mimetype, size, creator_id, info, next) {
   var r = new meta.Resource();
   r.name = name;
-  r.mime = mime.lookup(name);
+  r.mime = mimetype ? mimetype : mime.lookup(name);
   r.path = path;
   r.size = size;
   r.creator = creator_id;
@@ -578,13 +578,11 @@ upload_job_complete = function(id) {
           pr.path = p;
           pr.size = s;
           pr.meta = {generated: true, job_name: job.type};
-          pr.save(function (err, ps) {
+          if (err) throw err;
+          meta.Resource.update({_id: job.data.parent}, {$push: {children: pr}}, function(err, r){
             if (err) throw err;
-            meta.Resource.update({_id: job.data.parent}, {$push: {children: pr}}, function(err, r){
-              if (err) throw err;
-              logger.info('removing job');
-              job.remove();
-            });
+            logger.info('removing job');
+            job.remove();
           });
         });
       });
@@ -606,10 +604,9 @@ exports.upload = function (req, res) {
       form.handlePart(part);
       return;
     }
-    console.log(" part", part);
-    var path = uuid.v4() + part.filename;
+    var path = uuid.v4() + '/' + part.filename;
     var save_resource = function (meta, next) {
-      exports.save_resource(part.filename, path, part.size, req.session.user._id, meta, next);
+      exports.save_resource(part.filename, path, part.mime, form.bytesReceived, req.session.user._id, meta, next);
     };
     switch (config.storage) {
       case "file":
@@ -624,6 +621,7 @@ exports.upload = function (req, res) {
         }));
         break;
       case "cloudinary":
+        // untested
         var cloudStream = cloudinary.uploader.upload_stream(function (e) {
           save_resource(e, function (s) {
             res.json(s);
@@ -651,6 +649,14 @@ exports.delete_resource = function (req, res) {
     if (r) {
       switch (config.storage) {
         case "pkgcloud":
+          client.removeFile(config.container, r.path, function (err) {
+            if (err) logger.error(err);
+            r.remove(function(err, r){
+              if (err) throw err;
+              logger.info('resource '+JSON.stringify(r)+' deleted')
+              res.json({message: 'Resource deleted'});
+            });
+          });
           break
         case "cloudinary":
           cloudinary.uploader.destroy(r.meta.public_id, function (result) {
