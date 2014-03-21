@@ -23,7 +23,11 @@ exports.workflow = {
         {from: DRAFT, to: [PUBLISHED]},
         {from: PUBLISHED, to: [DRAFT]},
         {from: PUBLISHED, to: [FLAGGED]}
-      ]
+      ],
+      permissions: {
+        Inventory: ['edit', 'view'],
+        Artist: ['']
+      }
     }
   }
 }

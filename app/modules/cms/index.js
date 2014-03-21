@@ -632,7 +632,7 @@ exports.write = function (stream, path, next) {
       stream.on('data', cloudStream.write).on('end', cloudStream.end);
       break;
     case "gfs":
-      var ws = gfs.createWriteStream({ _id: id, filename: path });
+      var ws = gfs.createWriteStream({ filename: path });
         stream.pipe(ws);
         stream.on('end', next);
         //ws.on('error', function (e) {

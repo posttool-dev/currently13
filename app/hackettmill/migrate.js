@@ -3,6 +3,7 @@ var csv = require('csv');
 var mongoose = require('mongoose');
 var cloudinary = require('cloudinary');
 var uuid = require('node-uuid');
+var http = require('http');
 
 var workflow = require('./workflow');
 var cms = require('../modules/cms');
@@ -10,7 +11,7 @@ var cms = require('../modules/cms');
 var data = {};
 var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
 
-var use_existing_images = true; // false will destroy images at cloudinary & table of resources
+var use_existing_images = false; // false will destroy images at cloudinary & table of resources
 var prefix = 'dev1';
 
 var _job;
@@ -26,10 +27,13 @@ exports.migrate_data = function (job, done) {
   if (use_existing_images)
     migrate0();
   else
-    cloudinary.api.delete_resources_by_prefix(prefix, function (c) {
-      console.log('   ... deleted ' + c + ' cloduinary resources');
       migrate_delete_resources0();
-    });
+
+//  else
+//    cloudinary.api.delete_resources_by_prefix(prefix, function (c) {
+//      console.log('   ... deleted ' + c + ' cloduinary resources');
+//      migrate_delete_resources0();
+//    });
 }
 
 
@@ -56,7 +60,7 @@ function migrate0() {
 
 function migrate1()
 {
-  cms.utils.forEach(data['Resource'].array, create_resource, migrate2, 20);
+  cms.utils.forEach(data['Resource'].array, create_resource, migrate2, 2);
 }
 
 
@@ -144,18 +148,17 @@ function create_resource(rd, next) {
     }
     else
     {
-      cloudinary.uploader.upload(url,
-        function (e) {
-          var r = new R();
-          r.path = p;
-          r.meta = e;
-          r.meta.thumb = cms.get_preview_url(e);
-          r.save(function (err, r) {
+      console.log(p);
+      http.get(url, function (response) {
+        //console.log(response)
+        cms.write(response, p, function (err) {
+          cms.save_resource(rd['filename'], p, rd['content-type'], rd['filesize'], null, {}, function (s) {
+            console.log(s);
             rd.model = r;
-            console.log('Uploaded ', r.meta.public_id, r.meta.thumb);
             next();
           });
-        }, { public_id: prefix+'/'+uuid.v4()});
+        });
+      });
     }
   });
 }

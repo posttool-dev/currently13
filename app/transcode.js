@@ -5,20 +5,33 @@ var ffmpeg = require('fluent-ffmpeg');
 var gm = require('gm');
 
 // arg 'app name'
-var p = require('./peter'), config = p.config;
+var p = require('./hackettmill'), config = p.config;
+var logger = require('./modules/cms/utils').get_logger('transcode');
 
 // requires pkgcloud and kue configs
 var client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
+logger.info('created pkgcloud storage client');
 var jobs = kue.createQueue(config.kueConfig);
+logger.info('initialed process queue');
 
 var cms_jobs = require('./modules/cms/jobs')
 
+
+process.on('uncaughtException', function (err) {
+  console.error('uncaughtException:', err.message)
+  console.error(err.stack)
+  //process.exit(1);
+});
+
+//server.on('error', function (err) {
+//  console.error(err)
+//})
 
 /* jobs */
 
 mp3 = function (job, done, options) {
   cms_jobs.process_resource(client, job, done, '.mp3', function (infile, outfile, next) {
-    console.log('mp3',infile,outfile)
+    logger.info('mp3'+' '+infile+' '+outfile)
     new ffmpeg({ source: infile })
       .withAudioBitrate(options.bitrate)
       .withAudioCodec('libmp3lame')
@@ -47,6 +60,7 @@ jobs.process('audio mp3', function(job, done){
 
 resize = function(job, done, options) {
   cms_jobs.process_resource(client, job, done, '.jpg', function (path, path2, next) {
+    logger.info(job.type+' '+path+' '+path2)
     var g = gm(path);
     g.resize(options.width, options.height, options.resizeOptions);
     g.write(path2, function (err) {
@@ -68,7 +82,7 @@ jobs.process('image large', function(job, done){
 });
 
 
-kue.app.set('title', 'Jobs');
+kue.app.set('title', 'Transcoder');
 kue.app.listen(3001);
 
 process.once( 'SIGTERM', function ( sig ) {

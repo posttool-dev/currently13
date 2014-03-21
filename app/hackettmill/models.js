@@ -10,7 +10,8 @@ exports.models = {
     meta: {
       plural: "Inventory",
       name: "<%= title %>",
-      dashboard: true
+      dashboard: true,
+      workflow: true
     },
     schema: {
       title: String,
@@ -396,7 +397,7 @@ exports.models = {
 
 exports.models.Resource.jobs = {
   image: ['thumb', 'medium', 'large'],
-  audio: [],
+  audio: ['mp3'],
   video: []
 }
 

@@ -47,12 +47,12 @@ function init_app() {
   });
 
   cms.init(app, hm);
+  var Exhibition = mongoose.model('Exhibition');
+  var News = mongoose.model('News');
 
   app.get('/', function(req, res)
   {
-    var Exhibition = cms.meta.model('Exhibition');
-    var News = cms.meta.model('News');
-    Exhibition.find({state: PUBLISHED}, function (err, exhibits) {
+    Exhibition.find({state: PUBLISHED}, null, {sort: 'date'}, function (err, exhibits) {
       News.find({state: PUBLISHED}, function (err, news) {
         res.render('hackettmill/index', {exhibits: exhibits, news: news});
       });
@@ -75,10 +75,11 @@ function init_app() {
     });
   });
 
-  app.get('/pop', function(req, res){
+//  app.get('/pop', function(req, res){
+//    hm.migrate.migrate_data();
+//    res.json('ok');
+//  });
     hm.migrate.migrate_data();
-    res.json('ok');
-  });
 
   app.listen(config.serverPort);
   console.log('App started on port '+config.serverPort);
