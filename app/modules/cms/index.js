@@ -597,6 +597,7 @@ client_upload_params = function(path) {
         'content-disposition': mime.lookup(path)
       }}
 };
+
 exports.upload = function (req, res) {
   var form = new formidable.IncomingForm();
   form.onPart = function (part) {
@@ -605,41 +606,41 @@ exports.upload = function (req, res) {
       return;
     }
     var path = uuid.v4() + '/' + part.filename;
-    var save_resource = function (meta, next) {
-      exports.save_resource(part.filename, path, part.mime, form.bytesReceived, req.session.user._id, meta, next);
-    };
-    switch (config.storage) {
-      case "file":
-        new Error('unimplemented');
-        break;
-      case "pkgcloud":
-        part.pipe(client.upload(client_upload_params(path), function (err) {
-          if (err) throw err;
-          save_resource({}, function (s) {
-            res.json(s);
-          });
-        }));
-        break;
-      case "cloudinary":
-        // untested
-        var cloudStream = cloudinary.uploader.upload_stream(function (e) {
-          save_resource(e, function (s) {
-            res.json(s);
-          });
-        });
-        part.on('data', cloudStream.write).on('end', cloudStream.end);
-        break;
-      case "gfs":
-        save_resource({}, function (s) {
-          save_gfs(s._id, path, function (s) {
-            res.json(s);
-          });
-        });
-        break;
-    }
+    exports.write(part, path, function (meta) {
+      exports.save_resource(part.filename, path, part.mime, form.bytesReceived, req.session.user._id, meta, function (s) {
+        res.json(s);
+      });
+    });
   }
   form.parse(req, function () {});
 };
+
+exports.write = function (stream, path, next) {
+  //stream.on('error', function (e) {
+  //  next(e);
+  //});
+  switch (config.storage) {
+    case "file":
+      new Error('unimplemented');
+      break;
+    case "pkgcloud":
+      stream.pipe(client.upload(client_upload_params(path), next));
+      break;
+    case "cloudinary":
+      // untested
+      var cloudStream = cloudinary.uploader.upload_stream(next);
+      stream.on('data', cloudStream.write).on('end', cloudStream.end);
+      break;
+    case "gfs":
+      var ws = gfs.createWriteStream({ _id: id, filename: path });
+        stream.pipe(ws);
+        stream.on('end', next);
+        //ws.on('error', function (e) {
+        //  next(e);
+        //});
+      break;
+  }
+}
 
 
 exports.delete_resource = function (req, res) {
@@ -701,23 +702,5 @@ exports.download = function (req, res) {
   });
 };
 
-
-function save_gfs(id, path, next) {
-  var ws = gfs.createWriteStream({ _id: id, filename: path });
-  ws.on('error', function (e) {
-    next(e);
-  });
-  var rs = fs.createReadStream(path);
-  rs.on('open', function () {
-    rs.pipe(ws);
-  });
-  rs.on('end', function () {
-    next(null);
-  });
-  rs.on('error', function (e) {
-    next(e);
-  });
-
-}
 
 
