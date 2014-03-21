@@ -108,7 +108,7 @@ var form_fields = {
     // widget
     var $w = $("<textarea></textarea>").addClass("form-control");
     $el.append($w); //code mirror requires the appending before...
-    var cm = CodeMirror.fromTextArea($w[0], $.extend({}, _properties));
+    var cm = CodeMirror.fromTextArea($w[0], $.extend({}, {}));
 
     var _s = "";
     Object.defineProperty(self, "data",
