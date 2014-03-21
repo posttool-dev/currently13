@@ -70,7 +70,7 @@ function layers_layers(){
   self.pop_layer = function()
   {
     pop_child();
-    history_push();
+    //history_push();
     update_ui();
     refresh_last();
   }
@@ -80,7 +80,7 @@ function layers_layers(){
     var x = $el.children().length - i - 1;
     for (var i=0; i<x; i++)
       pop_child();
-    history_push();
+    //history_push();
     update_ui();
     refresh_last();
   }
@@ -130,6 +130,7 @@ function layers_layers(){
   {
     var f = $el.children().last().data('__obj__');
     history.pushState(f.url(), f.toString(), f.url());
+    document.title =  f.toString();
   }
 
   function pop_child()
