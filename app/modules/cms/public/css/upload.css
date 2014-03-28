@@ -1,0 +1,42 @@
+
+
+.file-input-button {
+    position: relative;
+    overflow: hidden;
+    margin: 6px 0 6px 0;
+}
+
+.file-input-button input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    border: solid transparent;
+    border-width: 0 0 100px 200px;
+    opacity: 0;
+    filter: alpha(opacity = 0);
+    -moz-transform: translate(-300px, 0) scale(4);
+    direction: ltr;
+    cursor: pointer;
+}
+
+
+.progress, .file-input-info {
+    display: none;
+}
+
+.file-input-wrap {
+    margin: 0 0 8px 0;
+}
+
+.multi-drop-area {
+    padding:5px;
+    min-height: 50px;
+    border: 1px dotted #777;
+    background-color: #eee;
+    line-height: 18px;
+}
+
+.multi-drop-area a, .multi-drop-area i { line-height: 15px; }
+
+.multi-drop-area:hover {background-color: #fff; }

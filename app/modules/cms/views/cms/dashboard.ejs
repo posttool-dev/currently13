@@ -1,0 +1,56 @@
+<% include ../head %>
+<% include head %>
+<% include ../head1 %>
+<% include ../nav %>
+
+<div style="padding: 100px 300px 20px 20px;">
+
+<% for(var p in models) {
+    if (models[p].meta.dashboard) {  %>
+    <div style="width:200px; height:70px; border: 1px solid #555; margin:0 10px 10px 0;padding:10px;float:left; ">
+    <span style="font-size:22px; "><%= p %></span><br>
+    <a href='/cms/browse/<%=p%>'>browse</a>
+    <a href='/cms/create/<%=p%>'>create</a>
+        </div>
+<% } } %>
+
+<br clear="both">
+
+</div>
+
+
+<script>
+
+
+var $info_logs = $("#info-panel");
+var seen = {}
+$$ajax('/cms/logs').done(function (logs) {
+    if (logs.length != 0)
+        $info_logs.append("<h3>Recent Activity</h3>");
+    for (var i = 0; i < logs.length; i++)
+    {
+        var k = logs[i].action + logs[i].type+logs[i].id;
+        if (seen[k])
+            continue;
+        seen[k] = true;
+        $info_logs.append(get_log_row(logs[i]));
+    }
+});
+
+
+function get_log_row(log) {
+    var $r = $$('log-row');
+    $$('action', {parent: $r}).text(log.action);
+
+    var t = render_template(log.type, log.info.object);
+    $$('instance', {parent: $r}).text(t).click(function(){ location.href = '/cms/update/'+log.type+'/'+log.id});
+    $$('time', {parent: $r}).html(timeSince(log.time) + " by <i>" + log.user.email + "</i>");
+    return $r;
+}
+</script>
+
+
+
+<% include ../foot %>
+
+
