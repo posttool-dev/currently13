@@ -12,7 +12,7 @@ mongoose.connect(domain.config.mongoConnectString, {}, function (err) {
     console.error('Connection Error', err);
   });
   var cms = new Cms();
-  var app = cms.init(domain);
+  var app = cms.init(domain, mongoose.connection);
   app.listen(8080);
   app.on('error', function (err) {
     console.error('Server Error', err);

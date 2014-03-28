@@ -15,9 +15,8 @@ var ResourceSchemaInfo = {
   }]
 };
 
-exports.models = {
-
-  Resource: {
+exports.ResourceInfo = function(){
+  return {
     meta: {
       plural: 'Resources',
       dashboard: true
@@ -36,7 +35,6 @@ exports.models = {
       {name: "children", widget: "choose_create", options: {type: "Resource", array: true, readonly: true}}
     ]
   }
-
 }
 
 

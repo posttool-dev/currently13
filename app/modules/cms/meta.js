@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var models = require('./models');
 var utils = require('./utils');
 exports = module.exports = Meta;
 
@@ -36,7 +37,8 @@ Meta.prototype._init = function () {
       console.log(this.info[p].form);
     }
   }
-
+  this.Resource = this.model('Resource');
+  this.Log = this.connection.model('Log', models.LogSchema);
 };
 
 Meta.prototype.browse = function(type)
@@ -94,11 +96,17 @@ validate_meta = function (p, schema, browse, form) {
   if (browse)
     for (var i = 0; i < browse.length; i++)
       if (browse[i].name && !schema[browse[i].name] && !extra_fields[browse[i].name])
-        throw new Error('No ' + browse[i].name + ' in ' + p);
+      {
+        console.log(schema);
+        throw new Error(p+'.browse path error: ' + browse[i].name );
+      }
   if (form)
     for (var i = 0; i < form.length; i++)
       if (form[i].name && !schema[form[i].name] && !extra_fields[form[i].name])
-        throw new Error('No ' + form[i].name + ' in ' + p);
+      {
+        console.log(p);
+        throw new Error(p+'.form path error: ' +form[i].name);
+      }
 }
 
 

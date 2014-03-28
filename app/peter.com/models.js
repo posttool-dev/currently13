@@ -1,6 +1,6 @@
 var mongoose = require("mongoose");
 var ObjectId = mongoose.Schema.Types.ObjectId;
-var cms = require("../modules/cms/models");
+var cms_models = require("../modules/cms/models");
 
 exports.models = {
 
@@ -80,7 +80,7 @@ exports.models = {
     ]
   },
 
-  Resource: cms.models.Resource
+  Resource:  cms_models.ResourceInfo()
 
 }
 

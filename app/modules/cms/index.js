@@ -1,19 +1,24 @@
+/* emits: get, save, browse, etc */
+var EventEmitter = require('events').EventEmitter
+/* util */
+var uuid = require('node-uuid');
 var fs = require('fs');
 var jsdiff = require('diff');
 var mime = require('mime');
-var uuid = require('node-uuid');
+/* store */
 var mongoose = require('mongoose');
 var gfs, Grid = require('gridfs-stream');
+/* web */
 var express = require('express');
 var MongoStore = require('connect-mongo')(express);
 var formidable = require('formidable');
+/* queuing */
 var kue = require('kue');
-
+/* cms */
 var auth = require('../auth');
 var Meta = require('./meta');
 var utils = require('./utils');
 var models = require('./models');
-
 var logger = utils.get_logger('cms');
 
 exports = module.exports = Cms;
@@ -23,15 +28,25 @@ function Cms()
   this.meta = null;
   this.workflow_info = null;
   this.config = null;
+  this.connection = null;
   this.client = null;
   this.gfs = null;
 }
+
+Cms.prototype.__proto__ = EventEmitter.prototype;
+
 
 Cms.prototype.init = function (module) {
   logger.info('current cms 0.0.2');
 
   var self = this;
-  self.meta = new Meta(module.models.models, mongoose.connection);
+
+  self.connection = mongoose.createConnection(module.config.mongoConnectString);
+  self.connection.on('error', function(e){
+    console.error(e);
+  });
+
+  self.meta = new Meta(module.models.models, self.connection);
 
   if (module.workflow)
     self.workflow_info = module.workflow.workflow;
@@ -41,7 +56,7 @@ Cms.prototype.init = function (module) {
 
   if (self.config.kueConfig) {
     self.jobs = kue.createQueue(self.config.kueConfig);
-    self.jobs.on('job complete', upload_job_complete);
+    self.jobs.on('job complete', job_complete);
     logger.info('initialed process queue')
   }
 
@@ -57,7 +72,7 @@ Cms.prototype.init = function (module) {
 //      break
     case "gfs":
     default:
-      self.gfs = new Grid(mongoose.connection.db, mongoose.mongo);
+      self.gfs = new Grid(self.connection.db, mongoose.mongo);
       logger.info('initialized gfs storage');
       break;
   }
@@ -69,7 +84,7 @@ Cms.prototype.init = function (module) {
   app.use(express.cookieParser());
   app.use(express.session({
     secret: self.config.sessionSecret,
-    store: new MongoStore({db: mongoose.connection.db})
+    store: new MongoStore({db: self.connection.db})
   }));
   app.use(express.urlencoded());
   app.use(express.json());
@@ -410,7 +425,7 @@ Cms.prototype.get_logs = function (query, options, complete) {
 
 
 Cms.prototype.add_log = function (user_id, action, type, instance, info, callback) {
-  var Log = this.meta.model('Log');
+  var Log = this.meta.Log;
   var log = new Log({
       user: user_id,
       action: action,
@@ -461,7 +476,8 @@ compare = function (a, b) {
 
 
 Cms.prototype.save_resource = function (name, path, mimetype, size, creator_id, info, next) {
-  var r = new this.meta.Resource();
+  var meta = this.meta;
+  var r = new meta.Resource();
   r.name = name;
   r.mime = mimetype ? mimetype : mime.lookup(name);
   r.path = path;
@@ -501,7 +517,7 @@ Cms.prototype.save_resource = function (name, path, mimetype, size, creator_id, 
   return r;
 }
 
-upload_job_complete = function(id) {
+job_complete = function(id) {
   logger.info('job complete', id);
   kue.Job.get(id, function(err, job) {
     job.get('path', function (err, p) {
