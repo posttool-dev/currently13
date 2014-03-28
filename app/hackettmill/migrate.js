@@ -38,7 +38,7 @@ exports.migrate_data = function (job, done) {
 
 
 function migrate_delete_resources0() {
-  var R = mongoose.model('Resource');
+  var R = cms.meta.model('Resource');
   console.log("Removing existing resources...");
   R.find().remove(function (err, c) {
     console.log(" ... removed " + c);
@@ -85,7 +85,7 @@ function migrate2()
 
 function repopulate(type, complete)
 {
-  var R = mongoose.model(type);
+  var R = cms.meta.model(type);
   R.find().remove(function (err, c) {
     console.log('Repopulating '+type+' ... removed '+c+' old records.');
     if (_job)
@@ -139,7 +139,7 @@ function read_csv(file, next) {
 function create_resource(rd, next) {
   var p = rd['path-token'];
   var url = "http://www.hackettmill.com:81/hm_resources/" + p;
-  var R = mongoose.model('Resource');
+  var R = cms.meta.model('Resource');
   R.findOne({path:p}, function(err, r){
     if (r)
     {
@@ -167,7 +167,7 @@ function create_resource(rd, next) {
 
 function create(type, data, next)
 {
-  var M = mongoose.model(type);
+  var M = cms.meta.model(type);
   var model = new M();
   var info = cms.meta.info(type);
   for (var p in info)

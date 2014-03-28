@@ -1,20 +1,23 @@
 //var logger = require('./logger')
 var fs = require('fs');
-var express = require('express'), app = express();
 var mongoose = require('mongoose');
-var MongoStore = require('connect-mongo')(express);
 
-var cms = require('./modules/cms');
+var Cms = require('./modules/cms');
 
-var p = require('./peter'),
-  config = p.config;
+var domain = require('./peter.com');
 
-
-
-mongoose.connect(config.mongoConnectString, {}, function (err) {
+mongoose.connect(domain.config.mongoConnectString, {}, function (err) {
   if (err) throw err;
-  mongoose.connection.on('error', console.error.bind(console, 'connection error:'));
-  init_app();
+  mongoose.connection.on('error', function (err) {
+    console.error('Connection Error', err);
+  });
+  var cms = new Cms();
+  var app = cms.init(domain);
+  app.listen(8080);
+  app.on('error', function (err) {
+    console.error('Server Error', err);
+  });
+
 });
 
 
@@ -22,36 +25,5 @@ mongoose.connect(config.mongoConnectString, {}, function (err) {
 //  console.error('uncaughtException:', err.message)
 //  console.error(err.stack)
 //  process.exit(1)})
-//server.on('error', function (err) {
-//  console.error(err)
-//})
-
-
-function init_app() {
-  app.set('view engine', 'ejs');
-  app.set('views',__dirname + '/views');
-
-  app.use(express.cookieParser());
-  app.use(express.session({
-    secret: config.sessionSecret,
-    store: new MongoStore({db: mongoose.connection.db})
-  }));
-  app.use(express.urlencoded());
-  app.use(express.json());
-  app.use(express.methodOverride());
-  app.use(express.static(__dirname + '/public'));
-
-  app.configure('development', function () {
-    app.use(express.logger('dev'));
-    app.use(express.errorHandler());
-  });
-
-  cms.init(app, p);
-
-  app.listen(config.serverPort);
-  console.log('App started on port '+config.serverPort);
-}
-
-
 
 

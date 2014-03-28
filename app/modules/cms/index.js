@@ -3,61 +3,83 @@ var jsdiff = require('diff');
 var mime = require('mime');
 var uuid = require('node-uuid');
 var mongoose = require('mongoose');
-var formidable = require('formidable');
-
 var gfs, Grid = require('gridfs-stream');
-var kue, jobs;
-var cloudinary;
+var express = require('express');
+var MongoStore = require('connect-mongo')(express);
+var formidable = require('formidable');
+var kue = require('kue');
 
 var auth = require('../auth');
-var meta = require('./meta');
+var Meta = require('./meta');
 var utils = require('./utils');
 var models = require('./models');
 
 var logger = utils.get_logger('cms');
 
-var workflow_info = null;
-var config = null;
-var client = null;
+exports = module.exports = Cms;
 
+function Cms()
+{
+  this.meta = null;
+  this.workflow_info = null;
+  this.config = null;
+  this.client = null;
+  this.gfs = null;
+}
 
-exports.init = function (app, p) {
-  logger.info('together cms 0.0.1');
+Cms.prototype.init = function (module) {
+  logger.info('current cms 0.0.2');
 
+  var self = this;
+  self.meta = new Meta(module.models.models, mongoose.connection);
 
-  meta.init(p.models.models);
+  if (module.workflow)
+    self.workflow_info = module.workflow.workflow;
 
-  if (p.workflow)
-    workflow_info = p.workflow.workflow;
-  if (p.config)
-    config = p.config;
+  if (module.config)
+    self.config = module.config;
 
-  if (!app)
-    return;
-
-  if (config.kueConfig) {
-    kue = require('kue');
-    jobs = kue.createQueue(config.kueConfig);
-    jobs.on('job complete', upload_job_complete);
+  if (self.config.kueConfig) {
+    self.jobs = kue.createQueue(self.config.kueConfig);
+    self.jobs.on('job complete', upload_job_complete);
     logger.info('initialed process queue')
   }
 
-  switch (config.storage) {
+  switch (self.config.storage) {
     case "pkgcloud":
-      client = require('pkgcloud').storage.createClient(config.pkgcloudConfig);
+      self.client = require('pkgcloud').storage.createClient(self.config.pkgcloudConfig);
       logger.info('created pkgcloud storage client');
       break
-    case "cloudinary":
-      cloudinary = require('cloudinary');
-      cloudinary.config(config.cloudinaryConfig);
-      logger.info('initialized cloudinary api');
-      break
+//    case "cloudinary":
+//      cloudinary = require('cloudinary');
+//      cloudinary.config(config.cloudinaryConfig);
+//      logger.info('initialized cloudinary api');
+//      break
     case "gfs":
     default:
-      gfs = new Grid(mongoose.connection.db, mongoose.mongo);
+      self.gfs = new Grid(mongoose.connection.db, mongoose.mongo);
       logger.info('initialized gfs storage');
       break;
   }
+
+  var app = express();
+  app.set('view engine', 'ejs');
+  app.set('views',__dirname + '/views');
+
+  app.use(express.cookieParser());
+  app.use(express.session({
+    secret: self.config.sessionSecret,
+    store: new MongoStore({db: mongoose.connection.db})
+  }));
+  app.use(express.urlencoded());
+  app.use(express.json());
+  app.use(express.methodOverride());
+  app.use(express.static(__dirname + '/public'));
+
+  app.configure('development', function () {
+    app.use(express.logger('dev'));
+    app.use(express.errorHandler());
+  });
 
 
   // move session message to request locals
@@ -67,7 +89,7 @@ exports.init = function (app, p) {
     delete req.session.message;
     res.locals.user = req.session.user;
     res.user = req.session.user;
-    res.locals.containerHttp = config.containerHttp;
+    res.locals.containerHttp = self.config.containerHttp;
     next();
   });
   auth.on_login = '/cms';
@@ -80,50 +102,53 @@ exports.init = function (app, p) {
   //app.get ('/user/:user_id', [utils.has_user, user.load, user.is_user], user.display);
   //app.get ('/user/:user_id/edit', [utils.has_user, user.load, user.is_user], user.form.get);
   //app.post('/user/:user_id/edit', [utils.has_user, user.load, user.is_user], user.form.post);
+
+  var p1 = [auth.has_user];
+  var p2 = [auth.has_user, self.add_meta.bind(self)];
+  var p3 = [auth.has_user, self.add_meta.bind(self), self.add_object.bind(self)];
   app.get('/profile', [auth.has_user], auth.form.get);
-  app.post('/profile', [auth.has_user], auth.form.post);
-  app.all('/cms', [auth.has_user, exports.add_meta], exports.show_dashboard);
-  app.all('/cms/logs', [auth.has_user, exports.add_meta], exports.logs_for_user);
-  app.all('/cms/logs/:type/:id', [auth.has_user, exports.add_meta], exports.logs_for_record);
-  app.get('/cms/browse/:type', [auth.has_user, exports.add_meta], exports.browse.get);
-  app.post('/cms/browse/:type', [auth.has_user, exports.add_meta], exports.browse.post);
-  app.post('/cms/schema/:type', [auth.has_user, exports.add_meta], exports.browse.schema);
-  app.get('/cms/create/:type', [auth.has_user, exports.add_meta], exports.form.get);
-  app.post('/cms/create/:type', [auth.has_user, exports.add_meta], exports.form.post);
-  app.get('/cms/update/:type/:id', [auth.has_user, exports.add_meta], exports.form.get);
-  app.post('/cms/update/:type/:id', [auth.has_user, exports.add_meta, exports.add_object], exports.form.post);
-  app.get('/cms/get/:type', [auth.has_user, exports.add_meta], exports.form.get_json);
-  app.get('/cms/get/:type/:id', [auth.has_user, exports.add_meta, exports.add_object], exports.form.get_json);
-  app.post('/cms/delete_references/:type/:id', [auth.has_user, exports.add_meta, exports.add_object], exports.form.delete_references);
-  app.post('/cms/delete/:type/:id', [auth.has_user, exports.add_meta, exports.add_object], exports.form.delete);
-  app.post('/cms/status/:type/:id', [auth.has_user, exports.add_meta, exports.add_object], exports.form.status);
-  app.post('/cms/upload', [auth.has_user], exports.upload);
-  app.get('/cms/download/:id', [auth.has_user], exports.download);
-  app.get('/cms/delete_resource/:id', [auth.has_user], exports.delete_resource);
+  app.post('/profile', p1, auth.form.post);
+  app.all('/cms', p2, self.show_dashboard.bind(self));
+  app.all('/cms/logs', p2, self.logs_for_user.bind(self));
+  app.all('/cms/logs/:type/:id', p2, self.logs_for_record.bind(self));
+  app.get('/cms/browse/:type', p2, self.browse_get.bind(self));
+  app.post('/cms/browse/:type', p2, self.browse_post.bind(self));
+  app.post('/cms/schema/:type', p2, self.browse_schema.bind(self));
+  app.get('/cms/create/:type', p2, self.form_get.bind(self));
+  app.post('/cms/create/:type', p2, self.form_post.bind(self));
+  app.get('/cms/update/:type/:id', p2, self.form_get.bind(self));
+  app.post('/cms/update/:type/:id', p3, self.form_post.bind(self));
+  app.get('/cms/get/:type', p2, self.form_get_json.bind(self));
+  app.get('/cms/get/:type/:id', p3, self.form_get_json.bind(self));
+  app.post('/cms/delete_references/:type/:id', p3, self.form_delete_references.bind(self));
+  app.post('/cms/delete/:type/:id', p3, self.form_delete.bind(self));
+  app.post('/cms/status/:type/:id', p3, self.form_status.bind(self));
+  app.post('/cms/upload', p1, self.upload.bind(self));
+  app.get('/cms/download/:id', p1, self.download.bind(self));
+  app.get('/cms/delete_resource/:id', p1, self.delete_resource.bind(self));
+
+  return app;
 }
 
-exports.meta = meta;
-exports.utils = utils;
-exports.models = models;
 
 
 /* put the meta info in every request */
 
-exports.add_meta = function (req, res, next) {
-  req.models = res.locals.models = meta.meta();
+Cms.prototype.add_meta = function (req, res, next) {
+  req.models = res.locals.models = this.meta.meta();
   var type = req.params.type;
   if (type) {
     req.type = type;
-    req.schema = meta.schema(type);
-    req.model = meta.model(type);
-    req.browser = meta.browse(type);
-    req.form = meta.form(type);
+    req.schema = this.meta.schema(type);
+    req.model = this.meta.model(type);
+    req.browser = this.meta.browse(type);
+    req.form = this.meta.form(type);
   }
-  if (workflow_info) {
+  if (this.workflow_info) {
     var group = req.session.user.group;
     if (req.session.user.admin)
-      group = workflow_info.groups.admin;
-    req.workflow = res.locals.workflow = {states: workflow_info.states, transitions: workflow_info.groups[group].transitions};
+      group = this.workflow_info.groups.admin;
+    req.workflow = res.locals.workflow = {states: this.workflow_info.states, transitions: this.workflow_info.groups[group].transitions};
   }
   else {
     req.workflow = res.locals.workflow = null;
@@ -132,19 +157,20 @@ exports.add_meta = function (req, res, next) {
 };
 
 /* find and populate a "deep" view of the model as well as all "related" entities */
-exports.add_object = function (req, res, next) {
+Cms.prototype.add_object = function (req, res, next) {
+  var meta = this.meta;
   if (!req.params.id) {
     next();
     return;
   }
-  expand(req.type, req.params.id, function (err, m) {
+  meta.expand(req.type, req.params.id, function (err, m) {
     if (err) {
       next(err);
       return;
     }
     req.object = m;
     if (m)
-      related(req.type, m._id, function (r) {
+      meta.related(req.type, m._id, function (r) {
         req.related = r;
         req.related_count = r._count;
         delete r._count;
@@ -156,99 +182,9 @@ exports.add_object = function (req, res, next) {
 };
 
 
-expand = function (type, id, next) {
-  var q = meta.model(type).findOne({_id: id});
-  q.exec(function (err, m) {
-    populate_deep(type, m, function () {
-      next(err, m);
-    });
-  });
-};
-
-
-populate_deep = function (type, instance, next, seen) {
-  if (type == 'User' || !instance) {
-    next();
-    return;
-  }
-  if (!seen)
-    seen = {};
-  if (seen[instance._id]) {
-    next();
-    return;
-  }
-  seen[instance._id] = true;
-  var refs = meta.get_references(meta.schema(type));
-  if (!refs) {
-    next();
-    return;
-  }
-  var opts = [];
-  for (var i = 0; i < refs.length; i++)
-    opts.push({path: refs[i].name, model: refs[i].ref});
-  meta.model(type).populate(instance, opts, function (err, o) {
-    utils.forEach(refs, function (r, n) {
-      if (r.is_array)
-        utils.forEach(o[r.name], function (v, nn) {
-          populate_deep(r.ref, v, nn, seen);
-        }, n);
-      else
-        populate_deep(r.ref, o[r.name], n, seen);
-    }, next);
-  });
-}
-
-
-related = function (type, id, next) {
-  var related_refs = [];
-  for (var p in meta.meta()) {
-    var refs = meta.get_references(meta.schema(p));
-    for (var i = 0; i < refs.length; i++) {
-      if (refs[i].ref == type) {
-        related_refs.push({type: p, field: refs[i]});
-      }
-    }
-  }
-  var related_records = { _count: 0 };
-  if (related_refs) {
-    utils.forEach(related_refs, function (ref, n) {
-      var c = {};
-      c[ref.field.name] = {$in: [id]}
-      var q = meta.model(ref.type).find(c);
-      q.exec(function (err, qr) {
-        related_records._count += qr.length;
-        related_records[ref.type] = {field: ref.field, results: qr, query: q};
-        n();
-      });
-    }, function () {
-      next(related_records);
-    });
-  }
-  else
-    next(related_records);
-};
-
-
-// queries? piping results?
-//      if (req.queries)
-//      {
-//        var keys = Object.keys(req.queries);
-//        req.related = {};
-//        utils.forEach(keys, function (e, n) {
-//          var q = m[e](piped);
-//          q.exec(function (err, r) {
-//            req.related[e] = r;
-//            n();
-//          });
-//        }, next);
-//      }
-//      else
-//        next();
-
-
 // the 'views'
 
-exports.show_dashboard = function (req, res, next) {
+Cms.prototype.show_dashboard = function (req, res, next) {
   res.render('cms/dashboard', {
     title: 'CMS Dashboard ',
     models: req.models
@@ -256,22 +192,20 @@ exports.show_dashboard = function (req, res, next) {
 };
 
 
-exports.logs_for_user = function (req, res, next) {
-  get_logs({user: req.session.user._id}, {sort: '-time'}, function (logs) {
+Cms.prototype.logs_for_user = function (req, res, next) {
+  this.get_logs({user: req.session.user._id}, {sort: '-time'}, function (logs) {
     res.json(logs);
   });
 };
 
-exports.logs_for_record = function (req, res, next) {
-  get_logs({type: req.params.type, id: req.params.id }, {sort: '-time'}, function (logs) {
+Cms.prototype.logs_for_record = function (req, res, next) {
+  this.get_logs({type: req.params.type, id: req.params.id }, {sort: '-time'}, function (logs) {
     res.json(logs);
   });
-}
+};
 
 
-exports.browse = {
-
-  get: function (req, res, next) {
+Cms.prototype.browse_get = function (req, res, next) {
     var conditions = req.body.condition;
     req.model.count(conditions, function (err, count) {
       if (err) {
@@ -285,9 +219,10 @@ exports.browse = {
         total: count
       });
     });
-  },
+};
 
-  post: function (req, res, next) {
+Cms.prototype.browse_post = function (req, res, next) {
+  var meta = this.meta;
     var conditions = process_conditions(req.body.condition);
     var fields = null;
     var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
@@ -307,11 +242,10 @@ exports.browse = {
           res.json({results: r, count: count});
       });
     });
-  },
+};
 
-  schema: function (req, res, next) {
-    res.json({schema: meta.get_schema_info(req.schema), browser: req.browser});
-  }
+Cms.prototype.browse_schema = function (req, res, next) {
+    res.json({schema: this.meta.get_schema_info(req.schema), browser: req.browser});
 };
 
 
@@ -331,12 +265,10 @@ process_conditions = function (o) {
     }
   }
   return c;
-}
+};
 
 
-exports.form =
-{
-  get: function (req, res) {
+Cms.prototype.form_get = function (req, res) {
     res.render('cms/form', {
       title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
       ancestors: [
@@ -345,9 +277,9 @@ exports.form =
       type: req.type,
       id: req.id ? req.id : null,
       form: req.form});
-  },
+};
 
-  get_json: function (req, res) {
+Cms.prototype.form_get_json = function (req, res) {
     var related = {};
     for (var p in req.related) {
       related[p] = req.related[p].results;
@@ -358,56 +290,58 @@ exports.form =
       object: req.object || new req.model(),
       related: related,
       form: req.form})
-  },
+};
 
-  post: function (req, res, next) {
-    var s = req.object || new req.model();
-    var data = JSON.parse(req.body.val);
-    var info = { diffs: {} };
-    var schema_info = meta.get_schema_info(req.schema);
-    for (var i = 0; i < req.form.length; i++) {
-      var f = req.form[i].name;
-      if (!f)
-        continue;
-      var field_info = schema_info[f];
-      var field_val = s[f];
-      var match = false;
-      if (field_info.type == 'Reference') {
-        field_val = field_info.is_array ? just_ids(field_val) : just_id(field_val);
-        match = compare(field_val, data[f])
-      }
-      else
-        match = (data[f] == field_val) || (data[f] == '' && field_val == null);
-      if (!match) {
-        if (f != 'modified')//or other auto date fields...!
-          info.diffs[f] = jsdiff.diffChars(field_val, data[f]);
-        s[f] = data[f];
-      }
+Cms.prototype.form_post = function (req, res, next) {
+  var self = this;
+  var meta = self.meta;
+  var s = req.object || new req.model();
+  var data = JSON.parse(req.body.val);
+  var info = { diffs: {} };
+  var schema_info = meta.get_schema_info(req.schema);
+  for (var i = 0; i < req.form.length; i++) {
+    var f = req.form[i].name;
+    if (!f)
+      continue;
+    var field_info = schema_info[f];
+    var field_val = s[f];
+    var match = false;
+    if (field_info.type == 'Reference') {
+      field_val = field_info.is_array ? just_ids(field_val) : just_id(field_val);
+      match = compare(field_val, data[f])
     }
-    if (!s.creator)
-      s.creator = req.session.user._id;
-    if (!s.state && workflow_info && workflow_info.states)
-      s.state = workflow_info.states[0].code;
+    else
+      match = (data[f] == field_val) || (data[f] == '' && field_val == null);
+    if (!match) {
+      if (f != 'modified')//or other auto date fields...!
+        info.diffs[f] = jsdiff.diffChars(field_val, data[f]);
+      s[f] = data[f];
+    }
+  }
+  if (!s.creator)
+    s.creator = req.session.user._id;
+  if (!s.state && self.workflow_info && self.workflow_info.states)
+    s.state = self.workflow_info.states[0].code;
 
-    //emit('presave',s)
-    s.save(function (err, s) {
-      if (err) {
-        res.json(err);
-      }
-      else {
-        add_log(req.session.user._id, 'save', req.type, s, info, function () {
-          expand(req.type, s._id, function (err, s) {
-            if (err)
-              next(err);
-            else
-              res.json(s);
-          });
+  //emit('presave',s)
+  s.save(function (err, s) {
+    if (err) {
+      res.json(err);
+    }
+    else {
+      self.add_log(req.session.user._id, 'save', req.type, s, info, function () {
+        meta.expand(req.type, s._id, function (err, s) {
+          if (err)
+            next(err);
+          else
+            res.json(s);
         });
-      }
-    });
-  },
+      });
+    }
+  });
+};
 
-  delete_references: function (req, res, next) {
+Cms.prototype.form_delete_references = function (req, res, next) {
     if (req.related_count == 0)
       res.json({});
     else {
@@ -432,15 +366,15 @@ exports.form =
         });
       })
     }
-  },
+};
 
-  delete: function (req, res, next) {
+Cms.prototype.form_delete = function (req, res, next) {
     req.object.remove(function (err, m) {
       res.json(m);
     });
-  },
+};
 
-  status: function (req, res, next) {
+Cms.prototype.form_status = function (req, res, next) {
     var original_state = req.object.state;
     req.object.state = req.body.state;
     req.object.save(function (err, m) {
@@ -450,14 +384,15 @@ exports.form =
           res.json(info);
         });
     });
-  }
 };
 
 // logs
 
 
-get_logs = function (query, options, complete) {
-  var q = models.Log.find(query, null, options);
+Cms.prototype.get_logs = function (query, options, complete) {
+  var meta = this.meta;
+  var Log = meta.model('Log');
+  var q = Log.find(query, null, options);
   q.populate('user', 'name email');
   q.exec(function (err, logs) {
     utils.forEach(logs, function (log, n) {
@@ -474,8 +409,9 @@ get_logs = function (query, options, complete) {
 }
 
 
-add_log = function (user_id, action, type, instance, info, callback) {
-  var log = new models.Log({
+Cms.prototype.add_log = function (user_id, action, type, instance, info, callback) {
+  var Log = this.meta.model('Log');
+  var log = new Log({
       user: user_id,
       action: action,
       type: type,
@@ -506,7 +442,7 @@ just_id = function (a) {
     return a;
 }
 
-function compare(a, b) {
+compare = function (a, b) {
   if (!a && !b)
     return true;
   if (!a || !b)
@@ -524,20 +460,20 @@ function compare(a, b) {
 
 
 
-exports.save_resource = function (name, path, mimetype, size, creator_id, info, next) {
-  var r = new meta.Resource();
+Cms.prototype.save_resource = function (name, path, mimetype, size, creator_id, info, next) {
+  var r = new this.meta.Resource();
   r.name = name;
   r.mime = mimetype ? mimetype : mime.lookup(name);
   r.path = path;
   r.size = size;
   r.creator = creator_id;
   r.meta = info ? info : {};
-  if (config.storage == 'cloudinary' && info)
-    r.meta.thumb = cloudinary.url(info.public_id + '.jpg', { width: 300, height: 200, crop: 'fit'});
+//  if (config.storage == 'cloudinary' && info)
+//    r.meta.thumb = cloudinary.url(info.public_id + '.jpg', { width: 300, height: 200, crop: 'fit'});
   r.save(function (err, s) {
     if (err) throw err;
     next(s); // but dont return
-    if (config.storage == 'cloudinary') return; // ha
+//    if (config.storage == 'cloudinary') return; // ha
     var resource_jobs = meta.meta().Resource.jobs;
     if (resource_jobs) {
       if (!jobs)
@@ -598,7 +534,8 @@ client_upload_params = function(path) {
       }}
 };
 
-exports.upload = function (req, res) {
+Cms.prototype.upload = function (req, res) {
+  var self = this;
   var form = new formidable.IncomingForm();
   form.onPart = function (part) {
     if (!part.filename) {
@@ -606,8 +543,8 @@ exports.upload = function (req, res) {
       return;
     }
     var path = uuid.v4() + '/' + part.filename;
-    exports.write(part, path, function (meta) {
-      exports.save_resource(part.filename, path, part.mime, form.bytesReceived, req.session.user._id, meta, function (s) {
+    self.write(part, path, function (meta) {
+      self.save_resource(part.filename, path, part.mime, form.bytesReceived, req.session.user._id, meta, function (s) {
         res.json(s);
       });
     });
@@ -615,24 +552,25 @@ exports.upload = function (req, res) {
   form.parse(req, function () {});
 };
 
-exports.write = function (stream, path, next) {
+Cms.prototype.write = function (stream, path, next) {
+  var self = this;
   //stream.on('error', function (e) {
   //  next(e);
   //});
-  switch (config.storage) {
+  switch (self.config.storage) {
     case "file":
       new Error('unimplemented');
       break;
     case "pkgcloud":
-      stream.pipe(client.upload(client_upload_params(path), next));
+      stream.pipe(self.client.upload(client_upload_params(path), next));
       break;
-    case "cloudinary":
-      // untested
-      var cloudStream = cloudinary.uploader.upload_stream(next);
-      stream.on('data', cloudStream.write).on('end', cloudStream.end);
-      break;
+//    case "cloudinary":
+//      // untested
+//      var cloudStream = cloudinary.uploader.upload_stream(next);
+//      stream.on('data', cloudStream.write).on('end', cloudStream.end);
+//      break;
     case "gfs":
-      var ws = gfs.createWriteStream({ filename: path });
+      var ws = self.gfs.createWriteStream({ filename: path });
         stream.pipe(ws);
         stream.on('end', next);
         //ws.on('error', function (e) {
@@ -643,14 +581,16 @@ exports.write = function (stream, path, next) {
 }
 
 
-exports.delete_resource = function (req, res) {
-  var q = meta.Resource.findOne({_id: req.params.id});
+Cms.prototype.delete_resource = function (req, res) {
+  var self = this;
+  var Resource = self.meta.model('Resource');
+  var q = Resource.findOne({_id: req.params.id});
   q.exec(function (err, r) {
     if (err) throw err;
     if (r) {
       switch (config.storage) {
         case "pkgcloud":
-          client.removeFile(config.container, r.path, function (err) {
+          self.client.removeFile(config.container, r.path, function (err) {
             if (err) logger.error(err);
             r.remove(function(err, r){
               if (err) throw err;
@@ -659,11 +599,11 @@ exports.delete_resource = function (req, res) {
             });
           });
           break
-        case "cloudinary":
-          cloudinary.uploader.destroy(r.meta.public_id, function (result) {
-            res.json(result);
-          });
-          break
+//        case "cloudinary":
+//          cloudinary.uploader.destroy(r.meta.public_id, function (result) {
+//            res.json(result);
+//          });
+//          break
         case "gfs":
         default:
           break;
@@ -676,16 +616,17 @@ exports.delete_resource = function (req, res) {
 };
 
 
-exports.download = function (req, res) {
-  // TODO: set proper mime type + filename, handle errors, etc...
-  var q = meta.Resource.findOne({_id: req.params.id});
+Cms.prototype.download = function (req, res) {
+  var self = this;
+  var Resource = self.meta.model('Resource');
+  var q = Resource.findOne({_id: req.params.id});
   q.exec(function (err, r) {
     if (r) {
-      switch (config.storage) {
+      switch (self.config.storage) {
         case "pkgcloud":
           break
-        case "cloudinary":
-          break
+//        case "cloudinary":
+//          break
         case "gfs":
         default:
           res.setHeader('Content-Type', r.mime + (r.charset ? '; charset=' + r.charset : ''));

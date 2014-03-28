@@ -41,7 +41,7 @@ exports.models = {
 
 
 // log
-var LogSchema = new mongoose.Schema({
+exports.LogSchema = new mongoose.Schema({
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   action: String,
   type: String,
@@ -49,7 +49,6 @@ var LogSchema = new mongoose.Schema({
   info: mongoose.Schema.Types.Mixed,
   time: { type: Date, default: Date.now }
 })
-exports.Log = mongoose.model('Log', LogSchema);
 
 // group
 // transition

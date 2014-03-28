@@ -1,93 +1,85 @@
 var mongoose = require('mongoose');
+var utils = require('./utils');
+exports = module.exports = Meta;
 
-
-
-
-
-
-var Meta = null;
-
-//var User = null;
-var Resource = null;
-
-/**
- holds on to meta info
- adds fields and methods to meta info
- */
-exports.init = function (meta) {
-  Meta = meta;
-  for (var p in  meta) {
-    console.log(">", p);
-    var schema_data = meta[p].schema;
-    validate_meta(p, schema_data, meta[p].browse, meta[p].form);
-    var schema = new mongoose.Schema(schema_data);
-    if (meta[p].virtuals)
-      for (var q in meta[p].virtuals)
-      {
-        schema.virtual(q).get(meta[p].virtuals[q]);
-      }
-    add_fields_and_methods(schema, p);
-    meta[p].schema = schema;
-    meta[p].model = mongoose.model(p, schema);
-    if (!meta[p].browse)
-    {
-      meta[p].browse = create_browse_info(p);
-      console.log('Added generated browse for '+p);
-      console.log(meta[p].browse);
-    }
-    if (!meta[p].form)
-    {
-      meta[p].form = create_form_info(p);
-      console.log('Added generated form for '+p);
-      console.log(meta[p].form);
-    }
-  }
-  Resource = exports.Resource = mongoose.model('Resource');
-  // User = mongoose.model(user_class_name, Meta[user_class_name].schema);
-
-};
-
-exports.browse = function(type)
+function Meta(info, connection)
 {
-  if (!Meta[type])
-    throw new Error('no '+type);
-  return Meta[type].browse;
-};
-
-exports.form = function(type)
-{
-  if (!Meta[type])
-    throw new Error('no '+type);
-  return Meta[type].form;
-};
-
-exports.schema = function(type)
-{
-  if (!Meta[type])
-    throw new Error('no '+type);
-  return Meta[type].schema;
-};
-
-exports.model = function(type)
-{
-  if (!Meta[type])
-    throw new Error('no '+type);
-  return mongoose.model(type);
-};
-
-exports.info = function(type)
-{
-  if (!Meta[type])
-    throw new Error('no '+type);
-  return exports.get_schema_info(Meta[type].schema);
+  this.info = info;
+  this.connection = connection;
+  this._init();
 }
 
-exports.meta = function(type)
+Meta.prototype._init = function () {
+  for (var p in this.info) {
+    var schema_data = this.info[p].schema;
+    validate_meta(p, schema_data, this.info[p].browse, this.info[p].form);
+    var schema = new mongoose.Schema(schema_data);
+    if (this.info[p].virtuals)
+      for (var q in this.info[p].virtuals)
+      {
+        schema.virtual(q).get(this.info[p].virtuals[q]);
+      }
+    add_fields_and_methods(schema, p);
+    this.connection.model(p, schema);
+    this.info[p].schema = schema;
+    this.info[p].model = this.connection.model(p, schema);
+    if (!this.info[p].browse)
+    {
+      this.info[p].browse = create_browse_info(this.info, p);
+      console.log('Added generated browse for '+p);
+      console.log(this.info[p].browse);
+    }
+    if (!this.info[p].form)
+    {
+      this.info[p].form = create_form_info(this.info, p);
+      console.log('Added generated form for '+p);
+      console.log(this.info[p].form);
+    }
+  }
+
+};
+
+Meta.prototype.browse = function(type)
+{
+  if (!this.info[type])
+    throw new Error('no '+type);
+  return this.info[type].browse;
+};
+
+Meta.prototype.form = function(type)
+{
+  if (!this.info[type])
+    throw new Error('no '+type);
+  return this.info[type].form;
+};
+
+Meta.prototype.schema = function(type)
+{
+  if (!this.info[type])
+    throw new Error('no '+type);
+  return this.info[type].schema;
+};
+
+Meta.prototype.model = function(type)
+{
+  if (!this.info[type])
+    throw new Error('no '+type);
+  return this.connection.model(type);
+};
+
+Meta.prototype.info = function(type)
+{
+  if (!this.info[type])
+    throw new Error('no '+type);
+  return this.get_schema_info(this.info[type].schema);
+}
+
+Meta.prototype.meta = function(type)
 {
   if (type)
-    return Meta[type].meta;
+    return this.info[type].meta;
   else
-    return Meta;
+    return this.info;
 }
 
 
@@ -102,11 +94,11 @@ validate_meta = function (p, schema, browse, form) {
   if (browse)
     for (var i = 0; i < browse.length; i++)
       if (browse[i].name && !schema[browse[i].name] && !extra_fields[browse[i].name])
-        throw new Error('No path ' + browse[i].name + ' in schema ' + p);
+        throw new Error('No ' + browse[i].name + ' in ' + p);
   if (form)
     for (var i = 0; i < form.length; i++)
       if (form[i].name && !schema[form[i].name] && !extra_fields[form[i].name])
-        throw new Error('No path ' + form[i].name + ' in schema ' + p);
+        throw new Error('No ' + form[i].name + ' in ' + p);
 }
 
 
@@ -131,13 +123,12 @@ add_fields_and_methods = function (schema, name) {
       this.created = new Date();
     next();
   });
-  mongoose.model(name, schema);
 }
 
 
 // model meta helpers
 
-exports.get_schema_info = function(schema)
+Meta.prototype.get_schema_info = function(schema)
 {
   var d = {};
   schema.eachPath(function (path, mtype) {
@@ -200,6 +191,14 @@ get_path_info = function (path, mtype) {
 };
 
 
+/**
+ * returns a simple summary of the mongoose schema info.
+ * the "Reference" type is used throughout in a standardized way. TODO handle relationships between references.
+ *
+ * @param schema
+ * @param type - our normalized type string
+ * @returns []
+ */
 get_by_type = function(schema, type) {
   var d = [];
   schema.eachPath(function (path, mtype) {
@@ -211,12 +210,12 @@ get_by_type = function(schema, type) {
 };
 
 
-exports.get_references = function(schema) {
+Meta.prototype.get_references = function(schema) {
   return get_by_type(schema, 'Reference');
 };
 
 
-exports.get_names = function (field_info) {
+Meta.prototype.get_names = function (field_info) {
   if (!field_info)
     return [];
   else return field_info.map(function (elem) {
@@ -231,20 +230,20 @@ exports.get_names = function (field_info) {
 
 /// default form/browser meta data
 
-create_browse_info = function(type)
+create_browse_info = function(Meta, type)
 {
   var si = exports.get_schema_info(Meta[type].schema);
   var s = [];
   for (var p in si)
   {
-      s.push({name: si[p].name, cell: "char", filters: ["$regex", "equals"], order: "asc,desc,default"})
+      s.push({name: si[p].name, cell: "char", filters: ["$regex", "="], order: "asc,desc,default"})
   }
   return s;
 }
 
 
 
-create_form_info = function(type)
+create_form_info = function(Meta, type)
 {
   var si = exports.get_schema_info(Meta[type].schema);
   var s = [];
@@ -269,3 +268,97 @@ create_form_info = function(type)
       {name: "pages", widget: "choose_create", options: {type: "Page", array: true}}
 
  */
+
+
+
+Meta.prototype.expand = function (type, id, next) {
+  var self = this;
+  var q = self.model(type).findOne({_id: id});
+  q.exec(function (err, m) {
+    populate_deep(self, type, m, function () {
+      next(err, m);
+    });
+  });
+};
+
+
+populate_deep = function (meta, type, instance, next, seen) {
+  if (type == 'User' || !instance) {
+    next();
+    return;
+  }
+  if (!seen)
+    seen = {};
+  if (seen[instance._id]) {
+    next();
+    return;
+  }
+  seen[instance._id] = true;
+  var refs = meta.get_references(meta.schema(type));
+  if (!refs) {
+    next();
+    return;
+  }
+  var opts = [];
+  for (var i = 0; i < refs.length; i++)
+    opts.push({path: refs[i].name, model: refs[i].ref});
+  meta.model(type).populate(instance, opts, function (err, o) {
+    utils.forEach(refs, function (r, n) {
+      if (r.is_array)
+        utils.forEach(o[r.name], function (v, nn) {
+          populate_deep(meta, r.ref, v, nn, seen);
+        }, n);
+      else
+        populate_deep(meta, r.ref, o[r.name], n, seen);
+    }, next);
+  });
+};
+
+
+Meta.prototype.related = function (type, id, next) {
+  var self = this;
+  var related_refs = [];
+  for (var p in self.meta()) {
+    var refs = self.get_references(self.schema(p));
+    for (var i = 0; i < refs.length; i++) {
+      if (refs[i].ref == type) {
+        related_refs.push({type: p, field: refs[i]});
+      }
+    }
+  }
+  var related_records = { _count: 0 };
+  if (related_refs) {
+    utils.forEach(related_refs, function (ref, n) {
+      var c = {};
+      c[ref.field.name] = {$in: [id]}
+      var q = self.model(ref.type).find(c);
+      q.exec(function (err, qr) {
+        related_records._count += qr.length;
+        related_records[ref.type] = {field: ref.field, results: qr, query: q};
+        n();
+      });
+    }, function () {
+      next(related_records);
+    });
+  }
+  else
+    next(related_records);
+};
+
+
+// queries? piping results?
+//      if (req.queries)
+//      {
+//        var keys = Object.keys(req.queries);
+//        req.related = {};
+//        utils.forEach(keys, function (e, n) {
+//          var q = m[e](piped);
+//          q.exec(function (err, r) {
+//            req.related[e] = r;
+//            n();
+//          });
+//        }, next);
+//      }
+//      else
+//        next();
+
