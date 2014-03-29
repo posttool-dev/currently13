@@ -15,7 +15,7 @@ var formidable = require('formidable');
 /* queuing */
 var kue = require('kue');
 /* cms */
-var auth = require('../auth');
+var auth = require('./auth');
 var Meta = require('./meta');
 var utils = require('./utils');
 var models = require('./models');
@@ -23,8 +23,7 @@ var logger = utils.get_logger('cms');
 
 exports = module.exports = Cms;
 
-function Cms()
-{
+function Cms() {
   this.module = null;
   this.connection = null;
   this.meta = null;
@@ -46,14 +45,12 @@ Cms.prototype.init = function (module) {
   self.module = module;
 
   self.connection = mongoose.createConnection(module.config.mongoConnectString);
-  self.connection.on('error', function(e){
+  self.connection.on('error', function (e) {
     console.error(e);
   });
 
   self.meta = new Meta(module.models.models, self.connection);
-
-  auth.User = self.meta.User;
-  auth.on_login = '/cms';
+  self.auth = new auth.Auth(self.meta.User, '/cms');
 
   if (module.workflow)
     self.workflow_info = module.workflow.workflow;
@@ -86,7 +83,7 @@ Cms.prototype.init = function (module) {
 
   var app = self.app = express();
   app.set('view engine', 'ejs');
-  app.set('views',__dirname + '/views');
+  app.set('views', __dirname + '/views');
 
   app.use(express.cookieParser());
   app.use(express.session({
@@ -114,11 +111,13 @@ Cms.prototype.init = function (module) {
     res.locals.containerHttp = self.config.containerHttp;
     next();
   });
-  app.get('/login', auth.login.get);
-  app.post('/login', auth.login.post);
+  app.get('/login', self.auth.login_get.bind(self.auth));
+  app.post('/login', self.auth.login_post.bind(self.auth));
+  app.all('/logout', self.auth.logout.bind(self.auth));
+  //app.get('/profile', p1, auth.form.get);
+  //app.post('/profile', p1, auth.form.post);
   //app.get('/register', auth.register.get);
   //app.post('/register', auth.register.post);
-  app.all('/logout', auth.logout);
   //app.all ('/users', [utils.has_user, utils.is_admin], user.list);
   //app.get ('/user/:user_id', [utils.has_user, user.load, user.is_user], user.display);
   //app.get ('/user/:user_id/edit', [utils.has_user, user.load, user.is_user], user.form.get);
@@ -127,8 +126,6 @@ Cms.prototype.init = function (module) {
   var p1 = [auth.has_user];
   var p2 = [auth.has_user, self.add_meta.bind(self)];
   var p3 = [auth.has_user, self.add_meta.bind(self), self.add_object.bind(self)];
-  app.get('/profile', [auth.has_user], auth.form.get);
-  app.post('/profile', p1, auth.form.post);
   app.all('/cms', p2, self.show_dashboard.bind(self));
   app.all('/cms/logs', p2, self.logs_for_user.bind(self));
   app.all('/cms/logs/:type/:id', p2, self.logs_for_record.bind(self));
@@ -150,7 +147,6 @@ Cms.prototype.init = function (module) {
 
   return app;
 }
-
 
 
 /* put the meta info in every request */
@@ -203,8 +199,6 @@ Cms.prototype.add_object = function (req, res, next) {
 };
 
 
-// the 'views'
-
 Cms.prototype.show_dashboard = function (req, res, next) {
   res.render('cms/dashboard', {
     title: 'CMS Dashboard ',
@@ -219,54 +213,58 @@ Cms.prototype.logs_for_user = function (req, res, next) {
   });
 };
 
+
 Cms.prototype.logs_for_record = function (req, res, next) {
   this.get_logs({type: req.params.type, id: req.params.id }, {sort: '-time'}, function (logs) {
     res.json(logs);
   });
 };
 
+// browse
 
 Cms.prototype.browse_get = function (req, res, next) {
-    var conditions = req.body.condition;
-    req.model.count(conditions, function (err, count) {
-      if (err) {
-        next(err);
-        return;
-      }
-      res.render('cms/browse', {
-        title: 'CMS Dashboard ',
-        browser: req.browser,
-        type: req.type,
-        total: count
-      });
+  var conditions = process_conditions(req.body.condition);
+  req.model.count(conditions, function (err, count) {
+    if (err) {
+      next(err);
+      return;
+    }
+    res.render('cms/browse', {
+      title: 'CMS Dashboard ',
+      browser: req.browser,
+      type: req.type,
+      total: count
     });
+  });
 };
+
 
 Cms.prototype.browse_post = function (req, res, next) {
   var meta = this.meta;
-    var conditions = process_conditions(req.body.condition);
-    var fields = null;
-    var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
-    req.model.count(conditions, function (err, count) {
-      if (err) {
+  var conditions = process_conditions(req.body.condition);
+  var fields = null;
+  var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
+  req.model.count(conditions, function (err, count) {
+    if (err) {
+      next(err);
+      return;
+    }
+    var q = req.model.find(conditions, fields, options);
+    var refs = meta.get_references(req.schema);
+    if (refs)
+      q.populate(meta.get_names(refs).join(" "));
+    q.exec(function (err, r) {
+      if (err)
         next(err);
-        return;
-      }
-      var q = req.model.find(conditions, fields, options);
-      var refs = meta.get_references(req.schema);
-      if (refs)
-        q.populate(meta.get_names(refs).join(" "));
-      q.exec(function (err, r) {
-        if (err)
-          next(err);
-        else
-          res.json({results: r, count: count});
-      });
+      else
+        res.json({results: r, count: count});
     });
+  });
 };
 
-Cms.prototype.browse_schema = function (req, res, next) {
-    res.json({schema: this.meta.get_schema_info(req.schema), browser: req.browser});
+
+Cms.prototype.browse_schema = function (req, res) {
+  res.json({schema: this.meta.get_schema_info(req.schema), browser: req.browser});
 };
 
 
@@ -288,30 +286,31 @@ process_conditions = function (o) {
   return c;
 };
 
+// form (create/update)
 
 Cms.prototype.form_get = function (req, res) {
-    res.render('cms/form', {
-      title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
-      ancestors: [
-        {url: '/cms/browse/' + req.type, name: req.type}
-      ],
-      type: req.type,
-      id: req.id ? req.id : null,
-      form: req.form});
+  res.render('cms/form', {
+    title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
+    ancestors: [
+      {url: '/cms/browse/' + req.type, name: req.type}
+    ],
+    type: req.type,
+    id: req.id ? req.id : null,
+    form: req.form});
 };
 
 
 Cms.prototype.form_get_json = function (req, res) {
-    var related = {};
-    for (var p in req.related) {
-      related[p] = req.related[p].results;
-    }
-    res.json({
-      title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
-      type: req.type,
-      object: req.object || new req.model(),
-      related: related,
-      form: req.form})
+  var related = {};
+  for (var p in req.related) {
+    related[p] = req.related[p].results;
+  }
+  res.json({
+    title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
+    type: req.type,
+    object: req.object || new req.model(),
+    related: related,
+    form: req.form})
 };
 
 
@@ -367,50 +366,51 @@ Cms.prototype.form_post = function (req, res, next) {
 
 Cms.prototype.form_delete_references = function (req, res) {
   var self = this;
-    if (req.related_count == 0)
-      res.json({});
-    else {
-      var to_update = [];
-      for (var p in req.related) {
-        if (req.related[p].results.length == 0)
-          continue;
-        var f = req.related[p].field;
-        var o = {};
-        o[f.name] = req.object._id;
-        to_update.push({o: o, p: p});
-      }
-      var info = [];
-      utils.forEach(to_update, function (e, n) {
-        self.meta.model(e.p).update(e.o, {$pull: e.o}, { multi: true }, function (err, x) {
-          info.push('Removed ' + x + ' reference(s) from ' + e.p + ".");
-          n();
-        });
-      }, function () {
-        self.add_log(req.session.user._id, 'remove references', req.type, req.object, {messages: info}, function () {
-          res.json(info);
-        });
-      })
+  if (req.related_count == 0)
+    res.json({});
+  else {
+    var to_update = [];
+    for (var p in req.related) {
+      if (req.related[p].results.length == 0)
+        continue;
+      var f = req.related[p].field;
+      var o = {};
+      o[f.name] = req.object._id;
+      to_update.push({o: o, p: p});
     }
+    var info = [];
+    utils.forEach(to_update, function (e, n) {
+      self.meta.model(e.p).update(e.o, {$pull: e.o}, { multi: true }, function (err, x) {
+        info.push('Removed ' + x + ' reference(s) from ' + e.p + ".");
+        n();
+      });
+    }, function () {
+      self.add_log(req.session.user._id, 'remove references', req.type, req.object, {messages: info}, function () {
+        res.json(info);
+      });
+    })
+  }
 };
 
 
 Cms.prototype.form_delete = function (req, res, next) {
-    req.object.remove(function (err, m) {
-      res.json(m);
-    });
+  req.object.remove(function (err, m) {
+    res.json(m);
+  });
 };
 
 
 Cms.prototype.form_status = function (req, res, next) {
-    var original_state = req.object.state;
-    req.object.state = req.body.state;
-    req.object.save(function (err, m) {
-      add_log(req.session.user._id, 'change status', req.type, m,
-        {message: 'From ' + original_state + 'to ' + req.object.state, reason: req.param.reason}, function (info) {
-          // todo find open related requests - notify requestors & close requests
-          res.json(info);
-        });
-    });
+  var self = this;
+  var original_state = req.object.state;
+  req.object.state = req.body.state;
+  req.object.save(function (err, m) {
+    self.add_log(req.session.user._id, 'change status', req.type, m,
+      {message: 'From ' + original_state + 'to ' + req.object.state, reason: req.param.reason}, function (info) {
+        // todo find open related requests - notify requestors & close requests
+        res.json(info);
+      });
+  });
 };
 
 // logs
@@ -418,7 +418,7 @@ Cms.prototype.form_status = function (req, res, next) {
 
 Cms.prototype.get_logs = function (query, options, complete) {
   var meta = this.meta;
-  var Log = meta.model('Log');
+  var Log = meta.Log;
   var q = Log.find(query, null, options);
   q.populate('user', 'name email');
   q.exec(function (err, logs) {
@@ -452,12 +452,12 @@ Cms.prototype.add_log = function (user_id, action, type, instance, info, callbac
 }
 
 
-// image and resource handling
-
+//  resource handling
 
 
 Cms.prototype.save_resource = function (name, path, mimetype, size, creator_id, info, next) {
-  var meta = this.meta;
+  var self = this;
+  var meta = self.meta;
   var r = new meta.Resource();
   r.name = name;
   r.mime = mimetype ? mimetype : mime.lookup(name);
@@ -465,17 +465,14 @@ Cms.prototype.save_resource = function (name, path, mimetype, size, creator_id, 
   r.size = size;
   r.creator = creator_id;
   r.meta = info ? info : {};
-//  if (config.storage == 'cloudinary' && info)
-//    r.meta.thumb = cloudinary.url(info.public_id + '.jpg', { width: 300, height: 200, crop: 'fit'});
+  self.emit('resource pre save');
   r.save(function (err, s) {
     if (err) throw err;
-    next(s); // but dont return
-//    if (config.storage == 'cloudinary') return; // ha
+    self.emit('resource post save');
     var resource_jobs = meta.meta().Resource.jobs;
     if (resource_jobs) {
-      if (!jobs)
-      {
-        logger.warn('there is no available job kue... not executing '+resource_jobs);
+      if (!self.jobs) {
+        logger.warn('there is no available job kue... not executing ' + resource_jobs);
         return;
       }
       var type = r.mime.split('/')[0];
@@ -483,25 +480,26 @@ Cms.prototype.save_resource = function (name, path, mimetype, size, creator_id, 
         resource_jobs = resource_jobs[r.mime];
       else
         resource_jobs = resource_jobs[type];
-      for (var i=0; i<resource_jobs.length; i++) {
+      for (var i = 0; i < resource_jobs.length; i++) {
         var process = resource_jobs[i];
         var job_name = type + ' ' + process;
         console.log("job create", job_name);
-        jobs.create(job_name, {
-          container: config.container,
+        self.jobs.create(job_name, {
+          container: self.config.container,
           filename: path,
           parent: r._id,
           creator: creator_id}).save();
       }
     }
+    next(s);
   });
   return r;
 }
 
-Cms.prototype.job_complete = function(id) {
+Cms.prototype.job_complete = function (id) {
   var meta = this.meta;
   logger.info('job complete', id);
-  kue.Job.get(id, function(err, job) {
+  kue.Job.get(id, function (err, job) {
     job.get('path', function (err, p) {
       job.get('size', function (err, s) {
         logger.info('  params', p, s);
@@ -513,7 +511,7 @@ Cms.prototype.job_complete = function(id) {
           pr.size = s;
           pr.meta = {generated: true, job_name: job.type};
           if (err) throw err;
-          meta.Resource.update({_id: job.data.parent}, {$push: {children: pr}}, function(err, r){
+          meta.Resource.update({_id: job.data.parent}, {$push: {children: pr}}, function (err, r) {
             if (err) throw err;
             logger.info('removing job');
             job.remove();
@@ -524,12 +522,12 @@ Cms.prototype.job_complete = function(id) {
   });
 };
 
-client_upload_params = function(config, path) {
+client_upload_params = function (config, path) {
   return {container: config.container,
-      remote: path,
-      headers: {
-        'content-disposition': mime.lookup(path)
-      }}
+    remote: path,
+    headers: {
+      'content-disposition': mime.lookup(path)
+    }}
 };
 
 Cms.prototype.upload = function (req, res) {
@@ -547,8 +545,10 @@ Cms.prototype.upload = function (req, res) {
       });
     });
   }
-  form.parse(req, function () {});
+  form.parse(req, function () {
+  });
 };
+
 
 Cms.prototype.write = function (stream, path, next) {
   var self = this;
@@ -569,11 +569,11 @@ Cms.prototype.write = function (stream, path, next) {
 //      break;
     case "gfs":
       var ws = self.gfs.createWriteStream({ filename: path });
-        stream.pipe(ws);
-        stream.on('end', next);
-        //ws.on('error', function (e) {
-        //  next(e);
-        //});
+      stream.pipe(ws);
+      stream.on('end', next);
+      //ws.on('error', function (e) {
+      //  next(e);
+      //});
       break;
   }
 }
@@ -581,7 +581,7 @@ Cms.prototype.write = function (stream, path, next) {
 
 Cms.prototype.delete_resource = function (req, res) {
   var self = this;
-  var Resource = self.meta.model('Resource');
+  var Resource = self.meta.Resource;
   var q = Resource.findOne({_id: req.params.id});
   q.exec(function (err, r) {
     if (err) throw err;
@@ -590,9 +590,9 @@ Cms.prototype.delete_resource = function (req, res) {
         case "pkgcloud":
           self.client.removeFile(config.container, r.path, function (err) {
             if (err) logger.error(err);
-            r.remove(function(err, r){
+            r.remove(function (err, r) {
               if (err) throw err;
-              logger.info('resource '+JSON.stringify(r)+' deleted')
+              logger.info('resource ' + JSON.stringify(r) + ' deleted')
               res.json({message: 'Resource deleted'});
             });
           });
@@ -616,7 +616,7 @@ Cms.prototype.delete_resource = function (req, res) {
 
 Cms.prototype.download = function (req, res) {
   var self = this;
-  var Resource = self.meta.model('Resource');
+  var Resource = self.meta.Resource;
   var q = Resource.findOne({_id: req.params.id});
   q.exec(function (err, r) {
     if (r) {
@@ -640,12 +640,6 @@ Cms.prototype.download = function (req, res) {
     }
   });
 };
-
-
-
-
-
-
 
 
 // utils
