@@ -1,8 +1,8 @@
 /* emits: get, save, browse, etc */
-var EventEmitter = require('events').EventEmitter
+var EventEmitter = require('events').EventEmitter;
 /* util */
-var uuid = require('node-uuid');
 var fs = require('fs');
+var uuid = require('node-uuid');
 var jsdiff = require('diff');
 var mime = require('mime');
 /* store */
@@ -25,12 +25,14 @@ exports = module.exports = Cms;
 
 function Cms()
 {
+  this.module = null;
+  this.connection = null;
   this.meta = null;
   this.workflow_info = null;
   this.config = null;
-  this.connection = null;
   this.client = null;
   this.gfs = null;
+  this.app = null;
 }
 
 Cms.prototype.__proto__ = EventEmitter.prototype;
@@ -41,12 +43,17 @@ Cms.prototype.init = function (module) {
 
   var self = this;
 
+  self.module = module;
+
   self.connection = mongoose.createConnection(module.config.mongoConnectString);
   self.connection.on('error', function(e){
     console.error(e);
   });
 
   self.meta = new Meta(module.models.models, self.connection);
+
+  auth.User = self.meta.User;
+  auth.on_login = '/cms';
 
   if (module.workflow)
     self.workflow_info = module.workflow.workflow;
@@ -56,7 +63,7 @@ Cms.prototype.init = function (module) {
 
   if (self.config.kueConfig) {
     self.jobs = kue.createQueue(self.config.kueConfig);
-    self.jobs.on('job complete', job_complete);
+    self.jobs.on('job complete', self.job_complete.bind(self));
     logger.info('initialed process queue')
   }
 
@@ -77,7 +84,7 @@ Cms.prototype.init = function (module) {
       break;
   }
 
-  var app = express();
+  var app = self.app = express();
   app.set('view engine', 'ejs');
   app.set('views',__dirname + '/views');
 
@@ -107,7 +114,6 @@ Cms.prototype.init = function (module) {
     res.locals.containerHttp = self.config.containerHttp;
     next();
   });
-  auth.on_login = '/cms';
   app.get('/login', auth.login.get);
   app.post('/login', auth.login.post);
   //app.get('/register', auth.register.get);
@@ -294,6 +300,7 @@ Cms.prototype.form_get = function (req, res) {
       form: req.form});
 };
 
+
 Cms.prototype.form_get_json = function (req, res) {
     var related = {};
     for (var p in req.related) {
@@ -306,6 +313,7 @@ Cms.prototype.form_get_json = function (req, res) {
       related: related,
       form: req.form})
 };
+
 
 Cms.prototype.form_post = function (req, res, next) {
   var self = this;
@@ -356,7 +364,9 @@ Cms.prototype.form_post = function (req, res, next) {
   });
 };
 
-Cms.prototype.form_delete_references = function (req, res, next) {
+
+Cms.prototype.form_delete_references = function (req, res) {
+  var self = this;
     if (req.related_count == 0)
       res.json({});
     else {
@@ -371,23 +381,25 @@ Cms.prototype.form_delete_references = function (req, res, next) {
       }
       var info = [];
       utils.forEach(to_update, function (e, n) {
-        meta.model(e.p).update(e.o, {$pull: e.o}, { multi: true }, function (err, x) {
+        self.meta.model(e.p).update(e.o, {$pull: e.o}, { multi: true }, function (err, x) {
           info.push('Removed ' + x + ' reference(s) from ' + e.p + ".");
           n();
         });
       }, function () {
-        add_log(req.session.user._id, 'remove references', req.type, req.object, {messages: info}, function () {
+        self.add_log(req.session.user._id, 'remove references', req.type, req.object, {messages: info}, function () {
           res.json(info);
         });
       })
     }
 };
 
+
 Cms.prototype.form_delete = function (req, res, next) {
     req.object.remove(function (err, m) {
       res.json(m);
     });
 };
+
 
 Cms.prototype.form_status = function (req, res, next) {
     var original_state = req.object.state;
@@ -439,39 +451,8 @@ Cms.prototype.add_log = function (user_id, action, type, instance, info, callbac
   });
 }
 
-// utils
-
-just_ids = function (a) {
-  var r = [];
-  for (var i = 0; i < a.length; i++)
-    if (a[i])
-      r.push(just_id(a[i]));
-  return r;
-}
-
-
-just_id = function (a) {
-  if (a && a._id)
-    return String(a._id);
-  else
-    return a;
-}
-
-compare = function (a, b) {
-  if (!a && !b)
-    return true;
-  if (!a || !b)
-    return false;
-  if (a.length != b.length)
-    return false;
-  for (var i = 0; i < a.length; i++)
-    if (a[i] != b[i])
-      return false;
-  return true;
-}
 
 // image and resource handling
-
 
 
 
@@ -517,7 +498,8 @@ Cms.prototype.save_resource = function (name, path, mimetype, size, creator_id, 
   return r;
 }
 
-job_complete = function(id) {
+Cms.prototype.job_complete = function(id) {
+  var meta = this.meta;
   logger.info('job complete', id);
   kue.Job.get(id, function(err, job) {
     job.get('path', function (err, p) {
@@ -542,7 +524,7 @@ job_complete = function(id) {
   });
 };
 
-client_upload_params = function(path) {
+client_upload_params = function(config, path) {
   return {container: config.container,
       remote: path,
       headers: {
@@ -578,7 +560,7 @@ Cms.prototype.write = function (stream, path, next) {
       new Error('unimplemented');
       break;
     case "pkgcloud":
-      stream.pipe(self.client.upload(client_upload_params(path), next));
+      stream.pipe(self.client.upload(client_upload_params(self.config, path), next));
       break;
 //    case "cloudinary":
 //      // untested
@@ -661,3 +643,38 @@ Cms.prototype.download = function (req, res) {
 
 
 
+
+
+
+
+
+// utils
+
+just_ids = function (a) {
+  var r = [];
+  for (var i = 0; i < a.length; i++)
+    if (a[i])
+      r.push(just_id(a[i]));
+  return r;
+}
+
+
+just_id = function (a) {
+  if (a && a._id)
+    return String(a._id);
+  else
+    return a;
+}
+
+compare = function (a, b) {
+  if (!a && !b)
+    return true;
+  if (!a || !b)
+    return false;
+  if (a.length != b.length)
+    return false;
+  for (var i = 0; i < a.length; i++)
+    if (a[i] != b[i])
+      return false;
+  return true;
+}

@@ -1,9 +1,8 @@
-var User = require('./model').User;
 var nodemailer = require("nodemailer");
 var crypto = require('crypto');
 
 
-
+var User = exports.User = null;
 exports.on_login = '.';
 
 

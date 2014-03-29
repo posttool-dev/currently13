@@ -21,7 +21,6 @@ Meta.prototype._init = function () {
         schema.virtual(q).get(this.info[p].virtuals[q]);
       }
     add_fields_and_methods(schema, p);
-    this.connection.model(p, schema);
     this.info[p].schema = schema;
     this.info[p].model = this.connection.model(p, schema);
     if (!this.info[p].browse)
@@ -39,6 +38,7 @@ Meta.prototype._init = function () {
   }
   this.Resource = this.model('Resource');
   this.Log = this.connection.model('Log', models.LogSchema);
+  this.User = this.connection.model('User', models.UserSchema);
 };
 
 Meta.prototype.browse = function(type)
@@ -85,30 +85,26 @@ Meta.prototype.meta = function(type)
 }
 
 
-
 extra_fields = {
-    'creator': {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    'created': Date,
-    'modified': Date,
-    'state': Number
-  };
+  'creator': {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  'created': Date,
+  'modified': Date,
+  'state': Number
+};
 validate_meta = function (p, schema, browse, form) {
   if (browse)
     for (var i = 0; i < browse.length; i++)
-      if (browse[i].name && !schema[browse[i].name] && !extra_fields[browse[i].name])
-      {
+      if (browse[i].name && !schema[browse[i].name] && !extra_fields[browse[i].name]) {
         console.log(schema);
-        throw new Error(p+'.browse path error: ' + browse[i].name );
+        throw new Error(p + '.browse path error: ' + browse[i].name);
       }
   if (form)
     for (var i = 0; i < form.length; i++)
-      if (form[i].name && !schema[form[i].name] && !extra_fields[form[i].name])
-      {
-        console.log(p);
-        throw new Error(p+'.form path error: ' +form[i].name);
+      if (form[i].name && !schema[form[i].name] && !extra_fields[form[i].name]) {
+        console.log(schema);
+        throw new Error(p + '.form path error: ' + form[i].name);
       }
 }
-
 
 
 /**
@@ -200,8 +196,6 @@ get_path_info = function (path, mtype) {
 
 
 /**
- * returns a simple summary of the mongoose schema info.
- * the "Reference" type is used throughout in a standardized way. TODO handle relationships between references.
  *
  * @param schema
  * @param type - our normalized type string
@@ -238,9 +232,9 @@ Meta.prototype.get_names = function (field_info) {
 
 /// default form/browser meta data
 
-create_browse_info = function(Meta, type)
+create_browse_info = function(meta, type)
 {
-  var si = exports.get_schema_info(Meta[type].schema);
+  var si = meta.get_schema_info(meta.schema(type));
   var s = [];
   for (var p in si)
   {
@@ -251,9 +245,9 @@ create_browse_info = function(Meta, type)
 
 
 
-create_form_info = function(Meta, type)
+create_form_info = function(meta, type)
 {
-  var si = exports.get_schema_info(Meta[type].schema);
+  var si = meta.get_schema_info(meta.schema(type));
   var s = [];
   for (var p in si)
   {

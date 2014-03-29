@@ -1,19 +1,6 @@
 var mongoose = require('mongoose'),
   ObjectId = mongoose.Schema.Types.ObjectId;
 
-var ResourceSchemaInfo = {
-  name: String,
-  path: String,
-  size: Number,
-  mime: String,
-  meta: mongoose.Schema.Types.Mixed,
-  children: [{
-    path: String,
-    size: Number,
-    mime: String,
-    meta: mongoose.Schema.Types.Mixed
-  }]
-};
 
 exports.ResourceInfo = function(){
   return {
@@ -21,7 +8,19 @@ exports.ResourceInfo = function(){
       plural: 'Resources',
       dashboard: true
     },
-    schema: ResourceSchemaInfo,
+    schema: {
+      name: String,
+      path: String,
+      size: Number,
+      mime: String,
+      meta: mongoose.Schema.Types.Mixed,
+      children: [{
+        path: String,
+        size: Number,
+        mime: String,
+        meta: mongoose.Schema.Types.Mixed
+      }]
+    },
     browse: [
       {name: "path", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
       {name: "size", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
@@ -36,6 +35,21 @@ exports.ResourceInfo = function(){
     ]
   }
 }
+
+// user
+exports.UserSchema = new mongoose.Schema({
+  name: {type: String, required: true, trim: true},
+  email: {type: String, required: true, trim: true, lowercase: true, unique: true},
+  email_verified: {type:Boolean, default: false},
+  image: {type: ObjectId, ref: 'Resource'},
+  hash: {type: String},
+  salt: {type: String},
+  created: {type: Date, default: Date.now},
+  last_login: {type: Date, default: Date.now},
+  group: {type:String},
+  admin: {type:Boolean, default: false},
+  active: {type:Boolean, default: false}
+});
 
 
 // log
