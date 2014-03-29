@@ -317,36 +317,20 @@ Cms.prototype.form_get_json = function (req, res) {
 Cms.prototype.form_post = function (req, res, next) {
   var self = this;
   var meta = self.meta;
-  var s = req.object || new req.model();
+  var object = req.object || new req.model();
   var data = JSON.parse(req.body.val);
-  var info = { diffs: {} };
   var schema_info = meta.get_schema_info(req.schema);
-  for (var i = 0; i < req.form.length; i++) {
-    var f = req.form[i].name;
-    if (!f)
-      continue;
-    var field_info = schema_info[f];
-    var field_val = s[f];
-    var match = false;
-    if (field_info.type == 'Reference') {
-      field_val = field_info.is_array ? just_ids(field_val) : just_id(field_val);
-      match = compare(field_val, data[f])
-    }
-    else
-      match = (data[f] == field_val) || (data[f] == '' && field_val == null);
-    if (!match) {
-      if (f != 'modified')//or other auto date fields...!
-        info.diffs[f] = jsdiff.diffChars(field_val, data[f]);
-      s[f] = data[f];
-    }
-  }
-  if (!s.creator)
-    s.creator = req.session.user._id;
-  if (!s.state && self.workflow_info && self.workflow_info.states)
-    s.state = self.workflow_info.states[0].code;
+  // set values and get info about differences
+  var info = utils.set_values(req.form, schema_info, data, object);
+  // set the creator (if unset)
+  if (!object.creator)
+    object.creator = req.session.user._id;
+  // set the default state (if unset)
+  if (!object.state && self.workflow_info && self.workflow_info.states)
+    object.state = self.workflow_info.states[0].code;
 
-  //emit('presave',s)
-  s.save(function (err, s) {
+  self.emit('pre save', object);
+  object.save(function (err, s) {
     if (err) {
       res.json(err);
     }
@@ -640,35 +624,3 @@ Cms.prototype.download = function (req, res) {
     }
   });
 };
-
-
-// utils
-
-just_ids = function (a) {
-  var r = [];
-  for (var i = 0; i < a.length; i++)
-    if (a[i])
-      r.push(just_id(a[i]));
-  return r;
-}
-
-
-just_id = function (a) {
-  if (a && a._id)
-    return String(a._id);
-  else
-    return a;
-}
-
-compare = function (a, b) {
-  if (!a && !b)
-    return true;
-  if (!a || !b)
-    return false;
-  if (a.length != b.length)
-    return false;
-  for (var i = 0; i < a.length; i++)
-    if (a[i] != b[i])
-      return false;
-  return true;
-}
