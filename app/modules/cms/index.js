@@ -199,7 +199,7 @@ Cms.prototype.add_object = function (req, res, next) {
 };
 
 
-Cms.prototype.show_dashboard = function (req, res, next) {
+Cms.prototype.show_dashboard = function (req, res) {
   res.render('cms/dashboard', {
     title: 'CMS Dashboard ',
     models: req.models
@@ -207,14 +207,14 @@ Cms.prototype.show_dashboard = function (req, res, next) {
 };
 
 
-Cms.prototype.logs_for_user = function (req, res, next) {
+Cms.prototype.logs_for_user = function (req, res) {
   this.get_logs({user: req.session.user._id}, {sort: '-time'}, function (logs) {
     res.json(logs);
   });
 };
 
 
-Cms.prototype.logs_for_record = function (req, res, next) {
+Cms.prototype.logs_for_record = function (req, res) {
   this.get_logs({type: req.params.type, id: req.params.id }, {sort: '-time'}, function (logs) {
     res.json(logs);
   });
@@ -222,13 +222,9 @@ Cms.prototype.logs_for_record = function (req, res, next) {
 
 // browse
 
-Cms.prototype.browse_get = function (req, res, next) {
+Cms.prototype.browse_get = function (req, res) {
   var conditions = process_conditions(req.body.condition);
   req.model.count(conditions, function (err, count) {
-    if (err) {
-      next(err);
-      return;
-    }
     res.render('cms/browse', {
       title: 'CMS Dashboard ',
       browser: req.browser,
@@ -239,25 +235,18 @@ Cms.prototype.browse_get = function (req, res, next) {
 };
 
 
-Cms.prototype.browse_post = function (req, res, next) {
+Cms.prototype.browse_post = function (req, res) {
   var meta = this.meta;
   var conditions = process_conditions(req.body.condition);
   var fields = null;
   var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
   req.model.count(conditions, function (err, count) {
-    if (err) {
-      next(err);
-      return;
-    }
     var q = req.model.find(conditions, fields, options);
     var refs = meta.get_references(req.schema);
     if (refs)
       q.populate(meta.get_names(refs).join(" "));
     q.exec(function (err, r) {
-      if (err)
-        next(err);
-      else
-        res.json({results: r, count: count});
+      res.json({results: r, count: count});
     });
   });
 };
@@ -331,19 +320,14 @@ Cms.prototype.form_post = function (req, res, next) {
 
   self.emit('pre save', object);
   object.save(function (err, s) {
-    if (err) {
-      res.json(err);
-    }
-    else {
-      self.add_log(req.session.user._id, 'save', req.type, s, info, function () {
-        meta.expand(req.type, s._id, function (err, s) {
-          if (err)
-            next(err);
-          else
-            res.json(s);
-        });
+    self.add_log(req.session.user._id, 'save', req.type, s, info, function () {
+      meta.expand(req.type, s._id, function (err, s) {
+        if (err)
+          next(err);
+        else
+          res.json(s);
       });
-    }
+    });
   });
 };
 
@@ -377,14 +361,14 @@ Cms.prototype.form_delete_references = function (req, res) {
 };
 
 
-Cms.prototype.form_delete = function (req, res, next) {
+Cms.prototype.form_delete = function (req, res) {
   req.object.remove(function (err, m) {
     res.json(m);
   });
 };
 
 
-Cms.prototype.form_status = function (req, res, next) {
+Cms.prototype.form_status = function (req, res) {
   var self = this;
   var original_state = req.object.state;
   req.object.state = req.body.state;
