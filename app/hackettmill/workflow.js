@@ -2,7 +2,7 @@ var DRAFT = exports.DRAFT = 100;
 var PUBLISHED = exports.PUBLISHED = 500;
 var FLAGGED = exports.FLAGGED = 600;
 
-exports.workflow = {
+exports = module.exports = {
   states: [
     {code: DRAFT, name: 'draft', editable: true},
     {code: PUBLISHED, name: 'published'},

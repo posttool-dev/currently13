@@ -1,5 +1,5 @@
-exports.models = require('./models');
-exports.migrate = require('./migrate');
-exports.workflow = require('./workflow');
-exports.config = require('./config');
-exports.name = "Hackett Mill";
+exports = module.exports = {
+  config: require('./config'),
+  models: require('./models'),
+  workflow: require('./workflow')
+}

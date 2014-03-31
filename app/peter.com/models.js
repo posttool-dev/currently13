@@ -2,7 +2,7 @@ var mongoose = require("mongoose");
 var ObjectId = mongoose.Schema.Types.ObjectId;
 var cms_models = require("../modules/cms/models");
 
-exports.models = {
+exports = module.exports = {
 
   Event: {
     meta: {
@@ -87,7 +87,7 @@ exports.models = {
 
 
 
-exports.models.Resource.jobs = {
+module.exports.Resource.jobs = {
   image: ['thumb', 'medium', 'large'],
   audio: ['mp3'],
   video: []

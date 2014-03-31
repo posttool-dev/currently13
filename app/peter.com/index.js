@@ -1,3 +1,5 @@
-exports.models = require('./models');
-exports.config = require('./config');
-exports.name = "Peter";
+exports = module.exports = {
+  config: require('./config'),
+  models: require('./models'),
+ // workflow: require('./workflow')
+}

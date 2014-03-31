@@ -5,7 +5,7 @@ var uuid = require('node-uuid');
 var http = require('http');
 
 var workflow = require('./workflow');
-var Cms = require('../modules/cms'), cms = new Cms();
+var current = require('../modules/cms'), cms = new current.Cms();
 var utils = require('../modules/cms/utils');
 
 var data = {};

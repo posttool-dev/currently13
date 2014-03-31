@@ -2,7 +2,7 @@ var mongoose = require("mongoose");
 var ObjectId = mongoose.Schema.Types.ObjectId;
 var cms_models = require("../modules/cms/models");
 
-exports.models = {
+exports = module.exports = {
 
 
   /* hackett mill calls their catalog of art "inventory" */
@@ -395,7 +395,7 @@ exports.models = {
 }
 
 
-exports.models.Resource.jobs = {
+exports.Resource.jobs = {
   image: ['thumb', 'medium', 'large'],
   audio: ['mp3'],
   video: []

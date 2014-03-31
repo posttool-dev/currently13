@@ -3,14 +3,16 @@ var logger = require('winston')
 var express = require('express');
 var mongoose = require('mongoose');
 
-var Cms = require('./modules/cms');
+var current = require('./modules/cms');
 
 var domains = ['hackettmill','peter.com'];
 var server = express();
 for (var i=0; i<domains.length; i++)
 {
-  var cms = new Cms();
-  var app = cms.init(require('./'+domains[i]));
+  var cms = new current.Cms();
+  var module = require('./'+domains[i]);
+  console.log(module.config.name);
+  var app = cms.init(module);
   server.use(express.vhost(domains[i], app));
 }
 

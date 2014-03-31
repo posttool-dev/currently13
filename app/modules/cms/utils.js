@@ -77,7 +77,9 @@ exports.compareArrays = function (a, b) {
   return true;
 }
 
-exports.set_values = function(form, schema_info, data, original){
+// given form meta info & related schema info & some new data, compare new data to the original and return 'diffs'.
+var jsdiff = require('diff');
+exports.get_diffs = function(form, schema_info, data, original){
   var info = { diffs: {} };
   for (var i = 0; i < form.length; i++) {
     var f = form[i].name;
@@ -95,7 +97,27 @@ exports.set_values = function(form, schema_info, data, original){
     if (!match) {
       if (f != 'modified')//or other auto date fields...!
         info.diffs[f] = jsdiff.diffChars(field_val, data[f]);
-      original[f] = data[f];
     }
   }
+  return info;
 }
+
+
+// process ui description of filter into mongo ready
+exports.process_browse_filter = function (o) {
+  var c = {};
+  for (var p in o) {
+    var op = o[p];
+    if (op.condition.charAt(0) == '$') {
+      c[p] = {};
+      c[p][op.condition] = op.value;
+      if (op.condition == '$regex') {
+        c[p]['$options'] = 'i';
+      }
+    }
+    else if (op.condition == '=') {
+      c[p] = op.value;
+    }
+  }
+  return c;
+};

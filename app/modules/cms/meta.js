@@ -1,12 +1,18 @@
 var mongoose = require('mongoose');
 var models = require('./models');
 var utils = require('./utils');
+
+
 exports = module.exports = Meta;
+
 
 function Meta(info, connection)
 {
   this.info = info;
   this.connection = connection;
+  this.Resource = null;
+  this.Log = null;
+  this.User = null;
   this._init();
 }
 
@@ -14,15 +20,9 @@ Meta.prototype._init = function () {
   for (var p in this.info) {
     var schema_data = this.info[p].schema;
     validate_meta(p, schema_data, this.info[p].browse, this.info[p].form);
-    var schema = new mongoose.Schema(schema_data);
-    if (this.info[p].virtuals)
-      for (var q in this.info[p].virtuals)
-      {
-        schema.virtual(q).get(this.info[p].virtuals[q]);
-      }
+    var schema = this.info[p].schema = new mongoose.Schema(schema_data);
     add_fields_and_methods(schema, p);
-    this.info[p].schema = schema;
-    this.info[p].model = this.connection.model(p, schema);
+    this.connection.model(p, schema);
     if (!this.info[p].browse)
     {
       this.info[p].browse = create_browse_info(this.info, p);
@@ -84,13 +84,35 @@ Meta.prototype.meta = function(type)
     return this.info;
 }
 
-
+/**
+  manages schema
+   - adds fields: creator, created, modified, state
+   - adds getters: url, type
+   - adds pre save to set times
+ */
 extra_fields = {
   'creator': {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   'created': Date,
   'modified': Date,
   'state': Number
 };
+add_fields_and_methods = function (schema, name) {
+  schema.add(extra_fields);
+  schema.virtual('url').get(function () {
+    return name.toLowerCase() + '/' + this._id;
+  });
+  schema.virtual('type').get(function () {
+    return name.toLowerCase() + '/' + this.uuid;
+  });
+  schema.pre('save', function (next) {
+    this.modified = new Date();
+    if (!this.created)
+      this.created = new Date();
+    next();
+  });
+}
+
+
 validate_meta = function (p, schema, browse, form) {
   if (browse)
     for (var i = 0; i < browse.length; i++)
@@ -107,27 +129,7 @@ validate_meta = function (p, schema, browse, form) {
 }
 
 
-/**
-  manages schema
-   - adds fields: creator, created, modified, state
-   - adds getters: url, type
-   - adds pre save to set times
- */
-add_fields_and_methods = function (schema, name) {
-  schema.add(extra_fields);
-  schema.virtual('url').get(function () {
-    return name.toLowerCase() + '/' + this._id;
-  });
-  schema.virtual('type').get(function () {
-    return name.toLowerCase() + '/' + this.uuid;
-  });
-  schema.pre('save', function (next) {
-    this.modified = new Date();
-    if (!this.created)
-      this.created = new Date();
-    next();
-  });
-}
+
 
 
 // model meta helpers
