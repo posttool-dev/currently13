@@ -9,11 +9,9 @@ var domains = ['hackettmill','peter.com'];
 var server = express();
 for (var i=0; i<domains.length; i++)
 {
-  var cms = new current.Cms();
   var module = require('./'+domains[i]);
-  console.log(module.config.name);
-  var app = cms.init(module);
-  server.use(express.vhost(domains[i], app));
+  var cms = new current.Cms(module);
+  server.use(express.vhost(domains[i], cms.app));
 }
 
 process.on('uncaughtException', function (err) {
@@ -21,6 +19,7 @@ process.on('uncaughtException', function (err) {
   console.error(err.stack);
   process.exit(1);
 });
+
 server.on('error', function (err) {
   console.error(err);
 });

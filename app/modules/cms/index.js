@@ -1,3 +1,4 @@
-
-module.exports.Cms = require('./cms');
-module.exports.Meta = require('./meta');
+exports = module.exports = {
+  Cms: require('./cms'),
+  Meta: require('./meta')
+}

@@ -1,88 +1,54 @@
-//var logger = require('./logger')
-var fs = require('fs');
-var express = require('express'), app = express();
+var express = require('express');
 var mongoose = require('mongoose');
-var MongoStore = require('connect-mongo')(express);
 
-var cms = require('./modules/cms');
+var current = require('./modules/cms');
 
 var hm = require('./hackettmill'),
-  PUBLISHED = hm.workflow.PUBLISHED,
-  config = hm.config;
+    PUBLISHED = hm.workflow.PUBLISHED,
+    config = hm.config;
 
+// connect to db
 
+var connection = mongoose.createConnection(config.mongoConnectString);
 
-mongoose.connect(config.mongoConnectString, {}, function (err) {
-  if (err) throw err;
-  mongoose.connection.on('error', console.error.bind(console, 'connection error:'));
-  init_app();
-});
+var server = express();
+var app = init_app();
+server.use(express.vhost('hackettmill', app));
+server.listen(3000);
+console.log('App started on port '+3000);
 
-
-//process.on('uncaughtException', function (err) {
-//  console.error('uncaughtException:', err.message)
-//  console.error(err.stack)
-//  process.exit(1)})
-//server.on('error', function (err) {
-//  console.error(err)
-//})
-
-
+// serve express app
 function init_app() {
+  var app = express();
   app.set('view engine', 'ejs');
   app.set('views',__dirname + '/views');
-
-  app.use(express.cookieParser());
-  app.use(express.session({
-    secret: config.sessionSecret,
-    store: new MongoStore({db: mongoose.connection.db})
-  }));
+  app.use(express.static(__dirname + '/public'));
   app.use(express.urlencoded());
   app.use(express.json());
-  app.use(express.static(__dirname + '/public'));
 
-  app.configure('development', function () {
-    app.use(express.logger('dev'));
-    app.use(express.errorHandler());
-  });
+  var meta = new current.Meta(hm.models, connection);
+  var Exhibition = meta.model('Exhibition');
+  var News = meta.model('News');
+  var Artist = meta.model('Artist');
 
-  cms.init(app, hm);
-  var Exhibition = mongoose.model('Exhibition');
-  var News = mongoose.model('News');
-
-  app.get('/', function(req, res)
-  {
+  app.get('/', function (req, res) {
     Exhibition.find({state: PUBLISHED}, null, {sort: 'date'}, function (err, exhibits) {
       News.find({state: PUBLISHED}, function (err, news) {
         res.render('hackettmill/index', {exhibits: exhibits, news: news});
       });
     });
   });
-
-  app.get('/artists', function(req, res)
-  {
-    var Artist = cms.meta.model('Artist');
+  app.get('/artists', function (req, res) {
     Artist.find({state: PUBLISHED}, null, {sort: 'last_name'}, function (err, artists) {
       res.render('hackettmill/artists', {artists: artists});
     });
   });
-
-  app.get('/artist/:id', function(req, res)
-  {
-    var Artist = cms.meta.model('Artist');
+  app.get('/artist/:id', function (req, res) {
     Artist.findOne({_id: req.params.id, state: PUBLISHED}, function (err, artist) {
       res.render('hackettmill/artist', {artist: artist});
     });
   });
-
-//  app.get('/pop', function(req, res){
-//    hm.migrate.migrate_data();
-//    res.json('ok');
-//  });
-    hm.migrate.migrate_data();
-
-  app.listen(config.serverPort);
-  console.log('App started on port '+config.serverPort);
+  return app;
 }
 
 

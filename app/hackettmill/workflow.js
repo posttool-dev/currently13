@@ -1,8 +1,11 @@
-var DRAFT = exports.DRAFT = 100;
-var PUBLISHED = exports.PUBLISHED = 500;
-var FLAGGED = exports.FLAGGED = 600;
+var DRAFT = 100;
+var PUBLISHED = 500;
+var FLAGGED = 600;
 
 exports = module.exports = {
+  DRAFT: DRAFT,
+  PUBLISHED: PUBLISHED,
+  FLAGGED: FLAGGED,
   states: [
     {code: DRAFT, name: 'draft', editable: true},
     {code: PUBLISHED, name: 'published'},

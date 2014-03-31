@@ -1,59 +1,66 @@
-/* emits: get, save, browse, etc */
-var EventEmitter = require('events').EventEmitter;
+/**
+ * Module dependencies
+ */
+var EventEmitter = require('events').EventEmitter,
+    fs = require('fs'),
+    uuid = require('node-uuid'),
+    mime = require('mime'),
+    mongoose = require('mongoose'),
+    gfs, Grid = require('gridfs-stream'),
+    express = require('express'),
+    MongoStore = require('connect-mongo')(express),
+    formidable = require('formidable'),
+    kue = require('kue'),
+    auth = require('./auth'),
+    Meta = require('./meta'),
+    utils = require('./utils'),
+    models = require('./models'),
+    logger = utils.get_logger('cms');
 
-/* util */
-var fs = require('fs');
-var uuid = require('node-uuid');
-var mime = require('mime');
 
-/* store */
-var mongoose = require('mongoose');
-var gfs, Grid = require('gridfs-stream');
-
-/* web */
-var express = require('express');
-var MongoStore = require('connect-mongo')(express);
-var formidable = require('formidable');
-
-/* queue */
-var kue = require('kue');
-
-/* cms */
-var auth = require('./auth');
-var Meta = require('./meta');
-var utils = require('./utils');
-var models = require('./models');
-var logger = utils.get_logger('cms');
-
+/**
+ * The Cms class is the only export.
+ * @type {Cms}
+ */
 exports = module.exports = Cms;
 
-function Cms() {
-  this.module = null;
+
+/**
+ * The Cms
+ * @constructor
+ */
+function Cms(module) {
+  this.module = module;
+  this.config = module.config;
   this.connection = null;
   this.meta = null;
-  this.config = null;
   this.client = null;
   this.gfs = null;
   this.app = null;
+  this._init();
 }
+
 
 Cms.prototype.__proto__ = EventEmitter.prototype;
 
-Cms.prototype.init = function (module) {
-  logger.info('current cms 0.0.2');
+
+Cms.prototype._init = function () {
   var self = this;
-  self.module = module;
-  self.config = module.config;
-  self.connection = mongoose.createConnection(module.config.mongoConnectString);
-  self.meta = new Meta(module.models, self.connection);
+  // mongoose connection and model meta info
+  self.connection = mongoose.createConnection(self.config.mongoConnectString);
+  self.meta = new Meta(self.module.models, self.connection);
+
+  // user management
   self.auth = new auth.Auth(self.meta.User, '/cms');
 
+  // queued jobs, like resizing and transcoding
   if (self.config.kueConfig) {
     self.jobs = kue.createQueue(self.config.kueConfig);
     self.jobs.on('job complete', self.job_complete.bind(self));
     logger.info('initialed process queue')
   }
 
+  // storage for servable stuff
   switch (self.config.storage) {
     case "pkgcloud":
       self.client = require('pkgcloud').storage.createClient(self.config.pkgcloudConfig);
@@ -66,16 +73,16 @@ Cms.prototype.init = function (module) {
       break
     case "gfs":
     default:
-      self.gfs = new Grid(self.connection.db, mongoose.mongo);
+      self.gfs = new Grid(self.connection.db);
       logger.info('initialized gfs storage');
       break;
   }
 
+  // the express app
   var app = self.app = express();
   app.set('view engine', 'ejs');
   app.set('views', __dirname + '/views');
   app.use(express.static(__dirname + '/public'));
-
   app.use(express.cookieParser());
   app.use(express.session({
     secret: self.config.sessionSecret,
@@ -84,11 +91,6 @@ Cms.prototype.init = function (module) {
   app.use(express.urlencoded());
   app.use(express.json());
   app.use(express.methodOverride());
-
-  app.configure('development', function () {
-    app.use(express.logger('dev'));
-    app.use(express.errorHandler());
-  });
 
   // move session message to request locals
   // put user & http base path in request locals
@@ -101,22 +103,27 @@ Cms.prototype.init = function (module) {
     next();
   });
 
+  // get ready for routing by defining middleware for permissions and set up
+
   // check for user in session
-  var aspect1 = [auth.has_user];
+  var aspect1 = [auth.has_user,
+      self.add_workflow.bind(self)];
 
   // add meta info to the request and verify that user has permission
   var aspect2 = [auth.has_user,
+    self.add_workflow.bind(self),
     self.add_meta.bind(self),
     self.permission_type.bind(self)];
 
   // add meta info and object
   var aspect3 = [auth.has_user,
+    self.add_workflow.bind(self),
     self.add_meta.bind(self),
     self.permission_type.bind(self),
     self.add_object.bind(self),
     self.permission_object.bind(self)];
 
-  // define urls
+  // route
   app.get('/login',
     self.auth.login_get.bind(self.auth));
   app.post('/login',
@@ -170,7 +177,7 @@ Cms.prototype.init = function (module) {
   app.get('/cms/delete_resource/:id',
     aspect1, self.delete_resource.bind(self));
 
-  return app;
+  logger.info('current cms 0.0.3');
 }
 
 
@@ -188,18 +195,8 @@ Cms.prototype.permission_object = function (req, res, next) {
 }
 
 
-/* for request that contain type ... put the meta info in the request */
-
-Cms.prototype.add_meta = function (req, res, next) {
-  req.models = res.locals.models = this.meta.meta();
-  var type = req.params.type;
-  if (type) {
-    req.type = type;
-    req.schema = this.meta.schema(type);
-    req.model = this.meta.model(type);
-    req.browser = this.meta.browse(type);
-    req.form = this.meta.form(type);
-  }
+// add workflow info to request
+Cms.prototype.add_workflow = function (req, res, next) {
   var workflow = this.module.workflow;
   if (workflow) {
     var group = req.session.user.group;
@@ -213,9 +210,24 @@ Cms.prototype.add_meta = function (req, res, next) {
   next();
 };
 
+
+// for requests that contain :type ... put the meta info in the request
+Cms.prototype.add_meta = function (req, res, next) {
+  req.models = res.locals.models = this.meta.meta();
+  var type = req.params.type;
+  if (type) {
+    req.type = type;
+    req.schema = this.meta.schema(type);
+    req.model = this.meta.model(type);
+    req.browser = this.meta.browse(type);
+    req.form = this.meta.form(type);
+  }
+  next();
+};
+
+
 /* find and populate a "deep" view of the model as well as all "related" entities
  * the put it in the request */
-
 Cms.prototype.add_object = function (req, res, next) {
   var meta = this.meta;
   if (!req.params.id) {
@@ -242,8 +254,6 @@ Cms.prototype.add_object = function (req, res, next) {
 
 
 // the "dashboard"
-
-
 Cms.prototype.show_dashboard = function (req, res) {
   res.render('cms/dashboard', {
     title: 'CMS Dashboard ',
@@ -253,8 +263,6 @@ Cms.prototype.show_dashboard = function (req, res) {
 
 
 // browse
-
-
 Cms.prototype.browse_get = function (req, res) {
   var conditions = utils.process_browse_filter(req.body.condition);
   req.model.count(conditions, function (err, count) {
@@ -268,6 +276,7 @@ Cms.prototype.browse_get = function (req, res) {
 };
 
 
+// browse (json): returns filters, ordered, offset results
 Cms.prototype.browse_post = function (req, res) {
   var meta = this.meta;
   var conditions = utils.process_browse_filter(req.body.condition);
@@ -285,14 +294,13 @@ Cms.prototype.browse_post = function (req, res) {
 };
 
 
+// browse (json): get 'browser' info and our simplified schema info
 Cms.prototype.browse_schema = function (req, res) {
   res.json({schema: this.meta.get_schema_info(req.schema), browser: req.browser});
 };
 
 
-// create/update in a "form"
-
-
+// form: create/update
 Cms.prototype.form_get = function (req, res) {
   res.render('cms/form', {
     title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
@@ -305,6 +313,7 @@ Cms.prototype.form_get = function (req, res) {
 };
 
 
+// form (json): get the object, related objects as well as form meta info
 Cms.prototype.form_get_json = function (req, res) {
   var related = {};
   for (var p in req.related)
@@ -318,7 +327,8 @@ Cms.prototype.form_get_json = function (req, res) {
 };
 
 
-Cms.prototype.form_post = function (req, res, next) {
+// form (json): save
+Cms.prototype.form_post = function (req, res) {
   var self = this;
   var meta = self.meta;
   var object = req.object || new req.model();
@@ -350,6 +360,7 @@ Cms.prototype.form_post = function (req, res, next) {
 };
 
 
+// form (json): delete references
 Cms.prototype.form_delete_references = function (req, res) {
   var self = this;
   if (req.related_count == 0)
@@ -378,6 +389,8 @@ Cms.prototype.form_delete_references = function (req, res) {
   }
 };
 
+
+// form (json): delete
 
 Cms.prototype.form_delete = function (req, res) {
   req.object.remove(function (err, m) {

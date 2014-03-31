@@ -51,7 +51,7 @@ exports.just_ids = function (a) {
   var r = [];
   for (var i = 0; i < a.length; i++)
     if (a[i])
-      r.push(just_id(a[i]));
+      r.push(exports.just_id(a[i]));
   return r;
 }
 
