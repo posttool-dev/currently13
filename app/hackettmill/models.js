@@ -4,7 +4,6 @@ var cms_models = require("../modules/cms/models");
 
 exports = module.exports = {
 
-
   /* hackett mill calls their catalog of art "inventory" */
   Inventory: {
     meta: {
@@ -394,12 +393,12 @@ exports = module.exports = {
 
 }
 
-
-exports.Resource.jobs = {
-  image: ['thumb', 'medium', 'large'],
-  audio: ['mp3'],
-  video: []
-}
+//
+//exports.Resource.jobs = {
+//  image: ['thumb', 'medium', 'large'],
+//  audio: ['mp3'],
+//  video: []
+//}
 
 
 
