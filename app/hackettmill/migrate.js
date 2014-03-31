@@ -1,44 +1,30 @@
 var fs = require('fs');
 var csv = require('csv');
 var mongoose = require('mongoose');
-var cloudinary = require('cloudinary');
 var uuid = require('node-uuid');
 var http = require('http');
 
 var workflow = require('./workflow');
-var cms = require('../modules/cms');
+var Cms = require('../modules/cms'), cms = new Cms();
+var utils = require('../modules/cms/utils');
 
 var data = {};
 var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
 
-var use_existing_images = false; // false will destroy images at cloudinary & table of resources
+var use_existing_images = true;
 var prefix = 'dev1';
 
-var _job;
-var _done;
-exports.migrate_data = function (job, done) {
-  if (_job && job)
-  {
-    _done(new Error('migration is in progress'));
-    return;
-  }
-  _job = job;
-  _done = done;
-  if (use_existing_images)
-    migrate0();
-  else
-      migrate_delete_resources0();
 
-//  else
-//    cloudinary.api.delete_resources_by_prefix(prefix, function (c) {
-//      console.log('   ... deleted ' + c + ' cloduinary resources');
-//      migrate_delete_resources0();
-//    });
-}
+cms.init(require('./index'));
+
+if (use_existing_images)
+  migrate0();
+else
+    migrate_delete_resources0();
 
 
 function migrate_delete_resources0() {
-  var R = cms.meta.model('Resource');
+  var R = cms.meta.Resource;
   console.log("Removing existing resources...");
   R.find().remove(function (err, c) {
     console.log(" ... removed " + c);
@@ -50,9 +36,9 @@ function migrate_delete_resources0() {
 function migrate0() {
   console.log('Reading CSVs');
   fs.readdir(path, function (err, files) {
-    cms.utils.forEach(files, read_csv, migrate1);
+    utils.forEach(files, read_csv, migrate1);
   });
-  cms.models.Log.remove(function(err,r){
+  cms.meta.Log.remove(function(err,r){
     console.log("REMOVED LOGS ",err,r);
   });
 }
@@ -60,7 +46,7 @@ function migrate0() {
 
 function migrate1()
 {
-  cms.utils.forEach(data['Resource'].array, create_resource, migrate2, 2);
+  utils.forEach(data['Resource'].array, create_resource, migrate2, 2);
 }
 
 
@@ -68,7 +54,7 @@ function migrate2()
 {
   var i = 0;
   var models = ['Inventory','Artist', 'Catalog','Contact','Essay','Exhibition','News','Page'];
-  cms.utils.forEach(models, function (e, next) {
+  utils.forEach(models, function (e, next) {
     if (_job)
       _job.progress(i, models.length);
     repopulate(e, next);
@@ -90,7 +76,7 @@ function repopulate(type, complete)
     console.log('Repopulating '+type+' ... removed '+c+' old records.');
     if (_job)
       _job.log('Repopulating '+type+' ... removed '+c+' old records.');
-    cms.utils.forEach(data[type].array,
+    utils.forEach(data[type].array,
       function(e, next){
         create(type, e, next);},
       complete);
