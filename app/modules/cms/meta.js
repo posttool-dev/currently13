@@ -10,7 +10,7 @@ function Meta(info, connection)
 {
   this.info = info;
   this.connection = connection;
-  this.schema = {};
+  this.schemas = {};
   this.Resource = null;
   this.Log = null;
   this.User = null;
@@ -21,7 +21,7 @@ Meta.prototype._init = function () {
   for (var p in this.info) {
     var schema_data = this.info[p].schema;
     validate_meta(p, schema_data, this.info[p].browse, this.info[p].form);
-    var schema = this.schema[p] = new mongoose.Schema(schema_data);
+    var schema = this.schemas[p] = new mongoose.Schema(schema_data);
     add_fields_and_methods(schema, p);
     this.connection.model(p, schema);
     if (!this.info[p].browse)
@@ -58,9 +58,9 @@ Meta.prototype.form = function(type)
 
 Meta.prototype.schema = function(type)
 {
-  if (!this.schema[type])
+  if (!this.schemas[type])
     throw new Error('no '+type);
-  return this.schema[type];
+  return this.schemas[type];
 };
 
 Meta.prototype.model = function(type)
@@ -74,7 +74,7 @@ Meta.prototype.info = function(type)
 {
   if (!this.info[type])
     throw new Error('no '+type);
-  return this.get_schema_info(this.info[type].schema);
+  return this.get_schema_info(this.schema(type));
 }
 
 Meta.prototype.meta = function(type)

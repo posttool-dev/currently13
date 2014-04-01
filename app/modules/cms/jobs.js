@@ -14,7 +14,10 @@ exports.process_resource = function (client, job, done, out_ext, process) {
     var downloadStream = fs.createWriteStream(path);
     client.download({container: job.data.container, remote: job.data.filename},
       function (err, info) {
-        if (err) throw err;
+        if (err) {
+          done(err);
+          return;
+        }
         job.log('download complete', info.size);
         tmp.tmpName({ postfix: out_ext }, function (err, path2) {
           if (err) throw err;

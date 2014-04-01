@@ -7,39 +7,54 @@ var current = require('./modules/cms');
 
 var server = {
   cms: express(),
-  app: express()
+  app: express(),
+  kue: express()
 }
+
 function add_cms(name, info){
   var cms = new current.Cms(require(info));
   server.cms.use(express.vhost(name, cms.app));
 }
+
 function add_app(name, info){
   var app = require(info)();
   server.app.use(express.vhost(name, app));
 }
-fs.readFile( __dirname + '/sites.json', 'utf8', function (err, data) {
-  data = JSON.parse(data);
+
+function add_job(name, info){
+  var config = require(info.config);
+  var kue = require(info.app)(config);
+  if (info.ui)
+    server.kue.use(express.vhost(name, kue.app));
+}
+
+function process_sites_data(data)
+{
   for (var p in data.cms)
     add_cms(p, data.cms[p]);
   for (var p in data.www)
     add_app(p, data.www[p]);
+  for (var p in data.job)
+    add_job(p, data.job[p]);
+}
+
+fs.readFile( __dirname + '/sites.json', 'utf8', function (err, data) {
+  process_sites_data(JSON.parse(data));
 });
 
-server.cms.listen(8080);
-server.app.listen(3000);
-//iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3000
+server.cms.listen(43556);
+server.kue.listen(43557);
+server.app.listen(8080);
+//iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
 
-process.on('uncaughtException', function (err) {
-  console.error('uncaughtException:', err.message);
-  console.error(err.stack);
-  process.exit(1);
-});
+//process.on('uncaughtException', function (err) {
+//  console.error('uncaughtException:', err.message);
+//  console.error(err.stack);
+//});
 
-//server.on('error', function (err) {
+//server.cms/app.on('error', function (err) {
 //  console.error(err);
 //});
-//
-//server.listen(8080);
 
 
 

@@ -255,8 +255,9 @@ Cms.prototype.add_object = function (req, res, next) {
 
 // the "dashboard"
 Cms.prototype.show_dashboard = function (req, res) {
+  var title = this.config.name;
   res.render('cms/dashboard', {
-    title: 'CMS Dashboard ',
+    title: title,
     models: req.models
   });
 };
@@ -515,6 +516,10 @@ Cms.prototype.job_complete = function (id) {
   var meta = this.meta;
   logger.info('job complete', id);
   kue.Job.get(id, function (err, job) {
+    if (err || !job) {
+      logger.error(err);
+      return;
+    }
     job.get('path', function (err, p) {
       job.get('size', function (err, s) {
         logger.info('  params', p, s);

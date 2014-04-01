@@ -393,12 +393,12 @@ exports = module.exports = {
 
 }
 
-//
-//exports.Resource.jobs = {
-//  image: ['thumb', 'medium', 'large'],
-//  audio: ['mp3'],
-//  video: []
-//}
+
+exports.Resource.jobs = {
+  image: ['thumb', 'medium', 'large'],
+  audio: ['mp3'],
+  video: []
+}
 
 
 

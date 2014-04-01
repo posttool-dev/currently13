@@ -5,5 +5,12 @@
   },
   "www": {
     "hackettmill": "./hackettmill/app"
+  },
+  "job": {
+    "hackettmill": {
+      "app": "./modules/cms/transcode",
+      "config": "./hackettmill/config",
+      "ui": true
+    }
   }
 }
