@@ -74,7 +74,7 @@ Meta.prototype.info = function(type)
 {
   if (!this.info[type])
     throw new Error('no '+type);
-  return this.get_schema_info(this.schema(type));
+  return exports.get_schema_info(this.schema(type));
 }
 
 Meta.prototype.meta = function(type)
@@ -135,7 +135,7 @@ validate_meta = function (p, schema, browse, form) {
 
 // model meta helpers
 
-Meta.prototype.get_schema_info = function(schema)
+exports.get_schema_info = function(schema)
 {
   var d = {};
   schema.eachPath(function (path, mtype) {
@@ -237,7 +237,7 @@ Meta.prototype.get_names = function (field_info) {
 
 create_browse_info = function(meta, type)
 {
-  var si = meta.get_schema_info(meta.schema(type));
+  var si = exports.get_schema_info(meta.schema(type));
   var s = [];
   for (var p in si)
   {
@@ -250,7 +250,7 @@ create_browse_info = function(meta, type)
 
 create_form_info = function(meta, type)
 {
-  var si = meta.get_schema_info(meta.schema(type));
+  var si = exports.get_schema_info(meta.schema(type));
   var s = [];
   for (var p in si)
   {

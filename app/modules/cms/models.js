@@ -37,19 +37,52 @@ exports.ResourceInfo = function(){
 }
 
 // user
-exports.UserSchema = new mongoose.Schema({
-  name: {type: String, required: true, trim: true},
-  email: {type: String, required: true, trim: true, lowercase: true, unique: true},
-  email_verified: {type:Boolean, default: false},
-  image: {type: ObjectId, ref: 'Resource'},
-  hash: {type: String},
-  salt: {type: String},
-  created: {type: Date, default: Date.now},
-  last_login: {type: Date, default: Date.now},
-  group: {type:String},
-  admin: {type:Boolean, default: false},
-  active: {type:Boolean, default: false}
-});
+
+exports.UserInfo = function(){
+  return {
+    meta: {
+      plural: 'Users'
+    },
+    schema: {
+      name: {type: String, required: true, trim: true},
+      email: {type: String, required: true, trim: true, lowercase: true, unique: true},
+      email_verified: {type:Boolean, default: false},
+      image: {type: ObjectId, ref: 'Resource'},
+      hash: {type: String},
+      salt: {type: String},
+      created: {type: Date, default: Date.now},
+      last_login: {type: Date, default: Date.now},
+      group: {type:String},
+      admin: {type:Boolean, default: false},
+      active: {type:Boolean, default: false}
+    },
+    browse: [
+      {name: "name", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
+      {name: "email", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
+      {name: "group", cell: "bool", filters: ["="], order: "asc,desc"},
+      {name: "admin", cell: "bool", filters: ["="], order: "asc,desc"},
+      {name: "email_verified", cell: "bool", filters: ["="], order: "asc,desc"},
+      {name: "active", cell: "bool", filters: ["="], order: "asc,desc"},
+    ],
+    form: [
+      {name: "name", widget: "input"},
+      {name: "name", widget: "email"},
+      {name: "image", widget: "upload", options: {type: "Resource"}},
+      {name: "password", widget: "password"}
+    ],
+    form_admin: [
+      {name: "name", widget: "input"},
+      {name: "name", widget: "email"},
+      {name: "image", widget: "upload", options: {type: "Resource"}},
+      {name: "password", widget: "password"},
+      {name: "group", widget: "group"},
+      {name: "active", widget: "boolean"},
+      {name: "admin", widget: "boolean"},
+    ]
+  }
+}
+
+exports.UserSchema = new mongoose.Schema(exports.UserInfo().schema);
 
 
 // log

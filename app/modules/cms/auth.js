@@ -1,14 +1,17 @@
 var nodemailer = require("nodemailer");
 var crypto = require('crypto');
+var Meta = require('./meta');
+var utils = require('./utils');
 
 
 exports.Auth = Auth;
 
 
-function Auth(User, onLogin) {
+function Auth(User, UserInfo, onLogin) {
   this.User = User;
+  this.UserInfo = UserInfo;
   this.onLogin = onLogin;
-}
+};
 
 Auth.prototype.login_get = function (req, res) {
   res.render('auth/login', {});
@@ -18,19 +21,22 @@ Auth.prototype.login_post = function (req, res) {
   var self = this;
   var noway = function () {
     req.session.message = 'no way';
-    res.redirect(req.query.next || exports.on_login);
+    res.redirect(req.query.next || self.onLogin);
   }
   var q = {email: req.body.email};
-  console.log(self)
   self.User.findOne(q, function (err, user) {
     if (!user)
       noway();
     else {
       exports.hash(req.body.password, user.salt, function (err, hash) {
-        if (err)
+        if (err) {
           noway();
-        if (hash != user.hash)
+          return;
+        }
+        if (hash != user.hash){
           noway();
+          return;
+        }
         req.session.message = 'user found!';
         req.session.user = user;
         res.redirect(req.query.next || self.onLogin);
@@ -97,7 +103,8 @@ exports.set_password = function(user, password, complete)
 //      pass: ""
 //  }
 //});
-//
+
+
 //exports.send_mail = function (user, subject, text, html) {
 //  var mailOptions = {
 //    from: "CMS <currently13@gmail.com>",
@@ -118,24 +125,29 @@ exports.set_password = function(user, password, complete)
 //    //smtpTransport.close(); // shut down the connection pool, no more messages
 //  });
 //};
-//
-//
-//exports.validate_email = function (req, res) {
-//  var q = {hash: req.params.h};
-//  User.findOne(q, function (err, user) {
-//    if (!user) {
-//      req.session.message = 'nope';
-//      res.redirect('.');
-//      return;
-//    }
-//    user.verified = true;
-//    user.save(function (err, user) {
-//      req.session.message = err ? 'uhoh ' + err : 'you registered!';
-//      req.session.user = user;
-//      res.redirect('.');
-//    });
-//  });
-//};
+
+
+Auth.prototype.send_validation_email = function (req, res) {
+  console.log('/validate?h='+req.session.user.hash);
+};
+
+
+Auth.prototype.validate_email = function (req, res) {
+  var q = {hash: req.params.h};
+  this.User.findOne(q, function (err, user) {
+    if (!user) {
+      req.session.message = 'nope';
+      res.redirect('.');
+      return;
+    }
+    user.verified = true;
+    user.save(function (err, user) {
+      req.session.message = err ? 'uhoh ' + err : 'you registered!';
+      req.session.user = user;
+      res.redirect('.');
+    });
+  });
+};
 
 
 Auth.prototype.logout = function (req, res) {
@@ -149,49 +161,101 @@ Auth.prototype.logout = function (req, res) {
 
 
 //admin
-//exports.list = function(req, res)
-//{
-//    User.find(function(err, users) {
-//        res.render('users/list', { title: 'Users', users: users });
-//    });
-//};
-//
-////admin
-//exports.load = function(req, res, next)
-//{
-//    var q = User.findOne({_id: req.params['user_id']});
-//    q.exec(function(err, m)
-//    {
-//      //todo
-//    });
-//};
-//
-//
-//exports.display = function(req, res)
-//{
-//  res.render('users/display', {
-//    title: 'Viewing user ' + req.user.name,
-//    user: req.user
-//  });
-//};
-//
-//
-//exports.form = {
-//    get: function(req, res)
-//    {
-//      res.render('users/form', {
-//        title: 'Editing user ' + req.user.name,
-//        user: req.user
-//      });
-//    },
-//    post: function(req, res)
-//    {
-//      var user = req.body.user;
-//      req.user.name = user.name;
-//      req.user.email = user.email;
-//      res.redirect('back');
-//    }
-//}
+// browse
+Auth.prototype.users_get = function (req, res) {
+  var User = this.User;
+  var UserInfo = this.UserInfo;
+  var conditions = utils.process_browse_filter(req.body.condition);
+  User.count(conditions, function (err, count) {
+    res.render('cms/browse', {
+      title: 'Browse Users ',
+      browser: UserInfo.browser,
+      total: count
+    });
+  });
+};
+
+
+// browse (json): returns filters, ordered, offset results
+Auth.prototype.users_post = function (req, res) {
+  var User = this.User;
+  var conditions = utils.process_browse_filter(req.body.condition);
+  var fields = null;
+  var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
+  User.count(conditions, function (err, count) {
+    var q = User.find(conditions, fields, options);
+    q.exec(function (err, r) {
+      res.json({results: r, count: count});
+    });
+  });
+};
+
+
+// browse (json): get 'browser' info and our simplified schema info
+Auth.prototype.users_schema = function (req, res) {
+  res.json({schema: Meta.get_schema_info(this.UserInfo.schema), browser: this.UserInfo.browser});
+};
+
+
+Auth.prototype.get_user = function(id, complete) {
+  if (id)
+    this.User.findOne({_id: id}, complete);
+  else
+    complete();
+}
+
+
+// form: create/update
+Auth.prototype.user_get = function (req, res) {
+  var UserInfo = this.UserInfo;
+  res.render('cms/form', {
+    title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
+    id: req.id ? req.id : null,
+    form: UserInfo});
+};
+
+
+// form (json): get the object, related objects as well as form meta info
+Auth.prototype.user_get_json = function (req, res) {
+  var UserInfo = this.UserInfo;
+  this.get_user(req.params.id, function (err, user) {
+    res.json({
+      title: (user ? 'Editing' : 'Creating') + ' User',
+      object: user,
+      form: UserInfo.form_admin});
+  });
+};
+
+
+// form (json): save
+Auth.prototype.user_create = function (req, res) {
+  var data = JSON.parse(req.body.val);
+  this.get_user(req.params.id, function (err, user) {
+    for (var p in data)
+      user[p] = data[p];
+    user.save(function (err, s) {
+      res.json(user);
+    });
+  });
+};
+
+
+// form (json): delete
+Auth.prototype.user_delete = function (req, res) {
+  req.object.remove(function (err, m) {
+    res.json(m);
+  });
+};
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -207,15 +271,15 @@ exports.has_user = function(req, res, next)
     }
 }
 
-//exports.is_admin = function(req, res, next)
-//{
-//    if (req.session.user.admin) {
-//        next();
-//    } else {
-//        req.session.message = 'Access denied!';
-//        res.redirect('/login?next='+encodeURIComponent(req.url));
-//    }
-//}
+exports.is_admin = function(req, res, next)
+{
+    if (req.session.user.admin) {
+        next();
+    } else {
+        req.session.message = 'Access denied!';
+        res.redirect('/login?next='+encodeURIComponent(req.url));
+    }
+}
 //
 //exports.is_user = function(req, res, next)
 //{

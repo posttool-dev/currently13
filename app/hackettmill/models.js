@@ -58,7 +58,6 @@ exports = module.exports = {
     ]
   },
 
-
   Artist: {
     meta: {
       plural: "Artists",
@@ -91,8 +90,6 @@ exports = module.exports = {
       {end: "row"}
     ]
   },
-
-
 
   Exhibition: {
     meta: {
@@ -163,13 +160,8 @@ exports = module.exports = {
             options: { type: "Catalog", array: false } },
         {end: "col" },
       { end: "row"},
-
     ]
-
   },
-
-
-
 
   Contact: {
     meta: {
@@ -330,10 +322,6 @@ exports = module.exports = {
 
   },
 
-
-
-
-
   /* pages */
   Page: {
     meta: {
@@ -390,7 +378,6 @@ exports = module.exports = {
   },
 
   Resource:  cms_models.ResourceInfo()
-
 }
 
 

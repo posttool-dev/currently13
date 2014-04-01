@@ -41,17 +41,18 @@ function Cms(module) {
 }
 
 
-Cms.prototype.__proto__ = EventEmitter.prototype;
+//Cms.prototype.__proto__ = EventEmitter.prototype;
 
 
 Cms.prototype._init = function () {
   var self = this;
+
   // mongoose connection and model meta info
   self.connection = mongoose.createConnection(self.config.mongoConnectString);
   self.meta = new Meta(self.module.models, self.connection);
 
   // user management
-  self.auth = new auth.Auth(self.meta.User, '/cms');
+  self.auth = new auth.Auth(self.meta.User, models.UserInfo(), '/cms');
 
   // queued jobs, like resizing and transcoding
   if (self.config.kueConfig) {
@@ -130,15 +131,18 @@ Cms.prototype._init = function () {
     self.auth.login_post.bind(self.auth));
   app.all('/logout',
     self.auth.logout.bind(self.auth));
-
-  //app.get('/profile', p1, auth.form.get);
-  //app.post('/profile', p1, auth.form.post);
-  //app.get('/register', auth.register.get);
-  //app.post('/register', auth.register.post);
-  //app.all ('/users', [utils.has_user, utils.is_admin], user.list);
-  //app.get ('/user/:user_id', [utils.has_user, user.load, user.is_user], user.display);
-  //app.get ('/user/:user_id/edit', [utils.has_user, user.load, user.is_user], user.form.get);
-  //app.post('/user/:user_id/edit', [utils.has_user, user.load, user.is_user], user.form.post);
+  app.get('/profile',
+    aspect1, self.auth.user_get.bind(self.auth));
+  app.post('/profile',
+     aspect1, self.auth.user_post.bind(self.auth));
+  app.all ('/users',
+    [utils.has_user, utils.is_admin], self.auth.admin_users.bind(self.auth));
+  app.get ('/user/:user_id',
+    [utils.has_user, utils.is_admin], self.auth.admin_user_get.bind(self.auth));
+  app.get ('/user/:user_id/edit',
+    [utils.has_user, utils.is_admin], self.auth.admin_user_get.bind(self.auth));
+  app.post('/user/:user_id/edit',
+    [utils.has_user, utils.is_admin], self.auth.admin_user_post.bind(self.auth));
 
   app.all('/cms',
     aspect2, self.show_dashboard.bind(self));
@@ -350,7 +354,7 @@ Cms.prototype.form_post = function (req, res) {
   if (!object.state && workflow && workflow.states)
     object.state = workflow.states[0].code;
 
-  self.emit('pre save', object);
+  //self.emit('pre save', object);
   object.save(function (err, s) {
     self.add_log(req.session.user._id, 'save', req.type, s, info, function () {
       meta.expand(req.type, s._id, function (err, s) {
@@ -392,7 +396,6 @@ Cms.prototype.form_delete_references = function (req, res) {
 
 
 // form (json): delete
-
 Cms.prototype.form_delete = function (req, res) {
   req.object.remove(function (err, m) {
     res.json(m);
@@ -400,6 +403,7 @@ Cms.prototype.form_delete = function (req, res) {
 };
 
 
+// form (json): workflow state
 Cms.prototype.form_status = function (req, res) {
   var self = this;
   var original_state = req.object.state;
@@ -415,8 +419,6 @@ Cms.prototype.form_status = function (req, res) {
 
 
 // logs
-
-
 Cms.prototype.logs_for_user = function (req, res) {
   this.get_logs({user: req.session.user._id}, {sort: '-time'}, function (logs) {
     res.json(logs);
@@ -480,10 +482,10 @@ Cms.prototype.save_resource = function (name, path, mimetype, size, creator_id, 
   r.size = size;
   r.creator = creator_id;
   r.meta = info ? info : {};
-  self.emit('resource pre save');
+  //self.emit('resource pre save');
   r.save(function (err, s) {
     if (err) throw err;
-    self.emit('resource post save');
+    //self.emit('resource post save');
     var resource_jobs = meta.meta().Resource.jobs;
     if (resource_jobs) {
       if (!self.jobs) {

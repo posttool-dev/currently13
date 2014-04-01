@@ -1,6 +1,6 @@
 var config = {
   development: {
-    name: 'hackett mill inc',
+    name: 'Hackett|Mill',
     serverPort: 8080,
     mongoConnectString: 'mongodb://localhost/hm0',
     sessionSecret: 'nfuds9543ythhfgjghf$WH*#IRF5euyhtfgxkj',

@@ -17,10 +17,18 @@
         padding: 10px;
         float: left;
     }
+
     .dashboard-model h3 {
         margin:23px 0 4px 0;
         color:#337;
         font-weight:normal;
+    }
+    .dashboard-model.dark {
+        background-color: #605e6b;
+        color: #ccc;
+    }
+    .dashboard-model.dark h3{
+        color: #fff;
     }
     .dashboard-model .fa { font-size: 13px; }
     a .fa { color: #999; }
@@ -28,7 +36,7 @@
 
 </style>
 
-<div style="padding: 30px 300px 20px 20px;">
+<div style="padding: 30px 300px 20px 15px;">
 <h2><%=title%></h2>
 <% for(var p in models) {
     if (models[p].meta.dashboard) {  %>
@@ -36,8 +44,13 @@
     <h3><%= p %></h3>
     <a href='/cms/browse/<%=p%>'>browse <i class='fa fa-play-circle'></i> </a>
     <a href='/cms/create/<%=p%>'>create <i class='fa fa-plus-circle'></i> </a>
-        </div>
+    </div>
 <% } } %>
+    <div class="dashboard-model dark">
+    <h3>Users</h3>
+    <a href='/cms/browse/<%=p%>'>browse <i class='fa fa-play-circle'></i> </a>
+    <a href='/cms/create/<%=p%>'>create <i class='fa fa-plus-circle'></i> </a>
+    </div>
 
 <br clear="both">
 
