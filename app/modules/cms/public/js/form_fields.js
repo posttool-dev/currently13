@@ -475,7 +475,7 @@ var form_fields = {
     {
       var $actions = $("<div style='clear:both;'></div>");
       var $add = $("<span><i class='fa fa-plus-circle'></i> create</span>").css({'cursor': 'pointer'});
-      var $browse = $("<span><i class='fa fa-play-circle '></i> browse</span>").css({'cursor': 'pointer'});
+      var $browse = $("<span><i class='fa fa-play-circle'></i> browse</span>").css({'cursor': 'pointer'});
       if (options.add)
         $actions.append($add, '&nbsp;');
       if (options.browse)
