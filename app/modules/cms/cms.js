@@ -133,8 +133,8 @@ Cms.prototype._init = function () {
     self.auth.logout.bind(self.auth));
   app.get('/profile',
     aspect1, self.auth.user_get.bind(self.auth));
-  app.post('/profile',
-     aspect1, self.auth.user_post.bind(self.auth));
+//  app.post('/profile',
+//     aspect1, self.auth.user_post.bind(self.auth));
 //  app.all ('/users',
 //    [utils.has_user, utils.is_admin], self.auth.admin_users.bind(self.auth));
 //  app.get ('/user/:user_id',
