@@ -135,14 +135,14 @@ Cms.prototype._init = function () {
     aspect1, self.auth.user_get.bind(self.auth));
   app.post('/profile',
      aspect1, self.auth.user_post.bind(self.auth));
-  app.all ('/users',
-    [utils.has_user, utils.is_admin], self.auth.admin_users.bind(self.auth));
-  app.get ('/user/:user_id',
-    [utils.has_user, utils.is_admin], self.auth.admin_user_get.bind(self.auth));
-  app.get ('/user/:user_id/edit',
-    [utils.has_user, utils.is_admin], self.auth.admin_user_get.bind(self.auth));
-  app.post('/user/:user_id/edit',
-    [utils.has_user, utils.is_admin], self.auth.admin_user_post.bind(self.auth));
+//  app.all ('/users',
+//    [utils.has_user, utils.is_admin], self.auth.admin_users.bind(self.auth));
+//  app.get ('/user/:user_id',
+//    [utils.has_user, utils.is_admin], self.auth.admin_user_get.bind(self.auth));
+//  app.get ('/user/:user_id/edit',
+//    [utils.has_user, utils.is_admin], self.auth.admin_user_get.bind(self.auth));
+//  app.post('/user/:user_id/edit',
+//    [utils.has_user, utils.is_admin], self.auth.admin_user_post.bind(self.auth));
 
   app.all('/cms',
     aspect2, self.show_dashboard.bind(self));
