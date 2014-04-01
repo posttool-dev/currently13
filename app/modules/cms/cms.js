@@ -289,9 +289,9 @@ Cms.prototype.browse_post = function (req, res) {
   var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
   req.model.count(conditions, function (err, count) {
     var q = req.model.find(conditions, fields, options);
-    var refs = meta.get_references(req.schema);
+    var refs = utils.get_references(req.schema);
     if (refs)
-      q.populate(meta.get_names(refs).join(" "));
+      q.populate(utils.get_names(refs).join(" "));
     q.exec(function (err, r) {
       res.json({results: r, count: count});
     });
@@ -301,7 +301,7 @@ Cms.prototype.browse_post = function (req, res) {
 
 // browse (json): get 'browser' info and our simplified schema info
 Cms.prototype.browse_schema = function (req, res) {
-  res.json({schema: this.meta.get_schema_info(req.schema), browser: req.browser});
+  res.json({schema: utils.get_schema_info(req.schema), browser: req.browser});
 };
 
 
@@ -338,7 +338,7 @@ Cms.prototype.form_post = function (req, res) {
   var meta = self.meta;
   var object = req.object || new req.model();
   var data = JSON.parse(req.body.val);
-  var schema_info = meta.get_schema_info(req.schema);
+  var schema_info = utils.get_schema_info(req.schema);
 
   // get info about differences and set values
   var info = utils.get_diffs(req.form, schema_info, data, object);
