@@ -1,11 +1,13 @@
 var mongoose = require('mongoose'),
-  ObjectId = mongoose.Schema.Types.ObjectId;
+    ObjectId = mongoose.Schema.Types.ObjectId;
+var utils = require('./utils');
 
 
 exports.ResourceInfo = function(){
   return {
     meta: {
       plural: 'Resources',
+      workflow: false,
       dashboard: true
     },
     schema: {
@@ -41,7 +43,11 @@ exports.ResourceInfo = function(){
 exports.UserInfo = function(){
   return {
     meta: {
-      plural: 'Users'
+      plural: 'Users',
+      workflow: false,
+      dashboard: true,
+      name: "<%= name %>",
+      references: 'manual'
     },
     schema: {
       name: {type: String, required: true, trim: true},
@@ -64,21 +70,34 @@ exports.UserInfo = function(){
       {name: "email_verified", cell: "bool", filters: ["="], order: "asc,desc"},
       {name: "active", cell: "bool", filters: ["="], order: "asc,desc"},
     ],
-    form: [
+    form_profile: [
       {name: "name", widget: "input"},
       {name: "name", widget: "email"},
       {name: "image", widget: "upload", options: {type: "Resource"}},
       {name: "password", widget: "password"}
     ],
-    form_admin: [
+    form: [
       {name: "name", widget: "input"},
-      {name: "name", widget: "email"},
-      {name: "image", widget: "upload", options: {type: "Resource"}},
+      {name: "email", widget: "email"},
+      {name: "image", widget: "upload", options: {type: "Resource", array: false}},
       {name: "password", widget: "password"},
-      {name: "group", widget: "group"},
+      {name: "group", widget: "select", options: {options: ['editor','contributor']}},
       {name: "active", widget: "boolean"},
       {name: "admin", widget: "boolean"},
-    ]
+    ],
+    presave: function(user, new_values, next)
+    {
+      if (new_values.password)
+        utils.hash(new_values.password, function (err, salt, hash) {
+          if (err) throw err;
+          new_values.salt = salt;
+          new_values.hash = hash;
+          delete new_values.password;
+          next();
+        });
+      else
+        next();
+    }
   }
 }
 

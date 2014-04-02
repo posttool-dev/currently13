@@ -97,6 +97,106 @@ var form_fields = {
     });
   },
 
+  email_field: function (options) {
+    var self = this;
+    var $el = $$('field string');
+    this.$el = function () {
+      return $el;
+    }
+
+    var $c = $("<input type='email'/>").addClass("form-control");
+    $el.append($c);
+
+    var _n = "";
+    Object.defineProperty(this, "data",
+      {
+        get: function () {
+          return _n;
+        },
+        set: function (n) {
+          _n = n;
+          update_ui();
+        }
+      });
+    function update_ui() {
+      $c.val(_n);
+    }
+
+    $c.keyup(function () {
+      _n = $c.val();
+      self.emit('change');
+    });
+  },
+
+
+  password_field: function (options) {
+    var self = this;
+    var $el = $$('field string');
+    this.$el = function () {
+      return $el;
+    }
+
+    var $c = $("<input type='password'/>").addClass("form-control");
+    $el.append($c);
+
+    var _n = "";
+    Object.defineProperty(this, "data",
+      {
+        get: function () {
+          return _n;
+        },
+        set: function (n) {
+          _n = n;
+          update_ui();
+        }
+      });
+    function update_ui() {
+      $c.val(_n);
+    }
+
+    $c.keyup(function () {
+      _n = $c.val();
+      self.emit('change');
+    });
+  },
+
+
+  select_field: function (options) {
+    var self = this;
+    var $el = $$('field string');
+    this.$el = function () {
+      return $el;
+    }
+
+    var $c = $("<select/>").addClass("form-control");
+    $el.append($c);
+    if (options && options.options)
+    {
+      for (var i=0; i<options.options.length; i++)
+        $c.append("<option>"+options.options[i]+"</option>");
+    }
+
+    var _n = "";
+    Object.defineProperty(this, "data",
+      {
+        get: function () {
+          return _n;
+        },
+        set: function (n) {
+          _n = n;
+          update_ui();
+        }
+      });
+    function update_ui() {
+      $c.val(_n);
+    }
+
+    $c.change(function () {
+      _n = $c.find('option:selected').text();
+      self.emit('change');
+    });
+  },
+
 
   code_field: function (options) {
     // super

@@ -87,6 +87,8 @@ exports.get_diffs = function(form, schema_info, data, original){
     if (!f)
       continue;
     var field_info = schema_info[f];
+    if (!field_info)
+      continue;
     var field_val = original[f];
     var match = false;
     if (field_info.type == 'Reference') {
@@ -165,14 +167,14 @@ exports.validate_meta = function (p, schema, browse, form) {
   if (browse)
     for (var i = 0; i < browse.length; i++)
       if (browse[i].name && !schema[browse[i].name] && !extra_fields[browse[i].name]) {
-        console.log(schema);
-        throw new Error(p + '.browse path error: ' + browse[i].name);
+        //console.log(schema);
+        console.log(p + '.browse path inconsistency: ' + browse[i].name);
       }
   if (form)
     for (var i = 0; i < form.length; i++)
       if (form[i].name && !schema[form[i].name] && !extra_fields[form[i].name]) {
-        console.log(schema);
-        throw new Error(p + '.form path error: ' + form[i].name);
+        //console.log(schema);
+        console.log(p + '.form path inconsistency: ' + form[i].name);
       }
 }
 
@@ -310,3 +312,78 @@ exports.create_form_info = function(meta, type)
   }
   return s;
 }
+
+
+
+
+
+
+
+
+// auth stuff
+
+exports.save_user = function(user, options, complete)
+{
+  exports.set_password(user, options.password, function(){
+    delete options.password;
+    for (var p in options)
+      user[p] = options[p];
+    user.save(function (err, user) {
+      complete(err, user);
+    });
+  });
+}
+
+
+exports.set_password = function(user, password, complete)
+{
+  exports.hash(password, function (err, salt, hash) {
+    if (err) throw err;
+    user.salt = salt;
+    user.hash = hash;
+    complete();
+  });
+}
+
+
+
+
+
+
+// https://github.com/visionmedia/node-pwd
+var crypto = require('crypto');
+
+var crypto_len = 128;
+var crypto_iterations = 12000;
+
+/**
+ * Hashes a password with optional `salt`, otherwise
+ * generate a salt for `pass` and invoke `fn(err, salt, hash)`.
+ *
+ * @param {String} password to hash
+ * @param {String} optional salt
+ * @param {Function} callback
+ * @api public
+ */
+
+exports.hash = function(pwd, salt, fn) {
+  try {
+    if (3 == arguments.length) {
+        crypto.pbkdf2(pwd, salt, crypto_iterations, crypto_len, function(err, hash) {
+            fn(err, hash.toString('base64'));
+        });
+    } else {
+        fn = salt;
+        crypto.randomBytes(crypto_len, function(err, salt) {
+            if (err) return fn(err);
+            salt = salt.toString('base64');
+            crypto.pbkdf2(pwd, salt, crypto_iterations, crypto_len, function(err, hash) {
+                if (err) return fn(err);
+                fn(null, salt, hash.toString('base64'));
+            });
+        });
+    }
+  } catch (e) {
+    fn(e);
+  }
+};

@@ -19,27 +19,29 @@ function Meta(info, connection)
 
 Meta.prototype._init = function () {
   for (var p in this.info) {
-    var schema_data = this.info[p].schema;
-    utils.validate_meta(p, schema_data, this.info[p].browse, this.info[p].form);
+    var info = this.info[p];
+    var schema_data = info.schema;
+    utils.validate_meta(p, schema_data, info.browse, info.form);
     var schema = this.schemas[p] = new mongoose.Schema(schema_data);
-    utils.add_fields_and_methods(schema, p);
+    if (info.meta.workflow)
+      utils.add_fields_and_methods(schema, p);
     this.connection.model(p, schema);
-    if (!this.info[p].browse)
+    if (!info.browse)
     {
-      this.info[p].browse = utils.create_browse_info(this.info, p);
+      info.browse = utils.create_browse_info(this.info, p);
       console.log('Added generated browse for '+p);
-      console.log(this.info[p].browse);
+      console.log(info.browse);
     }
-    if (!this.info[p].form)
+    if (!info.form)
     {
-      this.info[p].form = utils.create_form_info(this.info, p);
+      info.form = utils.create_form_info(this.info, p);
       console.log('Added generated form for '+p);
-      console.log(this.info[p].form);
+      console.log(info.form);
     }
   }
   this.Resource = this.model('Resource');
+  this.User = this.model('User');
   this.Log = this.connection.model('Log', models.LogSchema);
-  this.User = this.connection.model('User', models.UserSchema);
 };
 
 Meta.prototype.browse = function(type)
@@ -79,10 +81,12 @@ Meta.prototype.info = function(type)
 
 Meta.prototype.meta = function(type)
 {
-  if (type)
-    return this.info[type].meta;
-  else
+  if (!type)
     return this.info;
+  if (!this.info[type])
+    throw new Error('no '+type);
+  else
+    return this.info[type].meta;
 }
 
 
@@ -99,7 +103,7 @@ Meta.prototype.expand = function (type, id, next) {
 
 
 populate_deep = function (meta, type, instance, next, seen) {
-  if (type == 'User' || !instance) {
+  if (!instance) {
     next();
     return;
   }
@@ -117,7 +121,8 @@ populate_deep = function (meta, type, instance, next, seen) {
   }
   var opts = [];
   for (var i = 0; i < refs.length; i++)
-    opts.push({path: refs[i].name, model: refs[i].ref});
+    if (refs[i].ref != 'User')
+      opts.push({path: refs[i].name, model: refs[i].ref});
   meta.model(type).populate(instance, opts, function (err, o) {
     utils.forEach(refs, function (r, n) {
       if (r.is_array)

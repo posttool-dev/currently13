@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var prompt = require('prompt');
 
 var models = require('./modules/cms/models');
-var auth = require('./modules/cms/auth');
+var utils = require('./modules/cms/utils');
 
 prompt.message = "create admin > ".cyan;
 prompt.delimiter = "".grey;
@@ -39,12 +39,11 @@ prompt.get(prompt_schema, function (err, result) {
     console.error(e);
   });
   var User = connection.model('User', models.UserSchema);
-  var a = new auth.Auth(User);
-  a.create_user({name: result.name, email: result.email, email_verified: true,
-      password: result.password, active: true, admin: true }, function(err, user) {
-        if (err)
-          throw new Error(err);
-        console.log('Complete', user);
-      });
+  utils.save_user(new User(), {name: result.name, email: result.email, email_verified: true,
+    password: result.password, active: true, admin: true }, function (err, user) {
+    if (err)
+      throw new Error(err);
+    console.log('Complete', user);
+  });
 
 });

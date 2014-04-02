@@ -1,10 +1,9 @@
-var upload_url = "/cms/upload";
-var delete_url = "/cms/delete_resource/";
 
 
 
-function form_form(type, id) {
+function form_form(app, type, id) {
   var self = this;
+  self.app = app;
   self.type = type;
   self.toString = function(){ return 'Edit '+type; }
 
@@ -187,7 +186,7 @@ function form_form(type, id) {
           $state_change_btn.show();
         });
         $state_change_ok_btn.click(function(){
-          $$ajax('/cms/status/'+type+'/'+_id, JSON.stringify({state:selected}), 'post').done(function(r){
+          $$ajax(self.app.base_url + '/status/'+type+'/'+_id, JSON.stringify({state:selected}), 'post').done(function(r){
             _state = selected;
             update_info();
             refresh_logs();
@@ -215,7 +214,7 @@ function form_form(type, id) {
       var $delete = $$('delete', {el:'button'}).text('DELETE '+type.toUpperCase()+'...');
       $info_del.append($delete);
       $delete.click(function(){
-        $$ajax('/cms/delete/'+type+'/'+id, null, 'post').done(function(r){
+        $$ajax(self.app.base_url + '/delete/'+type+'/'+id, null, 'post').done(function(r){
           self.emit('close');
         });
       });
@@ -223,7 +222,7 @@ function form_form(type, id) {
     function add_reference_btn() {
       var $delete = $$('delete', {el:'button'}).text('REMOVE REFERENCES');
       $delete.click(function(){
-        $$ajax('/cms/delete_references/'+type+'/'+id, null, 'post').done(function(r){
+        $$ajax(self.app.base_url + '/delete_references/'+type+'/'+id, null, 'post').done(function(r){
           _related = {};
           $info_rel.empty();
           for (var i=0; i< r.length; i++)
@@ -325,7 +324,7 @@ function form_form(type, id) {
 
   self.url = function()
   {
-      var url = '/cms';
+      var url = self.app.base_url;
       if (_id)
         url += '/update/' + type + '/' + _id;
       else
@@ -340,7 +339,7 @@ function form_form(type, id) {
       console.log('cant refresh yet... save record...');
       return;
     }
-    var url = '/cms/get/' + type;
+    var url = self.app.base_url + '/get/' + type;
     if (_id)
       url += '/' + _id;
     $$ajax(url).done(function (o) {
@@ -354,13 +353,12 @@ function form_form(type, id) {
       refresh_logs();
     });
   };
-  self.refresh();
 
   function refresh_logs()
   {
     if (!_id)
       return;
-    $$ajax('/cms/logs/'+type+'/'+_id).done(function(r){
+    $$ajax(self.app.base_url + '/logs/'+type+'/'+_id).done(function(r){
       _logs = r;
       update_info();
     });

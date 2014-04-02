@@ -1,8 +1,9 @@
-function browse_browse(type) {
+function browse_browse(app, type) {
   var self = this;
+  self.app = app;
   self.type = type;
   self.toString = function(){ return 'Browse '+type; }
-  self.url = function() { return '/cms/browse/'+type; }
+  self.url = function() { return self.app.base_url + '/browse/' + type; }
   var schema;
   var bmeta;
   var bmeta_idx;
@@ -40,7 +41,7 @@ function browse_browse(type) {
   var $rbody = $$('body', {parent: $results});
   var $pager;
 
-  $$ajax('/cms/schema/' + type, null, 'post').done(function (o) {
+  $$ajax(self.app.base_url + '/schema/' + type, null, 'post').done(function (o) {
     schema = o;
     bmeta = o.browser;
     bmeta_idx = {};
@@ -57,7 +58,7 @@ function browse_browse(type) {
 
   function request_data() {
     var d = JSON.stringify({condition: filters, order: order, offset: page * pagesize, limit: pagesize});
-    $$ajax('/cms/browse/' + type, d, 'post').done(function (o) {
+    $$ajax(self.app.base_url + '/browse/' + type, d, 'post').done(function (o) {
       $rbody.empty();
       total = o.count;
       update_ui(o.results)
@@ -310,7 +311,6 @@ function browse_browse(type) {
       $i.empty();
       var $ic = $('<input type="text" class="small">')
       $i.append($ic);
-      console.log(p, r)
       if (r) {
         $t.val(r.condition);
         $ic.val(r.value);

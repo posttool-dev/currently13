@@ -23,6 +23,7 @@
 
 <script>
 var containerHttp = <% if (containerHttp) { %>"<%- containerHttp %>/";<% } else {%>null<% } %>;
+<% if (models) { %>
 <%
 var t = {};
 for (var p in models)
@@ -39,6 +40,8 @@ function render_template(type, object)
         return "";
     }
 }
+<% } %>
+
 <% if (workflow) { %>
 var __states = <%- JSON.stringify(workflow.states) %>;
 function get_state_name(code) {

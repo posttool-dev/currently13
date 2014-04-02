@@ -80,7 +80,8 @@ exports = module.exports = {
     ]
   },
 
-  Resource:  cms_models.ResourceInfo()
+  Resource:  cms_models.ResourceInfo(),
+  User:  cms_models.UserInfo()
 
 }
 

@@ -1,7 +1,8 @@
 /**
  * Module dependencies
  */
-var fs = require('fs'),
+var EventEmitter = require('events').EventEmitter,
+    fs = require('fs'),
     uuid = require('node-uuid'),
     mime = require('mime'),
     mongoose = require('mongoose'),
@@ -25,10 +26,20 @@ exports = module.exports = Cms;
 
 
 /**
- * The Cms
+ * Construct the Cms with a module. Cms ready modules must export at least `models` and `config`.
  * @constructor
  */
 function Cms(module) {
+  if (!module)
+    throw new Error('Requires a module');
+  if (!module.name)
+    logger.info('No name specified for module. Calling it null.')
+  if (!module.config)
+    throw new Error('Module requires config');
+  if (!module.config.mongoConnectString)
+    throw new Error('Config requires mongoConnectString');
+  if (!module.models)
+    throw new Error('Module requires models');
   this.module = module;
   this.config = module.config;
   this.connection = null;
@@ -40,16 +51,25 @@ function Cms(module) {
 }
 
 
+Cms.prototype.__proto__ = EventEmitter.prototype;
+
 
 Cms.prototype._init = function () {
   var self = this;
 
-  // mongoose connection and model meta info
+  // mongoose connection
   self.connection = mongoose.createConnection(self.config.mongoConnectString);
+  self.connection.on('error', function(e){
+    logger.error('connection error');
+    logger.error(e);
+    self.emit('error', {type: 'connection error', exception: e});
+  });
+
+  // model helper
   self.meta = new Meta(self.module.models, self.connection);
 
   // user management
-  self.auth = new auth.Auth(self.meta.User, models.UserInfo(), '/cms');
+  self.auth = new auth.Auth(self.meta, '/cms');
 
   // queued jobs, like resizing and transcoding
   if (self.config.kueConfig) {
@@ -101,12 +121,7 @@ Cms.prototype._init = function () {
     next();
   });
 
-  // get ready for routing by defining middleware for permissions and set up
-
-  // admin
-    var aspect0 = [auth.has_user, auth.is_admin,
-      self.add_workflow.bind(self),
-      self.add_meta.bind(self)];
+  // get ready for routing by defining middleware
 
   // check for user in session
   var aspect1 = [auth.has_user,
@@ -127,32 +142,7 @@ Cms.prototype._init = function () {
     self.permission_object.bind(self)];
 
   // route
-  app.get('/login',
-    self.auth.login_get.bind(self.auth));
-  app.post('/login',
-    self.auth.login_post.bind(self.auth));
-  app.all('/logout',
-    self.auth.logout.bind(self.auth));
-  app.get('/profile',
-    aspect1, self.auth.profile_get.bind(self.auth));
-  app.post('/profile',
-    aspect1, self.auth.profile_post.bind(self.auth));
-  app.get('/cms/browse/user',
-    aspect0, self.auth.users_get.bind(self.auth));
-  app.post('/cms/browse/user',
-    aspect0, self.auth.users_post.bind(self.auth));
-  app.post('/cms/schema/user',
-    aspect0, self.auth.users_schema.bind(self.auth));
-  app.get('/cms/create/user',
-    aspect0, self.auth.user_get.bind(self.auth));
-  app.post('/cms/create/user',
-    aspect0, self.auth.user_post.bind(self.auth));
-  app.get('/cms/update/user/:id',
-    aspect0, self.auth.user_get.bind(self.auth));
-  app.post('/cms/update/user/:id',
-    aspect0, self.auth.user_post.bind(self.auth));
-  app.get('/cms/get/user/:id',
-    aspect0, self.auth.user_get_json.bind(self.auth));
+  self.auth.init(app);
 
   app.all('/cms',
     aspect2, self.show_dashboard.bind(self));
@@ -330,9 +320,11 @@ Cms.prototype.form_get = function (req, res) {
 
 // form (json): get the object, related objects as well as form meta info
 Cms.prototype.form_get_json = function (req, res) {
+  var meta_meta = this.meta.meta(req.type);
   var related = {};
-  for (var p in req.related)
-    related[p] = req.related[p].results;
+  if (meta_meta.references != 'manual')
+    for (var p in req.related)
+      related[p] = req.related[p].results;
   res.json({
     title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
     type: req.type,
@@ -350,25 +342,32 @@ Cms.prototype.form_post = function (req, res) {
   var data = JSON.parse(req.body.val);
   var schema_info = utils.get_schema_info(req.schema);
 
-  // get info about differences and set values
-  var info = utils.get_diffs(req.form, schema_info, data, object);
-  for (var p in info.diffs)
-    object[p] = data[p];
+  var presave = this.meta.info[req.type].presave;
+  if (!presave)
+    presave = function(object, data, next){
+      next();
+    };
+  presave(object, data, function(){
+    // get info about differences and set values
+    var info = utils.get_diffs(req.form, schema_info, data, object);
+    for (var p in data)
+      object[p] = data[p];
 
-  // set the creator (if unset)
-  if (!object.creator)
-    object.creator = req.session.user._id;
+    // set the creator (if unset)
+    if (!object.creator)
+      object.creator = req.session.user._id;
 
-  // set the default state (if unset)
-  var workflow = self.module.workflow;
-  if (!object.state && workflow && workflow.states)
-    object.state = workflow.states[0].code;
+    // set the default state (if unset)
+    var workflow = self.module.workflow;
+    if (!object.state && workflow && workflow.states)
+      object.state = workflow.states[0].code;
 
-  //self.emit('pre save', object);
-  object.save(function (err, s) {
-    self.add_log(req.session.user._id, 'save', req.type, s, info, function () {
-      meta.expand(req.type, s._id, function (err, s) {
-        res.json(s);
+    //self.emit('pre save', object);
+    object.save(function (err, s) {
+      self.add_log(req.session.user._id, 'save', req.type, s, info, function () {
+        meta.expand(req.type, s._id, function (err, s) {
+          res.json(s);
+        });
       });
     });
   });

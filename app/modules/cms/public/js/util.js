@@ -242,5 +242,5 @@ function media_path(resource)
   if (containerHttp)
     return containerHttp + resource.path;
   else
-    return '/cms/download/' + resource._id
+    return download_url + '/' + resource._id
 }

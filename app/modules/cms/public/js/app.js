@@ -1,4 +1,9 @@
-function init_cms() {
+var upload_url = "/cms/upload";
+var download_url = "/cms/download";
+var delete_url = "/cms/delete_resource/";
+
+function init_cms(base_url) {
+  // track control/meta key
   var ctrlKeyDown;
   $(window).keydown(function (e) {
     ctrlKeyDown = e.ctrlKey || e.altKey || e.shiftKey || e.metaKey;
@@ -6,19 +11,24 @@ function init_cms() {
     ctrlKeyDown = e.ctrlKey || e.altKey || e.shiftKey || e.metaKey;
   });
 
-  var layers = new layers_layers();
+  // the "app"
+  var app = {
+    base_url: base_url ? base_url : '/cms',
+    layers: new layers_layers(),
+    $el: function(){ return app.layers.$el(); }
+  }
 
   window.addEventListener("popstate", function (e) {
     var s = e.state ? e.state : location.pathname;
-    var f = layers.find(s);
+    var f = app.layers.find(s);
     if (f != -1) {
-      if (f == 0 && layers.size() == 1)
+      if (f == 0 && app.layers.size() == 1)
         history.back();
       else
-        layers.pop_to(s);
+        app.layers.pop_to(s);
     }
     else {
-      layers.clear_layers();
+      app.layers.clear_layers();
       var p = s.substring(1).split('/');
       if (p[1] == 'browse')
         browse(p[2])
@@ -31,15 +41,15 @@ function init_cms() {
 
   // form
   function form(type, id) {
-    var ff = new form_form(type, id);
+    var ff = new form_form(app, type, id);
     ff.add_listener('browse', function (f, o) {
-      var bb = new browse_browse(o.type);
+      var bb = new browse_browse(app, o.type);
       bb.add_listener('select', function (e, r) {
         o.field.push(r);
         o.field.emit('change');
-        layers.pop_layer();
+        app.layers.pop_layer();
       });
-      layers.add_layer(bb);
+      app.layers.add_layer(bb);
     });
     ff.add_listener('create', function (f, o) {
       var ff = form(o.type);
@@ -59,29 +69,30 @@ function init_cms() {
 //        update_object(o.field, r);//happens in layer.refresh
       });
     });
-    layers.add_layer(ff);
+    ff.refresh();
+    app.layers.add_layer(ff);
     return ff;
   }
 
 
   // root browser
   function browse(type) {
-    var browser = new browse_browse(type);
+    var browser = new browse_browse(app, type);
     browser.add_listener('select', function (f, r) {
       if (ctrlKeyDown) {
-        var url = '/cms/update/' + type + '/' + r._id;
+        var url = base_url + '/update/' + type + '/' + r._id;
         var win = window.open(url, ctrlKeyDown ? '_blank' : '_self');
         win.focus();
       }
       else {
         var ff = form(type, r._id);
         ff.add_listener('close', function (e, r) {
-          layers.pop_layer();
+          app.layers.pop_layer();
         });
       }
     });
-    layers.add_layer(browser);
+    app.layers.add_layer(browser);
   }
 
-  return layers;
+  return app;
 }
