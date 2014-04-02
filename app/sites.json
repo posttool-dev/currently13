@@ -1,7 +1,6 @@
 {
   "cms": {
-    "hackettmill": "./hackettmill",
-    "peter.com": "./peter"
+    "hackettmill": "./hackettmill"
   },
   "www": {
     "hackettmill": "./hackettmill/app"
