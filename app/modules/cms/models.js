@@ -72,8 +72,8 @@ exports.UserInfo = function(){
     ],
     form_profile: [
       {name: "name", widget: "input"},
-      {name: "name", widget: "email"},
-      {name: "image", widget: "upload", options: {type: "Resource"}},
+      {name: "email", widget: "email"},
+      {name: "image", widget: "upload", options: {type: "Resource", array: false}},
       {name: "password", widget: "password"}
     ],
     form: [

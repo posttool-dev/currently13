@@ -44,18 +44,30 @@ Meta.prototype._init = function () {
   this.Log = this.connection.model('Log', models.LogSchema);
 };
 
-Meta.prototype.browse = function(type)
+Meta.prototype.browse = function(type, sub_type)
 {
   if (!this.info[type])
     throw new Error('no '+type);
-  return this.info[type].browse;
+  if (!sub_type)
+    return this.info[type].browse;
+  var browse = this.info[type]['browse_'+sub_type];
+  if (browse)
+    return browse;
+  else
+    return this.info[type].browse;
 };
 
-Meta.prototype.form = function(type)
+Meta.prototype.form = function(type, sub_type)
 {
   if (!this.info[type])
     throw new Error('no '+type);
-  return this.info[type].form;
+  if (!sub_type)
+    return this.info[type].form;
+  var form = this.info[type]['form_'+sub_type];
+  if (form)
+    return form;
+  else
+    return this.info[type].form;
 };
 
 Meta.prototype.schema = function(type)
@@ -88,6 +100,7 @@ Meta.prototype.meta = function(type)
   else
     return this.info[type].meta;
 }
+
 
 
 

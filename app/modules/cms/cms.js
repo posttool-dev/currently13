@@ -217,14 +217,51 @@ Cms.prototype.add_workflow = function (req, res, next) {
 
 // for requests that contain :type ... put the meta info in the request
 Cms.prototype.add_meta = function (req, res, next) {
-  req.models = res.locals.models = this.meta.meta();
+  var user = req.session.user;
+  var models = req.models = res.locals.models = {};
+  var forms = {};
+  var browses = {};
+  var all_models = this.meta.meta();
+  var workflow = this.module.workflow;
+  if (workflow && workflow.groups && user.group && !user.admin) {
+    var form = workflow.groups[user.group].form;
+    for (var i=0; i<form.length; i++) {
+      var o = form[i];
+      if (typeof(o) == 'string')
+      {
+        models[o] = all_models[o];
+      }
+      else
+      {
+        models[o.name] = all_models[o.name];
+        forms[o.name] = o.form;
+      }
+    }
+    var browse = workflow.groups[user.group].browse;
+    for (var i=0; i<browse.length; i++) {
+      var o = browse[i];
+      if (typeof(o) == 'string')
+      {
+        models[o] = all_models[o];
+      }
+      else
+      {
+        models[o.name] = all_models[o.name];
+        browses[o.name] = o.form;
+      }
+    }
+  }
+  else
+    req.models = all_models;
+
+  console.log(forms)
   var type = req.params.type;
   if (type) {
     req.type = type;
     req.schema = this.meta.schema(type);
     req.model = this.meta.model(type);
-    req.browser = this.meta.browse(type);
-    req.form = this.meta.form(type);
+    req.browser = this.meta.browse(type, browses[type]);
+    req.form = this.meta.form(type, forms[type]);
   }
   next();
 };
@@ -364,6 +401,12 @@ Cms.prototype.form_post = function (req, res) {
 
     //self.emit('pre save', object);
     object.save(function (err, s) {
+      if (err)
+      {
+        logger.error(err);
+        res.json({error: err});
+        return;
+      }
       self.add_log(req.session.user._id, 'save', req.type, s, info, function () {
         meta.expand(req.type, s._id, function (err, s) {
           res.json(s);

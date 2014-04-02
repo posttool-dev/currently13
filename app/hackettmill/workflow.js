@@ -14,7 +14,6 @@ exports = module.exports = {
   groups: {
     admin: "editor",
     editor: {
-      edit: '*',
       transitions: [
         {from: DRAFT, to: [PUBLISHED, FLAGGED]},
         {from: PUBLISHED, to: [FLAGGED, DRAFT]},
@@ -22,17 +21,14 @@ exports = module.exports = {
       ]
     },
     contributor: {
-      edit: ['Inventory', 'Artist', 'Exhibition', 'Contact', 'Resource'],
+      form: ['Inventory', 'Artist', 'Exhibition', 'Contact', 'Resource', { name: 'User', form: 'profile' }],
+      browse: ['Inventory', 'Artist', 'Exhibition', 'Contact', 'Resource'],
       transitions: [],
       requests: [
         {from: DRAFT, to: [PUBLISHED]},
         {from: PUBLISHED, to: [DRAFT]},
         {from: PUBLISHED, to: [FLAGGED]}
-      ],
-      permissions: {
-        Inventory: ['edit', 'view'],
-        Artist: ['']
-      }
+      ]
     }
   }
 }
