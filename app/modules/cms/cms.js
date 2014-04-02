@@ -193,9 +193,10 @@ Cms.prototype.permission_type = function (req, res, next) {
 
 
 Cms.prototype.permission_object = function (req, res, next) {
-  // var info = permission.info(req.user, req.type, req.object);
-  // if (info.can_edit || info.can_view) next(); else ...
-  next();
+  if (req.form_permission)
+    req.form_permission(req.session.user, req.object, next);
+  else
+    next();
 }
 
 
@@ -218,50 +219,58 @@ Cms.prototype.add_workflow = function (req, res, next) {
 // for requests that contain :type ... put the meta info in the request
 Cms.prototype.add_meta = function (req, res, next) {
   var user = req.session.user;
-  var models = req.models = res.locals.models = {};
-  var forms = {};
+  var models = {};
   var browses = {};
+  var forms = {};
+  var permissions = {};
+  var conditions = {};
   var all_models = this.meta.meta();
-  var workflow = this.module.workflow;
-  if (workflow && workflow.groups && user.group && !user.admin) {
-    var form = workflow.groups[user.group].form;
-    for (var i=0; i<form.length; i++) {
-      var o = form[i];
-      if (typeof(o) == 'string')
-      {
-        models[o] = all_models[o];
+  var perm = this.module.permission;
+  if (perm && user.group && !user.admin && perm[user.group]) {
+    var form = perm[user.group].form;
+    if (form)
+      for (var i=0; i<form.length; i++) {
+        var o = form[i];
+        if (typeof(o) == 'string')
+        {
+          models[o] = all_models[o];
+        }
+        else
+        {
+          models[o.name] = all_models[o.name];
+          forms[o.name] = o.form;
+          permissions[o.name] = o.permission;
+        }
       }
-      else
-      {
-        models[o.name] = all_models[o.name];
-        forms[o.name] = o.form;
+    var browse = perm[user.group].browse;
+    if (browse)
+      for (var i=0; i<browse.length; i++) {
+        var o = browse[i];
+        if (typeof(o) == 'string')
+        {
+          models[o] = all_models[o];
+        }
+        else
+        {
+          models[o.name] = all_models[o.name];
+          browses[o.name] = o.browse;
+          conditions[o.name] = o.conditions;
+        }
       }
-    }
-    var browse = workflow.groups[user.group].browse;
-    for (var i=0; i<browse.length; i++) {
-      var o = browse[i];
-      if (typeof(o) == 'string')
-      {
-        models[o] = all_models[o];
-      }
-      else
-      {
-        models[o.name] = all_models[o.name];
-        browses[o.name] = o.form;
-      }
-    }
   }
   else
-    req.models = all_models;
+    models = all_models;
+  req.models = res.locals.models = models;
 
-  console.log(forms)
   var type = req.params.type;
-  if (type) {
+  if (type && models[type]) {
     req.type = type;
     req.schema = this.meta.schema(type);
     req.model = this.meta.model(type);
     req.browser = this.meta.browse(type, browses[type]);
+    req.browse_conditions = conditions[type] ? conditions[type](user) : null;
     req.form = this.meta.form(type, forms[type]);
+    req.form_permission = permissions[type];
   }
   next();
 };
@@ -307,6 +316,9 @@ Cms.prototype.show_dashboard = function (req, res) {
 // browse
 Cms.prototype.browse_get = function (req, res) {
   var conditions = utils.process_browse_filter(req.body.condition);
+  if (req.browse_conditions)
+    for (var p in req.browse_conditions)
+      conditions[p] = req.browse_conditions[p];
   req.model.count(conditions, function (err, count) {
     res.render('cms/browse', {
       title: 'CMS Dashboard ',
@@ -320,9 +332,11 @@ Cms.prototype.browse_get = function (req, res) {
 
 // browse (json): returns filters, ordered, offset results
 Cms.prototype.browse_post = function (req, res) {
-  var meta = this.meta;
   var conditions = utils.process_browse_filter(req.body.condition);
-  var fields = null;
+  if (req.browse_conditions)
+    for (var p in req.browse_conditions)
+      conditions[p] = req.browse_conditions[p];
+  var fields = null; // get from req.browse_fields!
   var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
   req.model.count(conditions, function (err, count) {
     var q = req.model.find(conditions, fields, options);
@@ -346,9 +360,6 @@ Cms.prototype.browse_schema = function (req, res) {
 Cms.prototype.form_get = function (req, res) {
   res.render('cms/form', {
     title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
-    ancestors: [
-      {url: '/cms/browse/' + req.type, name: req.type}
-    ],
     type: req.type,
     id: req.id ? req.id : null,
     form: req.form});
@@ -357,6 +368,8 @@ Cms.prototype.form_get = function (req, res) {
 
 // form (json): get the object, related objects as well as form meta info
 Cms.prototype.form_get_json = function (req, res) {
+  var object = req.object || new req.model();
+
   var meta_meta = this.meta.meta(req.type);
   var related = {};
   if (meta_meta.references != 'manual')
@@ -365,7 +378,7 @@ Cms.prototype.form_get_json = function (req, res) {
   res.json({
     title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
     type: req.type,
-    object: req.object || new req.model(),
+    object: object,
     related: related,
     form: req.form})
 };
@@ -420,6 +433,7 @@ Cms.prototype.form_post = function (req, res) {
 // form (json): delete references
 Cms.prototype.form_delete_references = function (req, res) {
   var self = this;
+
   if (req.related_count == 0)
     res.json({});
   else {
@@ -549,16 +563,17 @@ Cms.prototype.save_resource = function (name, path, mimetype, size, creator_id, 
         resource_jobs = resource_jobs[r.mime];
       else
         resource_jobs = resource_jobs[type];
-      for (var i = 0; i < resource_jobs.length; i++) {
-        var process = resource_jobs[i];
-        var job_name = type + ' ' + process;
-        console.log("job create", job_name);
-        self.jobs.create(job_name, {
-          container: self.config.container,
-          filename: path,
-          parent: r._id,
-          creator: creator_id}).save();
-      }
+      if (resource_jobs)
+        for (var i = 0; i < resource_jobs.length; i++) {
+          var process = resource_jobs[i];
+          var job_name = type + ' ' + process;
+          console.log("job create", job_name);
+          self.jobs.create(job_name, {
+            container: self.config.container,
+            filename: path,
+            parent: r._id,
+            creator: creator_id}).save();
+        }
     }
     next(s);
   });
