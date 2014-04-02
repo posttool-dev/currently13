@@ -13,9 +13,20 @@ function Auth(User, UserInfo, onLogin) {
   this.onLogin = onLogin;
 };
 
+
+
+Auth.prototype.get_user = function(id, complete) {
+  if (id)
+    this.User.findOne({_id: id}, complete);
+  else
+    complete();
+}
+
+
 Auth.prototype.login_get = function (req, res) {
   res.render('auth/login', {});
 };
+
 
 Auth.prototype.login_post = function (req, res) {
   var self = this;
@@ -128,17 +139,17 @@ exports.set_password = function(user, password, complete)
 
 
 
-var Mailgun = require('mailgun').Mailgun;
-
-var mg = new Mailgun('some-api-key');
-mg.sendText('example@example.com', ['Recipient 1 <rec1@example.com>', 'rec2@example.com'],
-  'This is the subject',
-  'This is the text',
-  'noreply@example.com', {},
-  function(err) {
-    if (err) console.log('Oh noes: ' + err);
-    else     console.log('Success');
-});
+//var Mailgun = require('mailgun').Mailgun;
+//
+//var mg = new Mailgun('some-api-key');
+//mg.sendText('example@example.com', ['Recipient 1 <rec1@example.com>', 'rec2@example.com'],
+//  'This is the subject',
+//  'This is the text',
+//  'noreply@example.com', {},
+//  function(err) {
+//    if (err) console.log('Oh noes: ' + err);
+//    else     console.log('Success');
+//});
 
 
 
@@ -173,6 +184,38 @@ Auth.prototype.logout = function (req, res) {
 
 
 
+// form: create/update
+Auth.prototype.profile_get = function (req, res) {
+  var UserInfo = this.UserInfo;
+  res.render('auth/profile', {
+    title: 'Profile',
+    id: req.id ? req.id : null,
+    form: UserInfo.form});
+};
+
+
+// form (json): get the object, related objects as well as form meta info
+Auth.prototype.profile_get_json = function (req, res) {
+  var user = req.session.user;
+  res.json({
+    title: (user ? 'Editing' : 'Creating') + ' User',
+    object: user,
+    form: this.UserInfo.form});
+};
+
+
+// form (json): save
+Auth.prototype.profile_post = function (req, res) {
+  var data = JSON.parse(req.body.val);
+  var user = req.session.user;
+  for (var p in data)
+    user[p] = data[p];
+  user.save(function (err, s) {
+    res.json(user);
+  });
+};
+
+
 
 
 //admin
@@ -182,7 +225,7 @@ Auth.prototype.users_get = function (req, res) {
   var UserInfo = this.UserInfo;
   var conditions = utils.process_browse_filter(req.body.condition);
   User.count(conditions, function (err, count) {
-    res.render('cms/browse', {
+    res.render('auth/users', {
       title: 'Browse Users ',
       browser: UserInfo.browser,
       total: count
@@ -212,21 +255,14 @@ Auth.prototype.users_schema = function (req, res) {
 };
 
 
-Auth.prototype.get_user = function(id, complete) {
-  if (id)
-    this.User.findOne({_id: id}, complete);
-  else
-    complete();
-}
-
 
 // form: create/update
 Auth.prototype.user_get = function (req, res) {
   var UserInfo = this.UserInfo;
-  res.render('cms/form', {
-    title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
+  res.render('auth/user', {
+    title: (req.id ? 'Editing' : 'Creating') + ' ' + req.type,
     id: req.id ? req.id : null,
-    form: UserInfo});
+    form: UserInfo.form_admin});
 };
 
 
@@ -243,7 +279,7 @@ Auth.prototype.user_get_json = function (req, res) {
 
 
 // form (json): save
-Auth.prototype.user_create = function (req, res) {
+Auth.prototype.user_post = function (req, res) {
   var data = JSON.parse(req.body.val);
   this.get_user(req.params.id, function (err, user) {
     for (var p in data)
