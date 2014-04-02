@@ -1,6 +1,6 @@
 var config = {
   development: {
-    name: 'peter.com',
+    name: 'peter',
     serverPort: 8080,
     mongoConnectString: 'mongodb://localhost/peter',
     sessionSecret: 'dsakj;ldsa8r4fndlsk*#IRF5euyhtfgxkj',
