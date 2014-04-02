@@ -21,8 +21,6 @@ exports = module.exports = {
       ]
     },
     contributor: {
-      form: ['Inventory', 'Artist', 'Exhibition', 'Contact', 'Resource', { name: 'User', form: 'profile' }],
-      browse: ['Inventory', 'Artist', 'Exhibition', 'Contact', 'Resource'],
       transitions: [],
       requests: [
         {from: DRAFT, to: [PUBLISHED]},

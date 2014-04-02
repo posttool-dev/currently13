@@ -7,7 +7,7 @@ exports.ResourceInfo = function(){
   return {
     meta: {
       plural: 'Resources',
-      workflow: false,
+      workflow: true,
       dashboard: true
     },
     schema: {
@@ -44,7 +44,7 @@ exports.UserInfo = function(){
   return {
     meta: {
       plural: 'Users',
-      workflow: false,
+      workflow: true,
       dashboard: true,
       name: "<%= name %>",
       references: 'manual'
