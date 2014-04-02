@@ -1,8 +1,7 @@
 /**
  * Module dependencies
  */
-var EventEmitter = require('events').EventEmitter,
-    fs = require('fs'),
+var fs = require('fs'),
     uuid = require('node-uuid'),
     mime = require('mime'),
     mongoose = require('mongoose'),
@@ -40,8 +39,6 @@ function Cms(module) {
   this._init();
 }
 
-
-//Cms.prototype.__proto__ = EventEmitter.prototype;
 
 
 Cms.prototype._init = function () {
@@ -106,6 +103,11 @@ Cms.prototype._init = function () {
 
   // get ready for routing by defining middleware for permissions and set up
 
+  // admin
+    var aspect0 = [auth.has_user, auth.is_admin,
+      self.add_workflow.bind(self),
+      self.add_meta.bind(self)];
+
   // check for user in session
   var aspect1 = [auth.has_user,
       self.add_workflow.bind(self)];
@@ -132,17 +134,25 @@ Cms.prototype._init = function () {
   app.all('/logout',
     self.auth.logout.bind(self.auth));
   app.get('/profile',
-    aspect1, self.auth.user_get.bind(self.auth));
-//  app.post('/profile',
-//     aspect1, self.auth.user_post.bind(self.auth));
-//  app.all ('/users',
-//    [utils.has_user, utils.is_admin], self.auth.admin_users.bind(self.auth));
-//  app.get ('/user/:user_id',
-//    [utils.has_user, utils.is_admin], self.auth.admin_user_get.bind(self.auth));
-//  app.get ('/user/:user_id/edit',
-//    [utils.has_user, utils.is_admin], self.auth.admin_user_get.bind(self.auth));
-//  app.post('/user/:user_id/edit',
-//    [utils.has_user, utils.is_admin], self.auth.admin_user_post.bind(self.auth));
+    aspect1, self.auth.profile_get.bind(self.auth));
+  app.post('/profile',
+    aspect1, self.auth.profile_post.bind(self.auth));
+  app.get('/cms/browse/user',
+    aspect0, self.auth.users_get.bind(self.auth));
+  app.post('/cms/browse/user',
+    aspect0, self.auth.users_post.bind(self.auth));
+  app.post('/cms/schema/user',
+    aspect0, self.auth.users_schema.bind(self.auth));
+  app.get('/cms/create/user',
+    aspect0, self.auth.user_get.bind(self.auth));
+  app.post('/cms/create/user',
+    aspect0, self.auth.user_post.bind(self.auth));
+  app.get('/cms/update/user/:id',
+    aspect0, self.auth.user_get.bind(self.auth));
+  app.post('/cms/update/user/:id',
+    aspect0, self.auth.user_post.bind(self.auth));
+  app.get('/cms/get/user/:id',
+    aspect0, self.auth.user_get_json.bind(self.auth));
 
   app.all('/cms',
     aspect2, self.show_dashboard.bind(self));

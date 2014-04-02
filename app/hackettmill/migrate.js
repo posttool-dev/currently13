@@ -9,13 +9,16 @@ var current = require('../modules/cms'), cms = new current.Cms();
 var utils = require('../modules/cms/utils');
 
 var data = {};
+
 var path = __dirname + '/migrate/HackettMillServer_Backup_2014_02_27_100100/';
 
 var use_existing_images = true;
+
 var prefix = 'dev1';
 
 
 cms.init(require('./index'));
+
 
 if (use_existing_images)
   migrate0();
