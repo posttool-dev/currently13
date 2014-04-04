@@ -144,7 +144,16 @@ Cms.prototype._init = function () {
     self.permission_object.bind(self)];
 
   // route
-  self.auth.init(app);
+  app.get('/login',
+    self.auth.login_get.bind(self.auth));
+  app.post('/login',
+    self.auth.login_post.bind(self.auth));
+  app.all('/logout',
+    self.auth.logout.bind(self.auth));
+  app.get('/profile',
+    auth.has_user, self.auth.profile_get.bind(self.auth));
+  app.post('/profile',
+    auth.has_user, self.auth.profile_post.bind(self.auth));
 
   app.all('/cms',
     aspect2, self.show_dashboard.bind(self));

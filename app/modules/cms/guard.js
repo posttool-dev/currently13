@@ -55,12 +55,14 @@ Guard.prototype.form_type = function (user, type) {
   return info.forms[type];
 }
 
+
 Guard.prototype.browse_conditions = function (user, type) {
   var info = this.map[user.group];
   if (!info)
     return null;
   return info.conditions[type];
 }
+
 
 Guard.prototype.form_permission = function (user, type) {
   var info = this.map[user.group];
@@ -69,6 +71,8 @@ Guard.prototype.form_permission = function (user, type) {
   return info.permissions[type];
 }
 
+
+// prepares meta info for a user about what they can browse and not browse
 Guard.prototype.get_models = function(user, meta) {
   var seen_models = {};
   var models = [];
@@ -98,12 +102,14 @@ Guard.prototype.get_models = function(user, meta) {
   return models;
 }
 
+
 Guard.prototype.get_info = function(meta, type){
   var info = meta.schema_info(type);
   info.meta = meta.meta(type);
   info._type = type;
   return info;
 }
+
 
 Guard.prototype.get_admin_models = function(meta){
   var m = [];
