@@ -4,9 +4,8 @@ sudo su
 apt-get update
 
 apt-get install -y build-essential --no-install-recommends
-apt-get install -y redis-server --no-install-recommends
-
 apt-get install -y python-software-properties
+apt-get install -y redis-server --no-install-recommends
 
 add-apt-repository ppa:chris-lea/node.js
 add-apt-repository ppa:dhor/myway

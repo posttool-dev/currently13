@@ -52,5 +52,9 @@ function condition_me(user) {
 }
 
 function condition_published(user) {
-  return {state: workflow.PUBLISHED};
+  return {$and: {$or: [{state: workflow.PUBLISHED}, {creator: user._id}]}};
 }
+
+// if there be cases where a condition is not sufficient,
+//  you will want to create an indexed field
+

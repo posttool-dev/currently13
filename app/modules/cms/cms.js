@@ -175,11 +175,11 @@ Cms.prototype._init = function () {
   app.post('/cms/status/:type/:id',
     aspect3, self.form_status.bind(self));
   app.post('/cms/upload',
-    aspect1, self.upload.bind(self));
+    aspect1, self.resource_upload.bind(self));
   app.get('/cms/download/:id',
-    aspect1, self.download.bind(self));
+    aspect1, self.resource_download.bind(self));
   app.get('/cms/delete_resource/:id',
-    aspect1, self.delete_resource.bind(self));
+    aspect1, self.resource_delete.bind(self));
 
   logger.info('current cms 0.0.3');
 }
@@ -620,7 +620,7 @@ client_upload_params = function (config, path) {
 };
 
 
-Cms.prototype.upload = function (req, res) {
+Cms.prototype.resource_upload = function (req, res) {
   var self = this;
   var form = new formidable.IncomingForm();
   form.onPart = function (part) {
@@ -668,7 +668,7 @@ Cms.prototype.write = function (stream, path, next) {
 }
 
 
-Cms.prototype.delete_resource = function (req, res) {
+Cms.prototype.resource_delete = function (req, res) {
   var self = this;
   var Resource = self.meta.Resource;
   var q = Resource.findOne({_id: req.params.id});
@@ -703,7 +703,7 @@ Cms.prototype.delete_resource = function (req, res) {
 };
 
 
-Cms.prototype.download = function (req, res) {
+Cms.prototype.resource_download = function (req, res) {
   var self = this;
   var Resource = self.meta.Resource;
   var q = Resource.findOne({_id: req.params.id});

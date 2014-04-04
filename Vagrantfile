@@ -13,6 +13,6 @@ Vagrant::Config.run do |config|
   config.vm.share_folder "app", "/home/vagrant/app", "app"
   config.vm.share_folder "deploy", "/home/vagrant/deploy", "deploy"
 
-  config.vm.provision :shell, :path => "deploy/init-app.sh"
+  config.vm.provision :shell, :path => "deploy/provision.sh"
 
 end
