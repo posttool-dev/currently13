@@ -5,20 +5,19 @@ exports = module.exports = {
   },
   contributor: {
     form: [
-      'Inventory',
-      'Artist',
-      'Exhibition',
-      'Contact',
-      {name: 'Resource', permission: is_creator},
-      {name: 'User', form: 'profile', permission: is_user}
+      {type: 'Inventory'},
+      {type: 'Artist'},
+      {type: 'Exhibition'},
+      {type: 'Contact'},
+      {type: 'Resource', permission: is_creator},
+      {type: 'User', form: 'profile', permission: is_user}
     ],
     browse: [
-      'Inventory',
-      'Artist',
-      {name: 'Exhibition', conditions: condition_published},
-      {name: 'Resource', conditions: condition_mine},
-      {name: 'Contact', conditions: condition_published},
-      {name: 'User', form: 'profile', conditions: condition_me}
+      {type: 'Inventory'},
+      {type: 'Artist'},
+      {type: 'Exhibition', conditions: condition_published},
+      {type: 'Contact', conditions: condition_published},
+      {type: 'Resource', conditions: condition_mine},
     ]
   }
 }

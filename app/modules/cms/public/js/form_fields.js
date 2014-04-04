@@ -308,18 +308,19 @@ var form_fields = {
 
     var $progress = $$('progress');
     var $progressbar = $$('bar', { css: { width: '0%' }, parent: $progress });
-    var $info = $$('multi-drop-area file-input-drop');
+    var $content = $$('');
+    var $info = $$('multi-drop-area').text('Drop file here or click Upload.');
     var $btn = $$('btn btn-small file-input-button', {
       children: [ $('<span><i class="fa fa-arrow-circle-o-up"></i> Upload file...</span>') ] });
     var $fileupload = $$('multi_upload', { el: 'input', parent: $btn,
       data: { url: upload_url },
       attributes: { type: 'file', name: 'file', multiple: 'multiple' }});
-    $el.append($progress, $info, '<br clear="both">', $btn);
+    $el.append($progress, $content, '<br clear="both">', $btn);
 
     var o = $.extend({add: false, browse: false}, options);
     var f = new form_fields.add_remove(form_fields.model_field, o);
     f.bubble_listener(self);
-    $info.append(f.$el());
+    $content.append(f.$el());
 
     Object.defineProperty(this, "data", {
       get: function () {
@@ -333,9 +334,15 @@ var form_fields = {
 
     function update_ui(){
       if (!options.array && f.data)
+      {
+        $info.hide();
         $btn.hide();
+      }
       else
+      {
+        $info.show();
         $btn.show();
+      }
     }
 
 //    $fileupload.change(function (e) {
@@ -387,7 +394,7 @@ var form_fields = {
       },
       done: function (e, edata) {
         $progress.hide();
-        $info.show();
+        $content.show();
         if (options.array)
           f.push(edata.result);
         else
@@ -422,7 +429,7 @@ var form_fields = {
     });
     function update_ui() {
       $el.empty();
-      var t = render_template(options.type, _d);
+      var t = render_template(options.type, _d).trim();
       if (t)
         $el.append('<div class="text">'+t+'</div>');
       if (is_resource)

@@ -12,17 +12,15 @@ var EventEmitter = require('events').EventEmitter,
     formidable = require('formidable'),
     kue = require('kue'),
     auth = require('./auth'),
-    Meta = require('./meta'),
+    meta = require('./meta'),
+    guard = require('./guard'),
     utils = require('./utils'),
     models = require('./models'),
     logger = utils.get_logger('cms');
 
 
-/**
- * The Cms class is the only export.
- * @type {Cms}
- */
-exports = module.exports = Cms;
+
+exports.Cms = Cms;
 
 
 /**
@@ -32,10 +30,10 @@ exports = module.exports = Cms;
 function Cms(module) {
   if (!module)
     throw new Error('Requires a module');
-  if (!module.name)
-    logger.info('No name specified for module. Calling it null.')
   if (!module.config)
     throw new Error('Module requires config');
+  if (!module.config.name)
+    logger.info('No name specified in config. Calling it null.')
   if (!module.config.mongoConnectString)
     throw new Error('Config requires mongoConnectString');
   if (!module.models)
@@ -44,6 +42,7 @@ function Cms(module) {
   this.config = module.config;
   this.connection = null;
   this.meta = null;
+  this.guard = null;
   this.client = null;
   this.gfs = null;
   this.app = null;
@@ -66,7 +65,10 @@ Cms.prototype._init = function () {
   });
 
   // model helper
-  self.meta = new Meta(self.module.models, self.connection);
+  self.meta = new meta.Meta(self.module.models, self.connection);
+
+  // permissions guard
+  self.guard = new guard.Guard(self.module.permissions);
 
   // user management
   self.auth = new auth.Auth(self.meta, '/cms');
@@ -75,24 +77,24 @@ Cms.prototype._init = function () {
   if (self.config.kueConfig) {
     self.jobs = kue.createQueue(self.config.kueConfig);
     self.jobs.on('job complete', self.job_complete.bind(self));
-    logger.info('initialed process queue')
+    logger.info('cms established kue')
   }
 
   // storage for servable stuff
   switch (self.config.storage) {
     case "pkgcloud":
       self.client = require('pkgcloud').storage.createClient(self.config.pkgcloudConfig);
-      logger.info('created pkgcloud storage client');
+      logger.info('cms established storage ['+self.config.pkgcloudConfig.provider+'/'+self.config.pkgcloudConfig.username+']');
       break
     case "cloudinary":
       self.cloudinary = require('cloudinary');
       self.cloudinary.config(self.config.cloudinaryConfig);
-      logger.info('initialized cloudinary api');
+      //logger.info('cms established cloudinary '+self.config.cloudinaryConfig.user);
       break
     case "gfs":
     default:
       self.gfs = new Grid(self.connection.db);
-      logger.info('initialized gfs storage');
+      logger.info('cms initialized gfs storage');
       break;
   }
 
@@ -181,7 +183,7 @@ Cms.prototype._init = function () {
   app.get('/cms/delete_resource/:id',
     aspect1, self.resource_delete.bind(self));
 
-  logger.info('current cms 0.0.3');
+  logger.info('cms ready ['+self.config.name+']');
 }
 
 
@@ -219,59 +221,34 @@ Cms.prototype.add_workflow = function (req, res, next) {
 // for requests that contain :type ... put the meta info in the request
 Cms.prototype.add_meta = function (req, res, next) {
   var user = req.session.user;
-  var models = {};
-  var browses = {};
-  var forms = {};
-  var permissions = {};
-  var conditions = {};
-  var all_models = this.meta.meta();
-  var perm = this.module.permission;
-  if (perm && user.group && !user.admin && perm[user.group]) {
-    var form = perm[user.group].form;
-    if (form)
-      for (var i=0; i<form.length; i++) {
-        var o = form[i];
-        if (typeof(o) == 'string')
-        {
-          models[o] = all_models[o];
-        }
-        else
-        {
-          models[o.name] = all_models[o.name];
-          forms[o.name] = o.form;
-          permissions[o.name] = o.permission;
-        }
-      }
-    var browse = perm[user.group].browse;
-    if (browse)
-      for (var i=0; i<browse.length; i++) {
-        var o = browse[i];
-        if (typeof(o) == 'string')
-        {
-          models[o] = all_models[o];
-        }
-        else
-        {
-          models[o.name] = all_models[o.name];
-          browses[o.name] = o.browse;
-          conditions[o.name] = o.conditions;
-        }
-      }
+  var type = req.params.type;
+  if (user.admin)
+  {
+    req.models = res.locals.models = this.guard.get_admin_models(this.meta);
+    if (type) {
+      req.type = type;
+      req.schema = this.meta.schema(type);
+      req.model = this.meta.model(type);
+      req.browser = this.meta.browse(type);
+      req.form = this.meta.form(type);
+    }
   }
   else
-    models = all_models;
-  req.models = res.locals.models = models;
-
-  var type = req.params.type;
-  if (type && models[type]) {
-    req.type = type;
-    req.schema = this.meta.schema(type);
-    req.model = this.meta.model(type);
-    req.browser = this.meta.browse(type, browses[type]);
-    req.browse_conditions = conditions[type] ? conditions[type](user) : null;
-    req.form = this.meta.form(type, forms[type]);
-    req.form_permission = permissions[type];
+  {
+    req.models = res.locals.models = this.guard.get_models(req.session.user, this.meta);
+    if (type) {
+      req.type = type;
+      req.schema = this.meta.schema(type);
+      req.model = this.meta.model(type);
+      req.browser = this.meta.browse(type, this.guard.browse_type(user, type));
+      var browse_conditions = this.guard.browse_conditions(user, type);
+      if (browse_conditions)
+        req.browse_conditions = browse_conditions(user);
+      req.form = this.meta.form(type, this.guard.form_type(user, type));
+      req.form_permission = this.guard.form_permission(user, type);
+    }
   }
+
   next();
 };
 
@@ -340,9 +317,9 @@ Cms.prototype.browse_post = function (req, res) {
   var options = {sort: req.body.order, skip: req.body.offset, limit: req.body.limit};
   req.model.count(conditions, function (err, count) {
     var q = req.model.find(conditions, fields, options);
-    var refs = utils.get_references(req.schema);
+    var refs = meta.get_references(req.schema);
     if (refs)
-      q.populate(utils.get_names(refs).join(" "));
+      q.populate(meta.get_names(refs).join(" "));
     q.exec(function (err, r) {
       res.json({results: r, count: count});
     });
@@ -352,7 +329,7 @@ Cms.prototype.browse_post = function (req, res) {
 
 // browse (json): get 'browser' info and our simplified schema info
 Cms.prototype.browse_schema = function (req, res) {
-  res.json({schema: utils.get_schema_info(req.schema), browser: req.browser});
+  res.json({schema: meta.get_schema_info(req.schema), browser: req.browser});
 };
 
 
@@ -380,19 +357,18 @@ Cms.prototype.form_get_json = function (req, res) {
     type: req.type,
     object: object,
     related: related,
-    form: req.form})
+    form: req.form});
 };
 
 
 // form (json): save
 Cms.prototype.form_post = function (req, res) {
   var self = this;
-  var meta = self.meta;
   var object = req.object || new req.model();
   var data = JSON.parse(req.body.val);
-  var schema_info = utils.get_schema_info(req.schema);
+  var schema_info = meta.get_schema_info(req.schema);
 
-  var presave = this.meta.info[req.type].presave;
+  var presave = self.meta.info[req.type].presave;
   if (!presave)
     presave = function(object, data, next){
       next();
@@ -421,7 +397,7 @@ Cms.prototype.form_post = function (req, res) {
         return;
       }
       self.add_log(req.session.user._id, 'save', req.type, s, info, function () {
-        meta.expand(req.type, s._id, function (err, s) {
+        self.meta.expand(req.type, s._id, function (err, s) {
           res.json(s);
         });
       });

@@ -30,13 +30,6 @@
 }
 
 .multi-drop-area {
-    padding:5px;
-    min-height: 50px;
     border: 1px dotted #777;
-    background-color: #eee;
-    line-height: 18px;
 }
 
-.multi-drop-area a, .multi-drop-area i { line-height: 15px; }
-
-.multi-drop-area:hover {background-color: #fff; }
