@@ -10,7 +10,7 @@ exports = module.exports = {
       {type: 'Exhibition'},
       {type: 'Contact'},
       {type: 'Resource', permission: is_creator},
-      {type: 'User', form: 'profile', permission: is_user}
+      {type: 'User', form: 'profile', permission: is_user, create: false}
     ],
     browse: [
       {type: 'Inventory'},

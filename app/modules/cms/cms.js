@@ -132,14 +132,12 @@ Cms.prototype._init = function () {
   // add meta info to the request and verify that user has permission
   var aspect2 = [auth.has_user,
     self.add_workflow.bind(self),
-    self.add_meta.bind(self),
-    self.permission_type.bind(self)];
+    self.add_meta.bind(self)];
 
   // add meta info and object
   var aspect3 = [auth.has_user,
     self.add_workflow.bind(self),
     self.add_meta.bind(self),
-    self.permission_type.bind(self),
     self.add_object.bind(self),
     self.permission_object.bind(self)];
 
@@ -196,13 +194,6 @@ Cms.prototype._init = function () {
 }
 
 
-Cms.prototype.permission_type = function (req, res, next) {
-  // var info = permission.info(req.user, req.type);
-  // if (info.can_edit || info.can_view) next(); else ...
-  next();
-}
-
-
 Cms.prototype.permission_object = function (req, res, next) {
   if (req.form_permission)
     req.form_permission(req.session.user, req.object, next);
@@ -249,12 +240,21 @@ Cms.prototype.add_meta = function (req, res, next) {
       req.type = type;
       req.schema = this.meta.schema(type);
       req.model = this.meta.model(type);
-      req.browser = this.meta.browse(type, this.guard.browse_type(user, type));
-      var browse_conditions = this.guard.browse_conditions(user, type);
-      if (browse_conditions)
-        req.browse_conditions = browse_conditions(user);
-      req.form = this.meta.form(type, this.guard.form_type(user, type));
-      req.form_permission = this.guard.form_permission(user, type);
+      var browse_type = this.guard.browse_type(user, type);
+      console.log(browse_type)
+      if (browse_type)
+      {
+        req.browser = this.meta.browse(type, browse_type);
+        var browse_conditions = this.guard.browse_conditions(user, type);
+        if (browse_conditions)
+          req.browse_conditions = browse_conditions(user);
+      }
+      var form_type = this.guard.form_type(user, type);
+      if (form_type)
+      {
+        req.form = this.meta.form(type, form_type);
+        req.form_permission = this.guard.form_permission(user, type);
+      }
     }
   }
 

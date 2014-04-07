@@ -10,6 +10,7 @@ function Guard(permissions) {
   this._init();
 }
 
+// transfer permissions into structures that are easier to lookup
 Guard.prototype._init = function () {
   for (var group in this.permissions) {
     var info = this.map[group] = {
@@ -24,7 +25,8 @@ Guard.prototype._init = function () {
         info.permissions[o.type] = o.permission;
         if (this.models.indexOf(o.type) == -1)
           this.models.push(o.type);
-        this.creates.push(o.type);
+        if (typeof(o.create) == 'undefined' || o.create)
+          this.creates.push(o.type);
       }
     var browse = perm.browse;
     if (browse)
