@@ -1,24 +1,34 @@
 var workflow = require('./workflow');
 
 exports = module.exports = {
-  editor: {
-  },
+  editor: { admin: true },
   contributor: {
-    form: [
-      {type: 'Inventory'},
-      {type: 'Artist'},
-      {type: 'Exhibition'},
-      {type: 'Contact'},
-      {type: 'Resource', permission: is_creator},
-      {type: 'User', form: 'profile', permission: is_user, create: false}
-    ],
-    browse: [
-      {type: 'Inventory'},
-      {type: 'Artist'},
-      {type: 'Exhibition', conditions: condition_published},
-      {type: 'Contact', conditions: condition_published},
-      {type: 'Resource', conditions: condition_mine},
-    ]
+    Inventory: { admin: true },
+    Artist: { admin: true },
+    Exhibition: { admin: true },
+    Contact: { admin: true },
+    User: {
+      can_browse: false,
+      can_create: false,
+      can_edit: true,
+      can_delete_references: false,
+      can_delete: false,
+      form: {
+        subtype: 'profile',
+        permission: is_user
+      }
+    },
+    Resource: {
+      can_edit: true,
+      can_create: true,
+      can_browse: true,
+      browse: {
+        condition: condition_mine
+      },
+      form: {
+        permission: is_creator
+      }
+    }
   }
 }
 

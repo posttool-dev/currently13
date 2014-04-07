@@ -194,13 +194,6 @@ Cms.prototype._init = function () {
 }
 
 
-Cms.prototype.permission_object = function (req, res, next) {
-  if (req.form_permission)
-    req.form_permission(req.session.user, req.object, next);
-  else
-    next();
-}
-
 
 // add workflow info to request
 Cms.prototype.add_workflow = function (req, res, next) {
@@ -240,20 +233,21 @@ Cms.prototype.add_meta = function (req, res, next) {
       req.type = type;
       req.schema = this.meta.schema(type);
       req.model = this.meta.model(type);
-      var browse_type = this.guard.browse_type(user, type);
-      console.log(browse_type)
-      if (browse_type)
+      if (this.guard.can_browse(user, type))
       {
+        var browse_type = this.guard.browse_type(user, type);
         req.browser = this.meta.browse(type, browse_type);
         var browse_conditions = this.guard.browse_conditions(user, type);
         if (browse_conditions)
           req.browse_conditions = browse_conditions(user);
       }
       var form_type = this.guard.form_type(user, type);
-      if (form_type)
+      if (this.guard.can_edit(user, type))
       {
         req.form = this.meta.form(type, form_type);
         req.form_permission = this.guard.form_permission(user, type);
+        req.form_create = this.guard.can_create(type, form_type);
+        req.form_delete = this.guard.can_delete(type, form_type);
       }
     }
   }
@@ -262,8 +256,7 @@ Cms.prototype.add_meta = function (req, res, next) {
 };
 
 
-/* find and populate a "deep" view of the model as well as all "related" entities
- * the put it in the request */
+// find and populate a "deep" view of the model as well as all "related" entities
 Cms.prototype.add_object = function (req, res, next) {
   var meta = this.meta;
   if (!req.params.id) {
@@ -287,6 +280,16 @@ Cms.prototype.add_object = function (req, res, next) {
       next();
   });
 };
+
+
+//
+Cms.prototype.permission_object = function (req, res, next) {
+  if (req.form_permission)
+    req.form_permission(req.session.user, req.object, next);
+  else
+    next();
+}
+
 
 
 // the "dashboard"

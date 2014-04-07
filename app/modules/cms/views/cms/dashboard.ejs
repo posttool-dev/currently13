@@ -13,8 +13,8 @@
         width: 200px;
         height: 70px;
         background-color: #e7e5e0;
-        margin: 0 10px 10px 0;
-        padding: 10px;
+        margin: 0 15px 15px 0;
+        padding: 15px;
         float: left;
     }
 
@@ -22,6 +22,7 @@
         margin:23px 0 4px 0;
         color:#337;
         font-weight:normal;
+        font-family: 'Playfair Display', sans-serif;
     }
     .dashboard-model.dark {
         background-color: #605e6b;
@@ -42,11 +43,11 @@
 <% if (models[i].meta.dashboard) {  %>
     <div class="dashboard-model">
     <h3><%= models[i].meta.plural %></h3>
-    <% if (models[i]._browse) {  %>
-    <a href='/cms/browse/<%=models[i]._type%>'>browse <i class='fa fa-play-circle'></i> </a>
+    <% if (models[i].info.admin || models[i].info.can_browse) {  %>
+    <a href='/cms/browse/<%=models[i].type%>'>browse <i class='fa fa-play-circle'></i> </a>
     <% } %>
-    <% if (models[i]._create) {  %>
-    <a href='/cms/create/<%=models[i]._type%>'>create <i class='fa fa-plus-circle'></i> </a>
+    <% if (models[i].info.admin || models[i].info.can_create) {  %>
+    <a href='/cms/create/<%=models[i].type%>'>create <i class='fa fa-plus-circle'></i> </a>
     <% } %>
     </div>
 <% } %>
