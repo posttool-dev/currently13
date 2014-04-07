@@ -91,7 +91,6 @@ Guard.prototype.get_models = function(user, meta) {
 }
 
 
-
 Guard.prototype.get_admin_models = function(meta){
   var models = [];
   for (var type in meta.info){

@@ -223,7 +223,7 @@ Cms.prototype.add_meta = function (req, res, next) {
       req.schema = this.meta.schema(type);
       req.model = this.meta.model(type);
       req.browser = this.meta.browse(type);
-      req.form = this.meta.form(type);
+      req.form = utils.expand_functions(this, this.meta.form(type));
     }
   }
   else
@@ -241,10 +241,10 @@ Cms.prototype.add_meta = function (req, res, next) {
         if (browse_conditions)
           req.browse_conditions = browse_conditions(user);
       }
-      var form_type = this.guard.form_type(user, type);
       if (this.guard.can_edit(user, type))
       {
-        req.form = this.meta.form(type, form_type);
+        var form_type = this.guard.form_type(user, type);
+        req.form = utils.expand_functions(this, this.meta.form(type, form_type));
         req.form_permission = this.guard.form_permission(user, type);
         req.form_create = this.guard.can_create(type, form_type);
         req.form_delete = this.guard.can_delete(type, form_type);

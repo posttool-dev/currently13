@@ -81,7 +81,7 @@ exports.UserInfo = function(){
       {name: "email", widget: "email"},
       {name: "image", widget: "upload", options: {type: "Resource", array: false}},
       {name: "password", widget: "password"},
-      {name: "group", widget: "select", options: {options: ['editor','contributor']}},// to do options: function(){ return workflow.states }
+      {name: "group", widget: "select", options: function(cms){ return {options: cms.workflow.states}}},
       {name: "active", widget: "boolean"},
       {name: "admin", widget: "boolean"},
     ],

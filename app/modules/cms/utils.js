@@ -202,3 +202,25 @@ exports.hash = function(pwd, salt, fn) {
     fn(e);
   }
 };
+
+
+
+
+//
+exports.expand_functions = function(ctx, list)
+{
+  var ff = [];
+  for (var i=0; i<list.length; i++)
+  {
+    var o =  list[i];
+    var fo = {};
+    ff.push(fo);
+    for (var p in o){
+      if (typeof(o[p]) == 'function')
+        fo[p] = o[p](ctx);
+      else
+        fo[p] = o[p];
+    }
+  }
+  return ff;
+}
