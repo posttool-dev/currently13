@@ -213,7 +213,7 @@ function form_form(app, type, id) {
     {
       var $delete = $$('delete', {el:'button'}).text('DELETE '+type.toUpperCase()+'...');
       $info_del.append($delete);
-      $delete.click(function(){
+      confirm_inline($delete, 'Really delete?', function(){
         $$ajax(self.app.base_url + '/delete/'+type+'/'+id, null, 'post').done(function(r){
           self.emit('close');
         });
@@ -237,17 +237,19 @@ function form_form(app, type, id) {
     for (var p in _related)
       for (var i=0; i<_related[p].length; i++)
         add_related_btn(p, _related[p][i]);
-    if (c == 0)
+    if (_id)
     {
-      add_delete_btn();
-      $info_del.prepend("<h3>Careful</h3>");
+      if (c == 0)
+      {
+        add_delete_btn();
+        $info_del.prepend("<h3>Careful</h3>");
+      }
+      else
+      {
+        add_reference_btn();
+        $info_rel.prepend("<h3>References</h3>");
+      }
     }
-    else
-    {
-      add_reference_btn();
-      $info_rel.prepend("<h3>References</h3>");
-    }
-
 
     // logs
     var $info_logs = $$('logs-panel', {parent: $info});

@@ -244,3 +244,26 @@ function media_path(resource)
   else
     return download_url + '/' + resource._id
 }
+
+
+function confirm_inline($el, message, next) {
+  var $p = $$('p');
+  var $n = $$('x', {el:'span'}).text(message+' ');
+  var $b = $$('x', {el:'button'}).text('OK');
+  var $c = $$('x', {el:'button'}).text('Cancel');
+  $p.append($n,$b,$c);
+  $el.after($p);
+  $p.hide();
+  $el.click(function(){
+    $el.hide();
+    $p.show();
+  });
+  $b.click(function(){
+    $el.show();
+    next();
+  });
+  $c.click(function(){
+    $el.show();
+    $p.hide();
+  });
+}
