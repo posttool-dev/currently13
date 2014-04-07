@@ -1,16 +1,13 @@
-var DRAFT = 100;
-var PUBLISHED = 500;
-var FLAGGED = 600;
+var DRAFT = 'draft';
+var PUBLISHED = 'published';
+var FLAGGED = 'flagged';
 
 exports = module.exports = {
-  DRAFT: DRAFT,
-  PUBLISHED: PUBLISHED,
-  FLAGGED: FLAGGED,
-  states: [
-    {code: DRAFT, name: 'draft', editable: true},
-    {code: PUBLISHED, name: 'published'},
-    {code: FLAGGED, name: 'flagged'},
-  ],
+  default: DRAFT,
+  states: [DRAFT, PUBLISHED, FLAGGED],
+  DRAFT: { name: "Draft" },
+  PUBLISHED: {name: "Published", read_only: true},
+  FLAGGED: {name: "Flagged"},
   groups: {
     admin: "editor",
     editor: {

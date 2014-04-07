@@ -168,6 +168,7 @@ select:active {
 .nav-item {
     padding-right: 10px;
     cursor:pointer;
+    font-family: 'Playfair Display';
 }
 .nav-item:hover {
     color: #48adff;
@@ -478,6 +479,10 @@ select:active {
 /*#info-panel*/
 .related-panel, .delete-panel, .logs-panel {
 padding-top: 20px;
+}
+.related-panel .model {
+    color: #ccc;
+    background-color: #3b3845;
 }
 /* logs */
 .logs-panel-c {

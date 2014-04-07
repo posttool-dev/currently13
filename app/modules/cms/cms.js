@@ -397,8 +397,8 @@ Cms.prototype.form_post = function (req, res) {
 
     // set the default state (if unset)
     var workflow = self.module.workflow;
-    if (!object.state && workflow && workflow.states)
-      object.state = workflow.states[0].code;
+    if (!object.state && workflow && workflow.default)
+      object.state = workflow.default;
 
     //self.emit('pre save', object);
     object.save(function (err, s) {

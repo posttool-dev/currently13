@@ -27,7 +27,7 @@ var containerHttp = <% if (containerHttp) { %>"<%- containerHttp %>/";<% } else 
 <%
 var t = {};
 for (var i=0; i<models.length; i++)
-    t[models[i]._type] = models[i].meta.name;
+    t[models[i].type] = models[i].meta.name;
 t = JSON.stringify(t);
 %>
 var __templates = <%-t%>;

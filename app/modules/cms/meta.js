@@ -69,6 +69,7 @@ Meta.prototype.form = function(type, sub_type)
     return this.info[type].form;
 };
 
+
 Meta.prototype.schema = function(type)
 {
   if (!this.schemas[type])
@@ -201,7 +202,7 @@ extra_fields = {
   'creator': {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   'created': Date,
   'modified': Date,
-  'state': Number
+  'state': String
 };
 exports.add_fields_and_methods = function (schema, name) {
   schema.add(extra_fields);
