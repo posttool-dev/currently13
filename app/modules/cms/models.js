@@ -101,20 +101,38 @@ exports.UserInfo = function(){
   }
 }
 
+
 exports.UserSchema = new mongoose.Schema(exports.UserInfo().schema);
 
 
 // log
 exports.LogSchema = new mongoose.Schema({
-  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  user: {type: ObjectId, ref: 'User'},
   action: String,
   type: String,
-  id: mongoose.Schema.Types.ObjectId,
+  id: ObjectId,
   info: mongoose.Schema.Types.Mixed,
   time: { type: Date, default: Date.now }
 })
 
-// group
-// transition
+
+// request
+exports.RequestSchema = new mongoose.Schema({
+  user: {type: ObjectId, ref: 'User'},
+  request_type: String,
+  message: {type: ObjectId, ref: 'Message'},
+  time: { type: Date, default: Date.now },
+  complete: { type: Boolean, default: false }
+});
+
+
 // assignment
+
 // msg
+exports.MessageSchema = new mongoose.Schema({
+  from: {type: ObjectId, ref: 'User'},
+  to: {type: ObjectId, ref: 'User'},
+  message: String,
+  time: { type: Date, default: Date.now },
+  read: { type: Date }
+});

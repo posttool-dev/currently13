@@ -24,38 +24,11 @@
 <script>
 var containerHttp = <% if (containerHttp) { %>"<%- containerHttp %>/";<% } else {%>null<% } %>;
 <% if (models) { %>
-<%
-var t = {};
-for (var i=0; i<models.length; i++)
-    t[models[i].type] = models[i].meta.name;
-t = JSON.stringify(t);
-%>
-var __templates = <%-t%>;
-function render_template(type, object)
-{
-    try {
-        return new EJS({text: __templates[type]}).render(object);
-    } catch (e) {
-        console.error(e);
-        return "";
-    }
-}
+<% var t = {}; for (var i=0; i<models.length; i++) t[models[i].type] = models[i].meta.name; %>
+var __templates = <%-JSON.stringify(t)%>;
 <% } %>
-
 <% if (workflow) { %>
 var __states = <%- JSON.stringify(workflow.states) %>;
-function get_state_name(code) {
-    for (var i=0; i<__states.length; i++)
-        if (__states[i].code == code)
-            return __states[i].name;
-    return '';
-}
 var __transitions = <%- JSON.stringify(workflow.transitions) %>;
-function get_state_transitions(code) {
-    for (var i=0; i<__transitions.length; i++)
-        if (__transitions[i].from == code)
-            return __transitions[i].to;
-    return [];
-}
 <% } %>
 </script>

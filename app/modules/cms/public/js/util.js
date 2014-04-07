@@ -267,3 +267,32 @@ function confirm_inline($el, message, next) {
     $p.hide();
   });
 }
+
+
+
+
+/// functions that rely on global __templates, __states, __transitions
+
+function render_template(type, object)
+{
+    try {
+        return new EJS({text: __templates[type]}).render(object);
+    } catch (e) {
+        console.error(e);
+        return "";
+    }
+}
+
+function get_state_name(code) {
+    for (var i=0; i<__states.length; i++)
+        if (__states[i].code == code)
+            return __states[i].name;
+    return '';
+}
+
+function get_state_transitions(code) {
+    for (var i=0; i<__transitions.length; i++)
+        if (__transitions[i].from == code)
+            return __transitions[i].to;
+    return [];
+}
