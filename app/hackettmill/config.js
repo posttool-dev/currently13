@@ -2,7 +2,7 @@ var config = {
   development: {
     name: 'Hackett|Mill',
     serverPort: 8080,
-    mongoConnectString: 'mongodb://localhost/hm0',
+    mongoConnectString: 'mongodb://localhost/hm3',
     sessionSecret: 'nfuds9543ythhfgjghf$WH*#IRF5euyhtfgxkj',
 
     /* storage */

@@ -10,9 +10,6 @@ function Meta(info, connection)
   this.info = info;
   this.connection = connection;
   this.schemas = {};
-  this.Resource = null;
-  this.Log = null;
-  this.User = null;
   this._init();
 }
 
@@ -38,9 +35,12 @@ Meta.prototype._init = function () {
       console.log(info.form);
     }
   }
+  // shortcuts ...  must be added in module
   this.Resource = this.model('Resource');
   this.User = this.model('User');
+  // added automatically ... no ui
   this.Log = this.connection.model('Log', models.LogSchema);
+  this.Request = this.connection.model('Request', models.RequestSchema);
 };
 
 Meta.prototype.browse = function(type, sub_type)

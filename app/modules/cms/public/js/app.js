@@ -39,7 +39,7 @@ function init_cms(base_url) {
     }
   });
 
-  // form
+  // add form layer
   function form(type, id) {
     var ff = new form_form(app, type, id);
     ff.add_listener('browse', function (f, o) {
@@ -75,7 +75,7 @@ function init_cms(base_url) {
   }
 
 
-  // root browser
+  // add browse layer
   function browse(type) {
     var browser = new browse_browse(app, type);
     browser.add_listener('select', function (f, r) {

@@ -4,8 +4,7 @@ var mongoose = require('mongoose');
 var uuid = require('node-uuid');
 var http = require('http');
 
-var workflow = require('./workflow');
-var current = require('../modules/cms'), cms = new current.Cms();
+var current = require('../modules/cms');
 var utils = require('../modules/cms/utils');
 
 var data = {};
@@ -17,7 +16,7 @@ var use_existing_images = true;
 var prefix = 'dev1';
 
 
-cms.init(require('./index'));
+var cms = new current.Cms(require('./index'));
 
 
 if (use_existing_images)
@@ -58,16 +57,10 @@ function migrate2()
   var i = 0;
   var models = ['Inventory','Artist', 'Catalog','Contact','Essay','Exhibition','News','Page'];
   utils.forEach(models, function (e, next) {
-    if (_job)
-      _job.progress(i, models.length);
     repopulate(e, next);
     i++;
   }, function () {
-    if (_done)
-    {
-      _job = null;
-      _done();
-    }
+    console.log("done")
   });
 }
 
@@ -77,8 +70,6 @@ function repopulate(type, complete)
   var R = cms.meta.model(type);
   R.find().remove(function (err, c) {
     console.log('Repopulating '+type+' ... removed '+c+' old records.');
-    if (_job)
-      _job.log('Repopulating '+type+' ... removed '+c+' old records.');
     utils.forEach(data[type].array,
       function(e, next){
         create(type, e, next);},
@@ -158,7 +149,7 @@ function create(type, data, next)
 {
   var M = cms.meta.model(type);
   var model = new M();
-  var info = cms.meta.info(type);
+  var info = cms.meta.schema_info(type);
   for (var p in info)
   {
     if (p == 'creator' || p == 'modified' || p == 'created')
@@ -166,7 +157,7 @@ function create(type, data, next)
     else if (data[p])
       model[p] = get_field_val(info[p], data[p]);
   }
-  model.state = workflow.PUBLISHED;
+  model.state = cms.module.workflow.default;
   model.save(function (err, i) {
     if (err)
       console.log(err);
