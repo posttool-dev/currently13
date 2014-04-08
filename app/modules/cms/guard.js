@@ -1,7 +1,7 @@
 exports.Guard = Guard;
 
 function Guard(permissions) {
-  this.map = permissions;
+  this.map = permissions ? permissions : {};
 }
 
 
@@ -22,7 +22,6 @@ Guard.prototype.browse_type = function (user, type) {
   return info[type].browse.subtype;
 }
 
-
 Guard.prototype.browse_conditions = function (user, type) {
   var info = this.map[user.group];
   if (!info)
@@ -35,7 +34,6 @@ Guard.prototype.browse_conditions = function (user, type) {
 }
 
 // form
-
 Guard.prototype.can_edit = function (user, type) {
   return can(this.map[user.group], type, 'can_edit');
 }
@@ -48,7 +46,7 @@ Guard.prototype.can_delete = function (user, type) {
   return can(this.map[user.group], type, 'can_delete');
 }
 
-
+// form type for group...
 Guard.prototype.form_type = function (user, type) {
   var info = this.map[user.group];
   if (!info)
@@ -74,11 +72,11 @@ Guard.prototype.form_permission = function (user, type) {
 
 // prepares meta info for a user about what they can browse and not browse
 Guard.prototype.get_models = function(user, meta) {
-  var models = [];
   var info = this.map[user.group];
   if (user.admin || info.admin)
     return this.get_admin_models(meta);
 
+  var models = [];
   for (var type in info) {
     models.push({
       info: info[type],
@@ -89,7 +87,6 @@ Guard.prototype.get_models = function(user, meta) {
   }
   return models;
 }
-
 
 Guard.prototype.get_admin_models = function(meta){
   var models = [];

@@ -14,6 +14,7 @@ var EventEmitter = require('events').EventEmitter,
     auth = require('./auth'),
     meta = require('./meta'),
     guard = require('./guard'),
+    workflow = require('./workflow'),
     utils = require('./utils'),
     models = require('./models'),
     logger = utils.get_logger('cms');
@@ -38,14 +39,26 @@ function Cms(module) {
     throw new Error('Config requires mongoConnectString');
   if (!module.models)
     throw new Error('Module requires models');
+  // module info and shortcut to configuration
   this.module = module;
   this.config = module.config;
+  // connection to mongo
   this.connection = null;
-  this.meta = null;
-  this.guard = null;
+  // the storage client
   this.client = null;
+  // gridfs storage (untested)
   this.gfs = null;
+  // the express app
   this.app = null;
+  // login, logout
+  this.auth = null;
+  // meta info for models
+  this.meta = null;
+  // guard manages view permissions
+  this.guard = null;
+  // workflow provides state transition info to view
+  this.workflow = null;
+
   this._init();
 }
 
@@ -66,12 +79,9 @@ Cms.prototype._init = function () {
 
   // model helper
   self.meta = new meta.Meta(self.module.models, self.connection);
-
-  // permissions guard
-  self.guard = new guard.Guard(self.module.permissions);
-
-  // user management
   self.auth = new auth.Auth(self.meta, '/cms');
+  self.guard = new guard.Guard(self.module.permissions);
+  self.workflow = new workflow.Workflow(self.module.workflow);
 
   // queued jobs, like resizing and transcoding
   if (self.config.kueConfig) {
@@ -126,16 +136,24 @@ Cms.prototype._init = function () {
   // get ready for routing by defining middleware
 
   // check for user in session
-  var aspect1 = [auth.has_user,
+  var middle1 = [auth.has_user,
       self.add_workflow.bind(self)];
 
   // add meta info to the request and verify that user has permission
-  var aspect2 = [auth.has_user,
+  var middle2 = [auth.has_user,
     self.add_workflow.bind(self),
     self.add_meta.bind(self)];
+  var middle2b = [auth.has_user,
+    self.add_workflow.bind(self),
+    self.add_meta.bind(self),
+    self.permission_browse.bind(self)];
+  var middle2f = [auth.has_user,
+    self.add_workflow.bind(self),
+    self.add_meta.bind(self),
+    self.permission_form.bind(self)];
 
   // add meta info and object
-  var aspect3 = [auth.has_user,
+  var middle3 = [auth.has_user,
     self.add_workflow.bind(self),
     self.add_meta.bind(self),
     self.add_object.bind(self),
@@ -154,41 +172,41 @@ Cms.prototype._init = function () {
     auth.has_user, self.auth.profile_post.bind(self.auth));
 
   app.all('/cms',
-    aspect2, self.show_dashboard.bind(self));
+    middle2, self.show_dashboard.bind(self));
   app.all('/cms/logs',
-    aspect1, self.logs_for_user.bind(self));
+    middle1, self.logs_for_user.bind(self));
   app.all('/cms/logs/:type/:id',
-    aspect2, self.logs_for_record.bind(self));
+    middle2, self.logs_for_record.bind(self));
   app.get('/cms/browse/:type',
-    aspect2, self.browse_get.bind(self));
+    middle2b, self.browse_get.bind(self));
   app.post('/cms/browse/:type',
-    aspect2, self.browse_post.bind(self));
+    middle2b, self.browse_post.bind(self));
   app.post('/cms/schema/:type',
-    aspect2, self.browse_schema.bind(self));
+    middle2b, self.browse_schema.bind(self));
   app.get('/cms/create/:type',
-    aspect2, self.form_get.bind(self));
+    middle2f, self.form_get.bind(self));
   app.post('/cms/create/:type',
-    aspect2, self.form_post.bind(self));
+    middle2f, self.form_post.bind(self));
   app.get('/cms/update/:type/:id',
-    aspect2, self.form_get.bind(self));
+    middle2f, self.form_get.bind(self));
   app.post('/cms/update/:type/:id',
-    aspect3, self.form_post.bind(self));
+    middle3, self.form_post.bind(self));
   app.get('/cms/get/:type',
-    aspect2, self.form_get_json.bind(self));
+    middle2f, self.form_get_json.bind(self));
   app.get('/cms/get/:type/:id',
-    aspect3, self.form_get_json.bind(self));
+    middle3, self.form_get_json.bind(self));
   app.post('/cms/delete_references/:type/:id',
-    aspect3, self.form_delete_references.bind(self));
+    middle3, self.form_delete_references.bind(self));
   app.post('/cms/delete/:type/:id',
-    aspect3, self.form_delete.bind(self));
+    middle3, self.form_delete.bind(self));
   app.post('/cms/status/:type/:id',
-    aspect3, self.form_status.bind(self));
+    middle3, self.form_status.bind(self));
   app.post('/cms/upload',
-    aspect1, self.resource_upload.bind(self));
+    middle1, self.resource_upload.bind(self));
   app.get('/cms/download/:id',
-    aspect1, self.resource_download.bind(self));
+    middle1, self.resource_download.bind(self));
   app.get('/cms/delete_resource/:id',
-    aspect1, self.resource_delete.bind(self));
+    middle1, self.resource_delete.bind(self));
 
   logger.info('cms ready ['+self.config.name+']');
 }
@@ -197,16 +215,7 @@ Cms.prototype._init = function () {
 
 // add workflow info to request
 Cms.prototype.add_workflow = function (req, res, next) {
-  var workflow = this.module.workflow;
-  if (workflow) {
-    var group = req.session.user.group;
-    if (req.session.user.admin)
-      group = workflow.groups.admin;
-    req.workflow = res.locals.workflow = {states: workflow.states, transitions: workflow.groups[group].transitions};
-  }
-  else {
-    req.workflow = res.locals.workflow = null;
-  }
+  req.workflow = res.locals.workflow = this.workflow.get_info(req.session.user);
   next();
 };
 
@@ -222,7 +231,7 @@ Cms.prototype.add_meta = function (req, res, next) {
       req.type = type;
       req.schema = this.meta.schema(type);
       req.model = this.meta.model(type);
-      req.browser = this.meta.browse(type);
+      req.browse = this.meta.browse(type);
       req.form = utils.expand_functions(this, this.meta.form(type));
     }
   }
@@ -236,7 +245,7 @@ Cms.prototype.add_meta = function (req, res, next) {
       if (this.guard.can_browse(user, type))
       {
         var browse_type = this.guard.browse_type(user, type);
-        req.browser = this.meta.browse(type, browse_type);
+        req.browse = this.meta.browse(type, browse_type);
         var browse_conditions = this.guard.browse_conditions(user, type);
         if (browse_conditions)
           req.browse_conditions = browse_conditions(user);
@@ -290,6 +299,20 @@ Cms.prototype.permission_object = function (req, res, next) {
     next();
 }
 
+Cms.prototype.permission_browse = function (req, res, next) {
+  if (req.browse)
+    next();
+  else
+    next('permission error');
+}
+
+Cms.prototype.permission_form = function (req, res, next) {
+  if (req.form)
+    next();
+  else
+    next('permission error');
+}
+
 
 
 // the "dashboard"
@@ -311,7 +334,7 @@ Cms.prototype.browse_get = function (req, res) {
   req.model.count(conditions, function (err, count) {
     res.render('cms/browse', {
       title: 'CMS Dashboard ',
-      browser: req.browser,
+      browser: req.browse,
       type: req.type,
       total: count
     });
@@ -341,7 +364,7 @@ Cms.prototype.browse_post = function (req, res) {
 
 // browse (json): get 'browser' info and our simplified schema info
 Cms.prototype.browse_schema = function (req, res) {
-  res.json({schema: meta.get_schema_info(req.schema), browser: req.browser});
+  res.json({schema: meta.get_schema_info(req.schema), browser: req.browse});
 };
 
 
@@ -458,10 +481,16 @@ Cms.prototype.form_delete = function (req, res) {
 
 
 // form (json): workflow state
-Cms.prototype.form_status = function (req, res) {
+Cms.prototype.form_status = function (req, res, next) {
   var self = this;
+  var new_state = req.body.state;
   var original_state = req.object.state;
-  req.object.state = req.body.state;
+  var ok = self.workflow.can_update(req.session.user, req.type, original_state, new_state);
+  if (!ok) {
+    next('workflow error');
+    return;
+  }
+  req.object.state = new_state;
   req.object.save(function (err, m) {
     self.add_log(req.session.user._id, 'change status', req.type, m,
       {message: 'From ' + original_state + 'to ' + req.object.state, reason: req.param.reason}, function (info) {

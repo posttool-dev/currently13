@@ -61,9 +61,9 @@ function condition_me(user) {
 }
 
 function condition_published(user) {
-  return {$and: {$or: [{state: workflow.PUBLISHED}, {creator: user._id}]}};
+  return {$or: [{state: workflow.PUBLISHED}, {creator: user._id}]};
 }
 
 // if there be cases where a condition is not sufficient,
-//  you will want to create an indexed field
+//  you will have to create an indexed field that you compute when relevant - solr style.
 
