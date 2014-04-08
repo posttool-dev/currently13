@@ -16,6 +16,10 @@ Workflow.prototype._init = function() {
     states.push({name: name, code: code});
   }
   this.states = states;
+  var groups = [];
+  for (var p in this.info.groups)
+    groups.push(p);
+  this.groups = groups;
 }
 
 Workflow.prototype.get_info = function(user) {

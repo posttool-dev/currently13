@@ -251,7 +251,7 @@ function confirm_inline($el, message, next) {
   var $p = $$('p');
   var $n = $$('x', {el:'span'}).text(message+' ');
   var $b = $$('x', {el:'button'}).text('OK');
-  var $c = $$('x', {el:'button'}).text('Cancel');
+  var $c = $$('x', {el:'button'}).text('CANCEL');
   $p.append($n,$b,$c);
   $el.after($p);
   $p.hide();
@@ -274,31 +274,29 @@ function confirm_inline($el, message, next) {
 
 /// functions that rely on global __templates, __states, __transitions
 
-function render_template(type, object)
-{
-    try {
-        return new EJS({text: __templates[type]}).render(object);
-    } catch (e) {
-        console.error(e);
-        return "";
-    }
+function render_template(type, object) {
+  try {
+    return new EJS({text: __templates[type]}).render(object);
+  } catch (e) {
+    console.error(e);
+    return "";
+  }
 }
 
 function get_state_name(code) {
-    for (var i=0; i<__states.length; i++)
-        if (__states[i].code == code)
-            return __states[i].name;
-    return '';
+  if (!__workflow[code])
+    return code;
+  return __workflow[code].name;
 }
 
-function get_state_transitions(code) {
-    for (var i=0; i<__transitions.length; i++)
-        if (__transitions[i].from == code)
-            return __transitions[i].to;
-    return [];
+function get_state(type, code) {
+  if (!__workflow[type])
+    return null;
+  for (var i = 0; i < __workflow[type].length; i++)
+    if (__workflow[type][i].from == code)
+      return __workflow[type][i].to;
+  return null;
 }
-
-
 
 
 /// random stylin'

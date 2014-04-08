@@ -81,7 +81,7 @@ exports.UserInfo = function(){
       {name: "email", widget: "email"},
       {name: "image", widget: "upload", options: {type: "Resource", array: false}},
       {name: "password", widget: "password"},
-      {name: "group", widget: "select", options: function(cms){ return {options: cms.workflow.states}}},
+      {name: "group", widget: "select", options: function(cms){ return {options: cms.workflow.groups}}},
       {name: "active", widget: "boolean"},
       {name: "admin", widget: "boolean"},
     ],
@@ -108,31 +108,24 @@ exports.UserSchema = new mongoose.Schema(exports.UserInfo().schema);
 // log
 exports.LogSchema = new mongoose.Schema({
   user: {type: ObjectId, ref: 'User'},
+  obj: {t: String, i: ObjectId},
   action: String,
-  type: String,
-  id: ObjectId,
   info: mongoose.Schema.Types.Mixed,
   time: { type: Date, default: Date.now }
 })
 
 
+
 // request
 exports.RequestSchema = new mongoose.Schema({
   user: {type: ObjectId, ref: 'User'},
-  request_type: String,
-  message: {type: ObjectId, ref: 'Message'},
+  obj: {t: String, i: ObjectId},
+  state: String,
+  request_message: String,
+  response_message: String,
   time: { type: Date, default: Date.now },
   complete: { type: Boolean, default: false }
 });
 
 
 // assignment
-
-// msg
-exports.MessageSchema = new mongoose.Schema({
-  from: {type: ObjectId, ref: 'User'},
-  to: {type: ObjectId, ref: 'User'},
-  message: String,
-  time: { type: Date, default: Date.now },
-  read: { type: Date }
-});

@@ -131,9 +131,15 @@ function form_form(app, type, id) {
 
   function update_info() {
     $info.empty();
-
     if (_state)
     {
+      var stype = {text: 'CHANGE STATE', api: '/status'};
+      var st = get_state('transitions', _state);
+      if (!st) {
+        stype = {text: 'REQUEST CHANGE', api: '/request_status'};
+        st = get_state('requests', _state);
+      }
+
       var selected = -1;
       var $last = $$();
       var $info_state = $$('state-panel', {parent: $info});
@@ -148,10 +154,9 @@ function form_form(app, type, id) {
         $state_change_ok_btn.prop('disabled', true);
       });
       $info_state.append($state_is);
-      var $state_change_btn = $("<button>CHANGE STATUS...</button>");
+      var $state_change_btn = $("<button>"+stype.text+"...</button>");
       $info_state.append($state_change_btn);
       var $state_change = $$('state-change', {parent:$info_state}).css({display:'none'});
-      var st = get_state_transitions(_state);
       if (st)
       {
         function add_choice(state)
@@ -173,8 +178,9 @@ function form_form(app, type, id) {
         }
         for (var i=0; i<st.length; i++)
           add_choice(st[i]);
-        $state_change.append("<textarea></textarea>");
-        var $state_change_ok_btn = $("<button>CHANGE STATUS</button>").prop('disabled',true);
+        var $text = $("<textarea></textarea>");
+        $state_change.append($text);
+        var $state_change_ok_btn = $("<button>"+stype.text+"</button>").prop('disabled',true);
         var $state_change_cancel_btn = $("<button>CANCEL</button>");
         $state_change.append($state_change_ok_btn, " ", $state_change_cancel_btn);
         $state_change_btn.click(function(){
@@ -186,7 +192,7 @@ function form_form(app, type, id) {
           $state_change_btn.show();
         });
         $state_change_ok_btn.click(function(){
-          $$ajax(self.app.base_url + '/status/'+type+'/'+_id, JSON.stringify({state:selected}), 'post').done(function(r){
+          $$ajax(self.app.base_url + stype.api + '/' + type + '/' + _id, JSON.stringify({state:selected, reason:$text.val()}), 'post').done(function(r){
             _state = selected;
             update_info();
             refresh_logs();
@@ -203,7 +209,6 @@ function form_form(app, type, id) {
       f.data = r;
       var $m = f.$el();
       $m.dblclick(function () {
-        console.log(r);
         self.emit('select', {type: type, id: r._id});
       });
       $info_rel.append($m);

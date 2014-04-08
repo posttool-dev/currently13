@@ -28,7 +28,6 @@ var containerHttp = <% if (containerHttp) { %>"<%- containerHttp %>/";<% } else 
 var __templates = <%-JSON.stringify(t)%>;
 <% } %>
 <% if (workflow) { %>
-var __states = <%- JSON.stringify(workflow.states) %>;
-var __transitions = <%- JSON.stringify(workflow.transitions) %>;
+var __workflow = <%- JSON.stringify(workflow) %>;
 <% } %>
 </script>

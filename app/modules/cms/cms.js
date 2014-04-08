@@ -201,6 +201,12 @@ Cms.prototype._init = function () {
     middle3, self.form_delete.bind(self));
   app.post('/cms/status/:type/:id',
     middle3, self.form_status.bind(self));
+  app.post('/cms/requests/:state',
+    middle3, self.requests_for_state.bind(self));
+  app.post('/cms/requests/:type/:id',
+    middle3, self.request_for_record.bind(self));
+  app.post('/cms/request_status/:type/:id',
+    middle3, self.form_request_status.bind(self));
   app.post('/cms/upload',
     middle1, self.resource_upload.bind(self));
   app.get('/cms/download/:id',
@@ -493,12 +499,67 @@ Cms.prototype.form_status = function (req, res, next) {
   req.object.state = new_state;
   req.object.save(function (err, m) {
     self.add_log(req.session.user._id, 'change status', req.type, m,
-      {message: 'From ' + original_state + 'to ' + req.object.state, reason: req.param.reason}, function (info) {
+      {message: 'From ' + original_state + 'to ' + req.object.state, reason: req.body.reason}, function (info) {
         // todo find open related requests - notify requestors & close requests
         res.json(info);
       });
   });
 };
+
+
+Cms.prototype.form_request_status = function (req, res, next) {
+  var self = this;
+  var new_state = req.body.state;
+  var original_state = req.object.state;
+  var ok = self.workflow.can_request(req.session.user, req.type, original_state, new_state);
+  if (!ok) {
+    next('workflow error');
+    return;
+  }
+  req.object.state = new_state;
+  var Request = self.meta.Request;
+  Request.findOne({'obj.t': req.type, 'obj.i': req.params.id, complete: false}, function (err, r) {
+    if (r){
+      next('request already exists');
+      return;
+    }
+    else
+    {
+      var r = new Request({
+        obj: {t: req.type, i: req.object._id},
+        state: new_state,
+        request_message: req.body.reason
+      });
+      r.save(function(err, r){
+        res.json(r);
+      });
+    }
+  });
+};
+
+
+Cms.prototype.request_for_record = function(req, res) {
+   this.meta.Request.findOne({'obj.t': req.type, 'obj.i': req.params.id, complete: false}, function (err, r) {
+      res.json({request: r});
+   });
+}
+
+
+Cms.prototype.requests_for_state = function(req, res) {
+  var meta = this.meta;
+   meta.Request.find({state: req.params.state, complete: false}, function (err, reqs) {
+    utils.forEach(reqs, function (r, n) {
+      meta.model(r.obj.t).findOne({_id: r.obj.i}, function (err, o) {
+        if (!r.info)
+          r.info = {};
+        r.info.object = o;
+        n();
+      });
+    }, function () {
+      res.json({request: reqs});
+    });
+   });
+}
 
 
 // logs
@@ -510,7 +571,7 @@ Cms.prototype.logs_for_user = function (req, res) {
 
 
 Cms.prototype.logs_for_record = function (req, res) {
-  this.get_logs({type: req.params.type, id: req.params.id }, {sort: '-time'}, function (logs) {
+  this.get_logs({'obj.t': req.params.type, 'obj.i': req.params.id }, {sort: '-time'}, function (logs) {
     res.json(logs);
   });
 };
@@ -523,10 +584,10 @@ Cms.prototype.get_logs = function (query, options, complete) {
   q.populate('user', 'name email');
   q.exec(function (err, logs) {
     utils.forEach(logs, function (log, n) {
-      meta.model(log.type).findOne({_id: log.id}, function (err, l) {
+      meta.model(log.obj.t).findOne({_id: log.obj.i}, function (err, o) {
         if (!log.info)
           log.info = {};
-        log.info.object = l;
+        log.info.object = o;
         n();
       });
     }, function () {
@@ -541,12 +602,13 @@ Cms.prototype.add_log = function (user_id, action, type, instance, info, callbac
   var log = new Log({
       user: user_id,
       action: action,
-      type: type,
-      id: instance._id,
-      info: info
+      info: info,
+      obj: {t: type, i: instance._id}
     }
   );
+  console.log(log);
   log.save(function (err, l) {
+    console.log(l);
     callback(l);
   });
 }
