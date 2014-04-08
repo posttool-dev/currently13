@@ -246,6 +246,7 @@ function media_path(resource)
 }
 
 
+
 function confirm_inline($el, message, next) {
   var $p = $$('p');
   var $n = $$('x', {el:'span'}).text(message+' ');
@@ -296,3 +297,29 @@ function get_state_transitions(code) {
             return __transitions[i].to;
     return [];
 }
+
+
+
+
+/// random stylin'
+
+function bg_w_grad($el, url){
+  var s = 'linear-gradient(-90deg, rgba(231,229,224,1) 10%, rgba(231,229,224,.85) 30%, rgba(231,229,224,0) 50%, rgba(231,229,224,0) 100%)';
+  $el.css({'background-image': vendor_prefix.css+s+', url('+url+')', 'background-repeat':'no-repeat'});
+}
+//http://davidwalsh.name/vendor-prefix
+var vendor_prefix = (function () {
+  var styles = window.getComputedStyle(document.documentElement, ''),
+    pre = (Array.prototype.slice
+      .call(styles)
+      .join('')
+      .match(/-(moz|webkit|ms)-/) || (styles.OLink === '' && ['', 'o'])
+    )[1],
+    dom = ('WebKit|Moz|MS|O').match(new RegExp('(' + pre + ')', 'i'))[1];
+  return {
+    dom: dom,
+    lowercase: pre,
+    css: '-' + pre + '-',
+    js: pre[0].toUpperCase() + pre.substr(1)
+  };
+})();

@@ -433,9 +433,10 @@ var form_fields = {
       if (t)
         $el.append('<div class="text">'+t+'</div>');
       if (is_resource)
-      {
         $el.append(form_fields.resource(_d));
-      }
+      var thumb = find_thumb2(_d);
+      if (thumb)
+        bg_w_grad($el, thumb);
     }
 
     $el.dblclick(function () {
@@ -446,15 +447,15 @@ var form_fields = {
   resource: function(data)
   {
     if (data.mime.indexOf('image') == 0){
-      var thumb = find_thumb(data);
-      if (thumb)
-        return $('<img src="'+thumb+'">');
-      else if (data.children)
-      {
-        var thumb = find_thumb2(data.children);
+//      var thumb = find_thumb(data);
+//      if (thumb)
+//        return $('<img src="'+thumb+'">');
+//      else if (data.children)
+//      {
+        var thumb = find_thumb2(data);
         if (thumb)
           return $('<img src="'+thumb+'">');
-      }
+//      }
       return $('<img src="'+media_path(data) +'">');
     } else if (data.mime.indexOf('audio') == 0) {
       return $('<audio controls><source src="'+media_path(data)+'" type="'+data.mime+'"></audio>');
