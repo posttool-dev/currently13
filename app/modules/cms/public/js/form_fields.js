@@ -266,6 +266,80 @@ var form_fields = {
 
   },
 
+  qrich_text_field: function(options) {
+    var self = this;
+    var $el = $$('field rich-text');
+    self.$el = function () {
+      return $el;
+    }
+
+    var $w = $('<div>\
+        <div class="toolbar-container">\
+          <span class="ql-format-group">\
+            <select title="Font" class="ql-font">\
+              <option value="sans-serif" selected>Sans Serif</option>\
+              <option value="Georgia, serif">Serif</option>\
+              <option value="Monaco, &quot;Courier New&quot;, monospace">Monospace</option>\
+            </select>\
+            <select title="Size" class="ql-size">\
+              <option value="10px">Small</option>\
+              <option value="13px" selected>Normal</option>\
+              <option value="18px">Large</option>\
+              <option value="32px">Huge</option>\
+            </select></span><span class="ql-format-group"><span title="Bold" class="ql-format-button ql-bold"></span><span class="ql-format-separator"></span><span title="Italic" class="ql-format-button ql-italic"></span><span class="ql-format-separator"></span><span title="Underline" class="ql-format-button ql-underline"></span></span><span class="ql-format-group">\
+            <select title="Text Alignment" class="ql-align">\
+              <option value="left" selected></option>\
+              <option value="center"></option>\
+              <option value="right"></option>\
+              <option value="justify"></option>\
+            </select>\
+          </span>\
+          <span class="ql-format-group">\
+            <span title="Link" class="ql-format-button ql-link"></span>\
+            <span class="ql-format-separator"></span>\
+            <span title="Image" class="ql-format-button ql-image"></span>\
+            <span class="ql-format-separator"></span>\
+            <span title="Bullet" class="ql-format-button ql-bullet"></span>\
+            </span><span class="ql-format-group">\
+          </span>\
+        </div>\
+        <div class="editor-container"></div>\
+      </div>');
+    $el.append($w);
+    console.log($w.html())
+    var fullEditor = new Quill($w.get(), {
+      theme: 'snow'
+    });
+
+
+    var _s = "";
+    Object.defineProperty(self, "data",
+      {
+        get: function () {
+          return _s;
+        },
+        set: function (n) {
+          _s = n;
+          update_ui();
+        }
+      });
+    function update_ui() {
+      //fullEditor.setHTML(_s);
+    }
+
+//    fullEditor.on('text-change', function(delta, source) {
+//      if (source == 'api') {
+//        //console.log("An API call triggered this change.");
+//      } else if (source == 'user') {
+//        //console.log("A user action triggered this change.");
+//        _s = fullEditor.getHTML();
+//        self.emit('change');
+//      }
+//    });
+
+
+  },
+
   date_field: function (options) {
     var self = this;
     var $el = $$('field date');
@@ -446,7 +520,8 @@ var form_fields = {
 
   resource: function(data)
   {
-    if (data.mime.indexOf('image') == 0){
+    var mime = data.mime ? data.mime : data.meta && data.meta.mime ? data.meta.mime : null;
+    if (mime && mime.indexOf('image') == 0){
 //      var thumb = find_thumb(data);
 //      if (thumb)
 //        return $('<img src="'+thumb+'">');
@@ -457,12 +532,14 @@ var form_fields = {
           return $('<img src="'+thumb+'">');
 //      }
       return $('<img src="'+media_path(data) +'">');
-    } else if (data.mime.indexOf('audio') == 0) {
+    } else if (mime && mime.indexOf('audio') == 0) {
       return $('<audio controls><source src="'+media_path(data)+'" type="'+data.mime+'"></audio>');
-    } else if (data.mime.indexOf('video') == 0) {
+    } else if (mime && mime.indexOf('video') == 0) {
       return $('<video controls><source src="'+media_path(data)+'" type="'+data.mime+'"></video>');
-    } else {
+    } else if (data.path) {
       return $('<a href="'+media_path(data)+'">'+data.path+"</a>");
+    } else {
+      return data;
     }
   },
 

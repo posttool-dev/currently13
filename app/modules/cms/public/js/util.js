@@ -242,7 +242,7 @@ function media_path(resource)
 {
   if (!resource)
     return null;
-  if (resource.indexOf('http')==0)
+  if (typeof resource == "string")
     return resource;
   if (containerHttp)
     return containerHttp + resource.path;

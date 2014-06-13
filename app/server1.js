@@ -12,21 +12,17 @@ if (useCluster && cluster.isMaster) {
   for (var i = 0; i < cpuCount; i += 1) {
     cluster.fork();
   }
-
   cluster.on('exit', function (worker) {
     console.log('Worker ' + worker.id + ' died');
     cluster.fork();
   });
 
 } else {
-
   var server = express();
   var cms = new current.Cms(require('./tabithasoren'));
   server.use(cms.app);
-  server.use(require('./tabithasoren/app'));
-
+  // server.use(require('./tabithasoren/app'));
   server.listen(3001);
-
 }
 
 
