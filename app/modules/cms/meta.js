@@ -191,7 +191,8 @@ Meta.prototype.related = function (type, id, next) {
 
 var mongoose = require('mongoose');
 
-
+// TODO plugin
+// http://mongoosejs.com/docs/plugins
 /**
   manages schema
    - adds fields: creator, created, modified, state
