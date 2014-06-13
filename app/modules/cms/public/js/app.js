@@ -18,6 +18,7 @@ function init_cms(base_url) {
     $el: function(){ return app.layers.$el(); }
   }
 
+  // restoring state
   window.addEventListener("popstate", function (e) {
     var s = e.state ? e.state : location.pathname;
     var f = app.layers.find(s);
@@ -29,17 +30,27 @@ function init_cms(base_url) {
     }
     else {
       app.layers.clear_layers();
-      var p = s.substring(1).split('/');
-      if (p[1] == 'browse')
-        browse(p[2])
-      else if (p[1] == 'create')
-        form(p[2])
-      else if (p[1] == 'update')
-        form(p[2], p[3]);
+      create_layer(s);
     }
   });
+//  var popped = ('state' in window.history && window.history.state !== null), initialURL = location.href;
+//  if (!popped)
+    create_layer(location.pathname);
 
-  // add form layer
+  // creating layers for
+  //   browse/:type
+  //   form/create/:type
+  //   form/update/:type/:id
+  function create_layer(path) {
+    var p = path.substring(1).split('/');
+    if (p[1] == 'browse')
+      browse(p[2])
+    else if (p[1] == 'create')
+      form(p[2])
+    else if (p[1] == 'update')
+      form(p[2], p[3]);
+  }
+
   function form(type, id) {
     var ff = new form_form(app, type, id);
     ff.add_listener('browse', function (f, o) {
@@ -74,8 +85,6 @@ function init_cms(base_url) {
     return ff;
   }
 
-
-  // add browse layer
   function browse(type) {
     var browser = new browse_browse(app, type);
     browser.add_listener('select', function (f, r) {
