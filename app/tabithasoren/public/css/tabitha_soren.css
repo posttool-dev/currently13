@@ -1,0 +1,208 @@
+Component 
+{
+	backgroundVisible: false;
+	backgroundColor: #ff0000;
+	backgroundAlpha: 1;
+	
+	/*backgroundVisible: false;
+	backgroundAlpha: .1;
+	backgroundColor: #ffffff;
+	backgroundBorderVisible: true;
+	backgroundBorderColor: #000000;
+	backgroundBorderAlpha: .5;*/
+}
+Label
+{
+	fontStyle: ._a;
+	decorator.embedded: true;
+}
+Input
+{
+	fontStyle: ._a;
+	decorator.embedded: true;
+	height:28;
+	
+	backgroundVisible: true;
+	backgroundColor: #ffffff;
+	backgroundAlpha: 1;
+	backgroundBorderColor: #000000;
+	backgroundBorderThickness: 1;
+	backgroundBorderAlpha: .3;
+}
+Link
+{
+	fontStyle: ._a;
+	decorator.embedded: true;
+	normalColor: #000000;
+	overColor: #941b20;
+	selectedColor: #941b20;
+}
+LinkContact
+{
+	fontStyle: ._1;
+	decorator.embedded: true;
+	normalColor: #000000;
+	overColor: #941b20;
+	selectedColor: #941b20;
+}
+
+ScrollingContainer
+{
+	decorator.scrollBarThumbCornerRadius: 0;
+	decorator.scrollBarThumbColor: #ff0000;
+	decorator.scrollBarThumbAlpha: 1;
+	decorator.scrollBarBackgroundColor: #9999;
+	decorator.scrollBarBackgroundAlpha: .5;
+	decorator.scrollBarWidth: 10;
+}
+
+/* font styles */
+._a
+{
+	fontFamily: aauxpro;
+	fontSize: 22;
+	color: #010101;
+	letterSpacing: .45;
+}
+
+._b
+{
+	fontFamily: aauxpro_medium;
+	fontSize: 12;
+	color: #000000;
+	letterSpacing: 1.25;
+}
+
+._b2
+{
+	fontFamily: aauxpro_black;
+	fontSize: 12;
+	color: #000000;
+	letterSpacing: 1.25;
+}
+
+._c
+{
+	fontFamily: new_clear_era;
+	fontSize: 19;
+	leading: 7; /*26*/
+	fontStyle: italic;
+	color: #941b20;
+	letterSpacing: 1;
+}
+
+
+._d
+{
+	fontFamily: aauxpro_light;
+	fontSize: 15;
+	color: #000000;	
+	letterSpacing: .45;
+}
+
+._e
+{
+	fontFamily: aauxpro;
+	fontSize: 9;
+	color: #333333;
+	letterSpacing: .45;
+}
+
+._1
+{
+	fontFamily: aauxpro;
+	fontSize: 12;
+	leading: 4; /*16*/
+	color: #000000;
+	letterSpacing: .45;
+}
+
+._2
+{
+	fontFamily: aauxpro_medium;
+	fontSize: 10;
+	color: #000000;
+	letterSpacing: 2;
+}
+
+._3
+{
+	fontFamily: aauxpro;
+	fontSize: 12;
+	leading: 8; /*20*/
+	color: #000000;	
+	letterSpacing: .45;
+}
+
+._4
+{
+	fontFamily: aauxpro_medium;
+	fontSize: 10;
+	leading: 8; /*18*/
+	color: #000000;	
+	letterSpacing: .45;
+}
+
+._5
+{
+	fontFamily: aauxpro;
+	fontWeight: bold;
+	fontStyle: italic;
+	fontSize: 10;
+	leading: 8; /*18*/
+	color: #000000;		
+	letterSpacing: .45;
+}
+
+._6
+{
+	fontFamily: aauxpro_light;
+	fontSize: 10;
+	leading: 8; /*18*/
+	color: #000000;			
+	letterSpacing: .45;
+}
+
+._6a
+{
+	fontFamily: aauxpro_light;
+	fontStyle: italic;
+	fontSize: 10;
+	leading: 8; /*18*/
+	color: #000000;			
+	letterSpacing: .45;
+
+}
+
+.small
+{
+	fontFamily: aauxpro_black;
+	fontSize: 22;
+	color: #00ff00;
+	letterSpacing: .45;
+}
+
+
+
+
+p {
+	fontFamily: aauxpro_light;
+	fontSize: 12;
+	leading: 2;
+	color: #000000;
+}
+
+a {
+	color: #111111;
+}
+
+a:link
+{
+	textDecoration: none;
+}
+
+a:hover
+{
+	color: #444444;
+	textDecoration: underline;
+}
