@@ -732,7 +732,7 @@ Cms.prototype.write = function (stream, path, next) {
       break;
     case "cloudinary":
       // untested
-      var cloudStream = cloudinary.uploader.upload_stream(next);
+      var cloudStream = self.cloudinary.uploader.upload_stream(next);
       stream.on('data', cloudStream.write).on('end', cloudStream.end);
       break;
     case "gfs":
@@ -766,7 +766,7 @@ Cms.prototype.resource_delete = function (req, res) {
           });
           break
         case "cloudinary":
-          cloudinary.uploader.destroy(r.meta.public_id, function (result) {
+          self.cloudinary.uploader.destroy(r.meta.public_id, function (result) {
             res.json(result);
           });
           break

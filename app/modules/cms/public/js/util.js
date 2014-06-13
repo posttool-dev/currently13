@@ -230,8 +230,11 @@ function find_prop(v, p){
 
 function find_thumb2(c){
   var f = find_obj_by_attr(c, 'meta.job_name', 'image thumb');
-  if (f) return media_path(f);
-  f = find_obj_by_attr(c, 'mime', 'image/jpeg');
+  if (f)
+    return media_path(f);
+  f = find_obj_by_attr(c, 'meta.url');
+  if (f)
+    return media_path(f.meta.url);
   return media_path(f);
 }
 
@@ -239,6 +242,8 @@ function media_path(resource)
 {
   if (!resource)
     return null;
+  if (resource.indexOf('http')==0)
+    return resource;
   if (containerHttp)
     return containerHttp + resource.path;
   else
