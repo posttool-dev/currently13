@@ -19,9 +19,9 @@ if (useCluster && cluster.isMaster) {
 
 } else {
   var server = express();
-  var cms = new current.Cms(require('./tabithasoren'));
+  var cms = new current.Cms(require('./toddhido'));
   server.use(cms.app);
-  // server.use(require('./tabithasoren/app'));
+  server.use(require('./toddhido/app')(cms.meta));
   server.listen(3001);
 }
 
