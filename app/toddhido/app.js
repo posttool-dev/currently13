@@ -5,13 +5,6 @@ var hm = require('./'),
     PUBLISHED = hm.workflow.PUBLISHED,
     config = hm.config;
 
-// connect to db
-
-var connection = mongoose.createConnection(config.mongoConnectString);
-connection.on('error',function(){
-  console.log('noooo '+config.mongoConnectString)
-});
-
 // serve express app
 exports = module.exports = function(meta) {
   var app = express();
@@ -24,47 +17,72 @@ exports = module.exports = function(meta) {
 
   var Page = meta.model('Page');
   var News = meta.model('News');
-//
-  app.get('/', function (req, res) {
-    Page.find({}, null, {sort: 'date'}, function (err, pages) { //state: PUBLISHED
+
+
+  // utils
+  var site = null;
+  var lastTime = null;
+
+  function getSiteMapData(next) {
+    if (!site || !lastTime || lastTime.getTime() + 60000 < Date.now()) {
+      Page.find({}, null, {sort: 'date'}, function (err, pages) { //state: PUBLISHED
+        if (err) return next(err);
+        site = getSiteMap(pages);
+        next(null, site);
+      });
+    } else {
+      next(null, site);
+    }
+  }
+
+  function getSiteMap(pages, root_title) {
+    if (!root_title)
+      root_title = 'home';
+    var m = {};
+    for (var i = 0; i < pages.length; i++)
+      m[pages[i].id] = pages[i];
+    var root = null;
+    for (var i = 0; i < pages.length; i++) {
+      var p = pages[i];
+      for (var j = 0; j < p.pages.length; j++) {
+        if (p.title == root_title)
+          root = p;
+        p.pages[j] = m[p.pages[j]];
+      }
+    }
+    // s/could go through and delete nulls (the result of unpublished children)
+    return root;
+  }
+
+  // endpoints
+
+  app.get('/', function (req, res, next) {
+    getSiteMapData(function (err, site) {
+      if (err) return next(err);
       News.find({}, function (err, news) {
-       res.render('index', {site: getSiteMap(pages), news: news});
+        if (err) return next(err);
+        res.render('index', {site: site, news: news});
       });
     });
   });
-//  app.get('/artists', function (req, res) {
-//    Artist.find({state: PUBLISHED}, null, {sort: 'last_name'}, function (err, artists) {
-//      res.render('artists', {artists: artists});
-//    });
-//  });
-//  app.get('/artist/:id', function (req, res) {
-//    Artist.findOne({_id: req.params.id, state: PUBLISHED}, function (err, artist) {
-//      res.render('artist', {artist: artist});
-//    });
-//  });
+
+  app.get('/*', function (req, res, next) {
+    getSiteMapData(function (err, site) {
+      if (err) return next(err);
+      Page.findOne({url: req.path}).populate("resources").exec(function (err, page) { //state: PUBLISHED
+        if (err) return next(err);
+        if (!page) return next(new Error('no such page'));
+        res.render('page', {page: page, site: site});
+      });
+    });
+  });
+
   return app;
+
+
+
+
+
+
+
 }
-
-
-
-function getSiteMap(pages, root_title) {
-  if (!root_title)
-    root_title = 'home';
-  var m = {};
-  for (var i=0; i<pages.length; i++)
-    m[pages[i].id] = pages[i];
-  var root = null;
-  for (var i=0; i<pages.length; i++)
-  {
-    var p = pages[i];
-    for (var j=0; j< p.pages.length; j++){
-      if (p.title == root_title)
-        root = p;
-      p.pages[j] = m[p.pages[j]];
-    }
-  }
-  // s/could go through and delete nulls (the result of unpublished children)
-  return root;
-}
-
-

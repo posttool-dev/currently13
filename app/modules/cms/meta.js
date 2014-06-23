@@ -207,9 +207,9 @@ extra_fields = {
 };
 exports.add_fields_and_methods = function (schema, name) {
   schema.add(extra_fields);
-  schema.virtual('url').get(function () {
-    return name.toLowerCase() + '/' + this._id;
-  });
+//  schema.virtual('url').get(function () {
+//    return name.toLowerCase() + '/' + this._id;
+//  });
   schema.virtual('type').get(function () {
     return name.toLowerCase() + '/' + this.uuid;
   });

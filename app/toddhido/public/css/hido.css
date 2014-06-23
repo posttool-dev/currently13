@@ -2,13 +2,41 @@
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+body {
+    background-color: #e0e0e0;
+}
+
 h3 {
     font-size: 19px;
     font-weight: normal;
 }
 
+.todd {
+    position: absolute;
+    top: 0px;
+    left: 10px;
+}
+
+#main-menu {
+    position: absolute;
+    top: 25px;
+    left: 180px;
+    width: 70%;
+}
+
 #main-menu ul {
     display: none;
+    position: absolute;
+    margin: 0;
+    padding: 0;
+}
+
+#main-menu li {
+    margin: 0;
+    padding: 0;
+    text-transform: uppercase;
+    font-size: 9px;
+    line-height: 18px;
 }
 
 #main-menu > ul {
@@ -18,8 +46,12 @@ h3 {
 #main-menu > ul > li {
     float: left;
     padding-right: 18px;
-    text-transform: uppercase;
-    font-size: 10px;
+}
+
+#main-menu > ul > ul {
+    background-color: #e0e0e0;
+    padding-right: 40px;
+    padding-top:15px;
 }
 
 a {
@@ -29,4 +61,16 @@ a {
 
 a:hover {
     color: #000;
+}
+
+
+
+
+.slides {
+    margin-top: 100px;
+    margin-bottom: 20px;
+}
+
+.slides img {
+    width:100%; height: auto;
 }

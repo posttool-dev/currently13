@@ -18,7 +18,7 @@ exports = module.exports = {
       pages: [
         {type: ObjectId, ref: "Page"}
       ],
-      code: String,
+      url: String,
       description: String,
       resources: [
         {type: ObjectId, ref: "Resource"}
@@ -31,7 +31,7 @@ exports = module.exports = {
     },
     browse: [
       {name: "title", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
-      {name: "code", cell: "char", filters: ["$regex", "="], order: "asc,desc,default"},
+      {name: "url", cell: "char", filters: ["$regex", "="], order: "asc,desc,default"},
       {name: "resources", cell: "image" },
       {name: "year", cell: "string", filters: ["$regex"], order: "asc,desc"},
       {name: "modified", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
@@ -41,7 +41,7 @@ exports = module.exports = {
       {begin: "row"},
         {begin: "col", options: {className: "two-col"}},
           {name: "title", widget: "input", options: {className: "large", width: "80%"}},
-          {name: "code", widget: "input", options: {className: "large", width: "20%"}},
+          {name: "url", widget: "input", options: {className: "large", width: "20%"}},
         {end: "col" },
         {begin: "col", options: {className: "two-col"}},
           {name: "resources", widget: "upload", options: {type: "Resource", array: true}},
