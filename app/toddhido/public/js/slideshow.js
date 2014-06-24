@@ -1,9 +1,12 @@
-function slideshow($el, page) {
+function slideshow($el, resources) {
   $el.empty();
   $el.click(function () {
     imgs[idx].fadeOut(200);
     idx++;
-    imgs[idx].fadeIn(200);
+    if (idx<imgs.length)
+      imgs[idx].fadeIn(200);
+    else
+      navigate_next();
     render();
   });
   var imgs = [];
@@ -17,17 +20,17 @@ function slideshow($el, page) {
       load_idx++;
       load_next();
     });
-    $img.attr("src", bp + "w_950,h_950,c_fit/" + resource.meta.public_id + ".jpg");
     $img.hide();
+    $img.attr("src", bp + "w_950,h_950,c_fit/" + resource.meta.public_id + ".jpg");
     imgs.push($img);
     $el.append($img);
   }
 
   function load_next() {
-    if (load_idx == page.resources.length) {
+    if (load_idx == resources.length) {
       //comspl
     } else {
-      load(page.resources[load_idx]);
+      load(resources[load_idx]);
     }
   }
 
@@ -65,7 +68,7 @@ function slideshow($el, page) {
     });
   }
 
-  if (page.resources.length) {
+  if (resources.length) {
     load_next();
     $(window).resize(resize);
   }

@@ -9,12 +9,13 @@
 </div>
 
 <% include menu.ejs %>
-
-
 <% include foot.ejs %>
 
 <script src="/js/slideshow.js"></script>
 <script>
     var bp = "<%= bp %>";
-    slideshow($(".slides"), <%- JSON.stringify(page) %>);
+    slideshow($(".slides"), <%- JSON.stringify(page.resources) %>);
+    function navigate_next(){
+        document.location.href = "<%= next_page.url %>";
+    }
 </script>

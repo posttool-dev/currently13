@@ -1,11 +1,15 @@
 <% var title = "Todd Hido" %>
+<% var bp = "http://res.cloudinary.com/posttool/image/upload/"; %>
 <% include head.ejs %>
+<div class="slides"></div>
 <% include menu.ejs %>
-
-
 <% include foot.ejs %>
 
-
+<script src="/js/layout.js"></script>
+<script>
+    var bp = "<%= bp %>";
+    layout($(".slides"), <%- JSON.stringify(images) %>);
+</script>
 
 
 

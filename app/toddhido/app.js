@@ -1,9 +1,10 @@
 var express = require('express');
 var mongoose = require('mongoose');
 
-var hm = require('./'),
-    PUBLISHED = hm.workflow.PUBLISHED,
-    config = hm.config;
+var th = require('./'),
+    PUBLISHED = th.workflow.PUBLISHED,
+    config = th.config,
+    util = require('./util');
 
 // serve express app
 exports = module.exports = function(meta) {
@@ -25,43 +26,67 @@ exports = module.exports = function(meta) {
 
   function getSiteMapData(next) {
     if (!site || !lastTime || lastTime.getTime() + 60000 < Date.now()) {
-      Page.find({}, null, {sort: 'date'}, function (err, pages) { //state: PUBLISHED
-        if (err) return next(err);
-        site = getSiteMap(pages);
-        next(null, site);
-      });
+      Page.find({})//state: PUBLISHED
+        .populate('resources')
+        .exec(function (err, pages) {
+          if (err) return next(err);
+          var pages_view = [];
+          for (var i=0; i<pages.length; i++){
+            var p = pages[i];
+            pages_view.push({id: p.id, title: p.title, url: p.url, pages: p.pages, resources: p.resources});
+          }
+          site = getSiteMap(pages_view);
+          next(null, site);
+        });
     } else {
       next(null, site);
     }
   }
 
-  function getSiteMap(pages, root_title) {
-    if (!root_title)
-      root_title = 'home';
+  function getSiteMap(pages) {
     var m = {};
     for (var i = 0; i < pages.length; i++)
       m[pages[i].id] = pages[i];
     var root = null;
     for (var i = 0; i < pages.length; i++) {
       var p = pages[i];
+      if (p.url == "/")
+        root = p;
       for (var j = 0; j < p.pages.length; j++) {
-        if (p.title == root_title)
-          root = p;
         p.pages[j] = m[p.pages[j]];
+        p.pages[j].parent = p;
       }
     }
     // s/could go through and delete nulls (the result of unpublished children)
     return root;
   }
 
+  function getResources(page, resources) {
+    if (resources == null)
+      resources = [];
+    if (page.resources) {
+      for (var i = 0; i < page.resources.length; i++) {
+        resources.push(page.resources[i]);
+      }
+    }
+    if (page.pages) {
+      for (var i = 0; i < page.pages.length; i++) {
+        getResources(page.pages[i], resources);
+      }
+    }
+    return resources;
+  }
+
+
   // endpoints
 
   app.get('/', function (req, res, next) {
     getSiteMapData(function (err, site) {
       if (err) return next(err);
+      var resources = getResources(site);
       News.find({}, function (err, news) {
         if (err) return next(err);
-        res.render('index', {site: site, news: news});
+        res.render('index', {site: site, news: news, images: resources, next_page: site.pages[0]});
       });
     });
   });
@@ -72,7 +97,9 @@ exports = module.exports = function(meta) {
       Page.findOne({url: req.path}).populate("resources").exec(function (err, page) { //state: PUBLISHED
         if (err) return next(err);
         if (!page) return next(new Error('no such page'));
-        res.render('page', {page: page, site: site});
+        page = util.findById(site, page.id);
+        var next_page = util.getNextNode(page);
+        res.render('page', {page: page, site: site, next_page: next_page});
       });
     });
   });
