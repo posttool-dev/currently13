@@ -38,4 +38,20 @@ $("ul > ul").mouseover(function(){
 });
 $("ul > ul").mouseout(function(){
   $(this).stop().fadeOut(100);
-})
+});
+
+
+var $s = $("a[href='"+location.pathname+"']");
+$s.addClass('selected');
+$s.parent().parent().prev().find('a').addClass('selected');
+
+var $ul = $s.parent().parent();
+if ($ul.prop("tagName") == "UL") {
+  position($ul);
+  $ul.fadeIn(100);
+}
+
+function position($c) {
+  if ($c.prev().length)
+    $c.css({position:"absolute", top: '16px', left: $c.prev().position().left+"px"});
+}
