@@ -9,6 +9,9 @@
 <script>
     var bp = "<%= bp %>";
     layout($(".slides"), <%- JSON.stringify(images) %>);
+    function navigate_next(){
+        document.location.href = "<%= next_page.url %>";
+    }
 </script>
 
 

@@ -1,4 +1,7 @@
 function layout($el, list) {
+  $el.click(function(){
+    navigate_next();
+  });
   list.shuffle();
 
   var imgs = [];

@@ -4,7 +4,6 @@ var CNAME = "pages";
 function findById(node, id) {
   if (node == null)
     return null;
-  console.log(">",node.id, id)
   if (node.id == id)
     return node;
   if (node[CNAME]) {
@@ -26,10 +25,25 @@ function getNextNode(origin) {
   if (next == null)
     next = getAncestorsSibling(origin);
   if (next == null)
-    next = root;
+    return getRoot(origin);
+  console.log("9",isEmptyNode(next));
+  if (isEmptyNode(next))
+    return getNextNode(next);
   return next;
 }
 exports.getNextNode = getNextNode;
+
+function getRoot(node){
+  var p = node;
+  while (p.parent != null) {
+    p = p.parent;
+  }
+  return p;
+}
+
+function isEmptyNode(node){
+  return node.resources.length==0;
+}
 
 function getFirstChild(node) {
   var c = node[CNAME];

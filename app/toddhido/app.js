@@ -86,7 +86,7 @@ exports = module.exports = function(meta) {
       var resources = getResources(site);
       News.find({}, function (err, news) {
         if (err) return next(err);
-        res.render('index', {site: site, news: news, images: resources, next_page: site.pages[0]});
+        res.render('index', {site: site, news: news, images: resources, next_page: site.pages[0].pages[0]});
       });
     });
   });
