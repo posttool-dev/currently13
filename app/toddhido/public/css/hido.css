@@ -70,6 +70,7 @@ a.selected {
     color: rgb(0, 188, 255);
 }
 
+
 .slides {
     position: absolute;
     top: 0;
@@ -85,4 +86,11 @@ a.selected {
     image-rendering: -webkit-optimize-contrast;
     -ms-interpolation-mode: nearest-neighbor;
 
+}
+
+
+.text {
+    margin: 80px 80px 30px 230px;
+    font-size: 9px;
+    color: #777;
 }
