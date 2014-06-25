@@ -18,7 +18,6 @@ $(document).ready(function () {
     if (is_ul($ul)) {
       select($ul);
     }
-    evt.preventDefault();
   });
 
   $("li").mouseout(function (evt) {

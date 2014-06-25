@@ -81,9 +81,8 @@ $$ajax('/cms/logs').done(function (logs) {
 function get_log_row(log) {
     var $r = $$('log-row');
     $$('action', {parent: $r}).text(log.action);
-
-    var t = render_template(log.type, log.info.object);
-    $$('instance', {parent: $r}).text(t).click(function(){ location.href = '/cms/update/'+log.type+'/'+log.id});
+    var t = render_template(log.obj.t, log.info.object);
+    $$('instance', {parent: $r}).text(t).click(function(){ location.href = '/cms/update/'+log.obj.t+'/'+log.info.object._id});
     $$('time', {parent: $r}).html(timeSince(log.time) + " by <i>" + log.user.email + "</i>");
     return $r;
 }

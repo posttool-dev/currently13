@@ -379,13 +379,19 @@ function indicated_field(d)//, settings_callback)
   var name = d.name;
   var label = d.label ? d.label : d.name;
   var type = d.widget;
+  var options = d.options;
   var $el = $$('control-group');
+  var showLabel = true;
+  var lastCols = null;
+  var cols = null;
+
   self.$el = function () {
     return $el;
   }
   form_make_listener(self);
 
-  var $label = $('<label></label>').addClass('control-label').attr('for', name).text(label);
+  var $label = $('<label></label>').addClass('control-label').attr('for', name);
+  label_update_ui();
   if (!form_fields[type + "_field"])
     throw Error("no field for " + type);
   var field = new form_fields[type + "_field"](d.options);
@@ -404,9 +410,6 @@ function indicated_field(d)//, settings_callback)
     }
   });
 
-  var lastCols = null;
-  var cols = null;
-
   function columns_update_ui() {
     $el.removeClass(lastCols);
     lastCols = 'col-1-' + cols;
@@ -423,10 +426,24 @@ function indicated_field(d)//, settings_callback)
     }
   });
 
-  var showLabel = true;
 
   function label_update_ui() {
-    $label.text(label);
+    console.log(showLabel, options)
+    if (options && options.collapsable) {
+      $label.empty();
+      var $c = $("<span class='field_collapse'><i class='fa fa-check-circle-o'></i></span>");
+      var v = true;
+      $c.click(function(){
+        if (v)
+          field.$el().hide();
+        else
+          field.$el().show();
+        v = !v;
+      })
+      $label.append("<span>"+label+"</span>", $c);
+    } else {
+      $label.text(label);
+    }
     if (showLabel)
       $label.show();
     else
@@ -442,15 +459,15 @@ function indicated_field(d)//, settings_callback)
       label_update_ui();
     }
   });
-  Object.defineProperty(this, "showLabel", {
-    get: function () {
-      return  showLabel;
-    },
-    set: function (n) {
-      showLabel = n;
-      label_update_ui();
-    }
-  });
+//  Object.defineProperty(this, "showLabel", {
+//    get: function () {
+//      return  showLabel;
+//    },
+//    set: function (n) {
+//      showLabel = n;
+//      label_update_ui();
+//    }
+//  });
   Object.defineProperty(this, "field", {
     get: function () {
       return field;

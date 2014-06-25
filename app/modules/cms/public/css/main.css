@@ -45,7 +45,8 @@ label {
 }
 
 input {
-    border: 1px solid #aaa;
+    border: 0;
+    background-color: #f0f0f0;
     font-size: 26px;
     padding: 7px;
     width: 100%;
@@ -145,13 +146,15 @@ select:active {
     left: 0;
     width: 100%;
     height: 40px;
-    background-color: #04061a;
-    color: #eee;
+    /*background-color: #04061a;*/
+    /*color: #eee;*/
+    background-color: #fff;
+    color: #000;
     /*border-bottom: 1px solid #48adff;*/
     z-index: 15;
-    -webkit-box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.1);
-    -moz-box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.1);
-    box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.1);
+    /*-webkit-box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.1);*/
+    /*-moz-box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.1);*/
+    /*box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.1);*/
 
 }
 
@@ -191,22 +194,24 @@ select:active {
     height: 35px;
     background-color: #fff;
     color: #333;
-    border-bottom: 1px solid #ccc;
+    /*border-bottom: 1px solid #ccc;*/
     padding: 4px 15px 0 18px;
     z-index: 12;
 }
 
 #info-panel {
     position:fixed;
-    top:40px;
+    top:0px;
     right: 0px;
     width: 250px;
     height: 100%;
-    background-color: #282a38;
-    color: #ccc;
+    /*background-color: #282a38;*/
+    /*color: #ccc;*/
+    background-color: #f5f5f5;
+    color: #555;
     padding: 10px 20px 10px 15px;
     font-size: 13px;
-    z-index: 13;
+    z-index: 16;
 }
 
 #info-panel-content {
@@ -462,20 +467,20 @@ select:active {
     height: 100%;
     top: 0;
     left: 0;
-    background-color: rgba(0,0,0, .7);
+    background-color: rgba(255, 255, 255, .7);
 }
 
 .c {
     position:relative;
     padding: 80px 20px 40px 20px;
-    background-color: white;
-    -webkit-box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);
-    -moz-box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);
-    box-shadow: 0px 0px 138px 67px rgba(0, 0, 0, 0.3);
+    background-color: #fff;
+    -webkit-box-shadow: 0px 0px 138px 67px rgba(255, 255, 255, 0.7);
+    -moz-box-shadow: 0px 0px 138px 67px rgba(255, 255, 255, 0.7);
+    box-shadow: 0px 0px 138px 67px rgba(255, 255, 255, 0.7);
 
 }
 
-#info-panel h3 { padding-top: 8px; border-top: 1px solid #44475f; }
+#info-panel h3 { padding-top: 8px; border-top: 1px solid #fff; }
 /*#info-panel*/
 .related-panel, .delete-panel, .logs-panel {
 padding-top: 20px;
@@ -494,7 +499,7 @@ padding-top: 20px;
 .log-row .email { color: #ccc;  }
 .log-row .instance { color: #48adff; cursor: pointer;}
 .log-row .instance:hover {    color: #79b6ff;}
-.log-row .action {  top: 0; color: #fff; }
+.log-row .action {  top: 0; color: #333; }
 .log-row .diff { font-size: 11px; color: #999; }
 .log-row .diff-added { font-size: 11px; color: #ddd; font-weight: bold;}
 .log-row .diff-unchanged { font-size: 11px; color: #ccc;}
