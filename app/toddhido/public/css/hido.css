@@ -54,7 +54,7 @@ h3 {
 #main-menu > ul > ul {
     background-color: rgb(227, 227, 227);
     padding-right: 40px;
-    padding-top: 15px;
+    padding-top: 13px;
 }
 
 a {
@@ -85,9 +85,15 @@ a.selected {
     image-rendering: -o-crisp-edges;
     image-rendering: -webkit-optimize-contrast;
     -ms-interpolation-mode: nearest-neighbor;
-
 }
 
+.info {
+    position: absolute;
+    top: 80px;
+    left: 31px;
+    width: 150px;
+    font-size: 9px;
+}
 
 .text {
     margin: 80px 80px 30px 230px;

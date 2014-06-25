@@ -1,4 +1,4 @@
-function slideshow($el, resources) {
+function slideshow($el, $info, resources) {
   $el.empty();
   $el.click(function () {
     imgs[idx].fadeOut(200);
@@ -15,6 +15,7 @@ function slideshow($el, resources) {
 
   function load(resource) {
     var $img = $("<img/>");
+    $img.data("name", resource.name);
     $img.load(function () {
       render();
       load_idx++;
@@ -39,8 +40,12 @@ function slideshow($el, resources) {
       idx = 0;
       imgs[0].fadeIn(200);
     }
+    var $img = imgs[idx];
+    $info.text(remove_ext($img.data("name")));
     resize();
   }
+
+
 
   function resize() {
     var $img = imgs[idx];

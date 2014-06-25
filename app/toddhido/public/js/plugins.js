@@ -34,3 +34,14 @@ Array.prototype.shuffle = function (){
     }
 };
 
+
+// string
+
+function remove_ext(s) {
+  if (!s)
+    return "";
+  var i = s.lastIndexOf('.');
+  if (i == -1)
+    return s;
+  return s.substring(0, i);
+}
