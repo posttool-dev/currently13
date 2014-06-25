@@ -4,11 +4,11 @@
 
 <% if (!page.template || page.template == "portfolio") {%>
 <div class="slides">
-   <!-- <% for (var i=0; i<page.resources.length && i<1; i++) { %>
-        <img src="<%=bp%>w_950,h_950,c_fit/<%= page.resources[i].meta.public_id%>.jpg"/><br>
-    <% }%> -->
+   <% if (page.resources) { %>
+        <img src="<%=bp%>w_350,h_350,c_fit/<%= page.resources[0].meta.public_id%>.jpg"/><br>
+   <% }%>
 </div>
-<div class="info"></div>
+<div class="info"><% if (page.resources) { %><%= page.resources[0].name %><% }%></div>
 <% } else if (page.template == "text1") { %>
 <div class="text">
     <%- page.description %>
