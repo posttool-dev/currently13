@@ -19,6 +19,7 @@ exports = module.exports = {
         {type: ObjectId, ref: "Page"}
       ],
       url: String,
+      template: String,
       description: String,
       resources: [
         {type: ObjectId, ref: "Resource"}
@@ -42,6 +43,7 @@ exports = module.exports = {
         {begin: "col", options: {className: "two-col"}},
           {name: "title", widget: "input", options: {className: "large", width: "80%"}},
           {name: "url", widget: "input", options: {className: "large", width: "20%"}},
+          {name: "template", widget: "select", options: {options: ['portfolio','text1','text2']}},
         {end: "col" },
         {begin: "col", options: {className: "two-col"}},
           {name: "resources", widget: "upload", options: {type: "Resource", array: true}},

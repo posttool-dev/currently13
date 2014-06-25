@@ -2,15 +2,28 @@
 <% var bp = "http://res.cloudinary.com/posttool/image/upload/"; %>
 <% include head.ejs %>
 
+<% if (!page.template || page.template == "portfolio") {%>
 <div class="slides">
    <!-- <% for (var i=0; i<page.resources.length && i<1; i++) { %>
         <img src="<%=bp%>w_950,h_950,c_fit/<%= page.resources[i].meta.public_id%>.jpg"/><br>
     <% }%> -->
 </div>
+<% } else if (page.template == "text1") { %>
+<div class="text">
+    <%= page.title %><br>
+    <%- page.description %>
+</div>
+<% } else if (page.template == "text2") { %>
+<div class="text">
+    <%= page.title %><br>
+    <%- page.description %>
+</div>
+<% } %>
 
 <% include menu.ejs %>
 <% include foot.ejs %>
 
+<% if (!page.template || page.template == "portfolio") {%>
 <script src="/js/slideshow.js"></script>
 <script>
     var bp = "<%= bp %>";
@@ -19,3 +32,4 @@
         document.location.href = "<%= next_page.url %>";
     }
 </script>
+<% } %>

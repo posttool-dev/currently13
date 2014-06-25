@@ -33,7 +33,15 @@ exports = module.exports = function(meta) {
           var pages_view = [];
           for (var i=0; i<pages.length; i++){
             var p = pages[i];
-            pages_view.push({id: p.id, title: p.title, url: p.url, pages: p.pages, resources: p.resources});
+            pages_view.push({
+              id: p.id,
+              title: p.title,
+              description: p.description,
+              url: p.url,
+              pages: p.pages,
+              resources: p.resources,
+              template: p.template
+            });
           }
           site = getSiteMap(pages_view);
           next(null, site);

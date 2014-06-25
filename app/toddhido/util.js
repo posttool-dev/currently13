@@ -26,7 +26,6 @@ function getNextNode(origin) {
     next = getAncestorsSibling(origin);
   if (next == null)
     return getRoot(origin);
-  console.log("9",isEmptyNode(next));
   if (isEmptyNode(next))
     return getNextNode(next);
   return next;
