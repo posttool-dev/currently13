@@ -26,6 +26,7 @@ You can test out your environment by ssh'ing into your environment and running t
     vagrant ssh
     cd app
     npm install
+    node createadminuser
     node server1.js
 
 In your browser, http://localhost:3001
