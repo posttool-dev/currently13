@@ -27,7 +27,7 @@ You can test out your environment by ssh'ing into your environment and running t
     cd app
     npm install
     node createadminuser
-    node server1.js
+    node server1
 
 In your browser, http://localhost:3001
 
