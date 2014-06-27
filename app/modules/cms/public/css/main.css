@@ -104,7 +104,7 @@ button.delete:hover:enabled {
 select {
     width: 100px;
     font-size: 12px;
-    border: 1px solid lightblue;
+    border: 1px solid #d2e4ff;
     border-radius: 3px;
     color: black;
     padding: 3px;
@@ -217,6 +217,11 @@ select:active {
 #info-panel-content {
     padding: 30px 0px 0px 1px;
 }
+
+#info-panel input {
+    background-color: white;
+}
+
 .heading {
     font-size: 20px;
 }
@@ -258,7 +263,6 @@ select:active {
     color: #335;
     cursor: move;
     margin: 0px 0 6px 0;
-    padding: 3px 6px 3px 0;
 }
 
 .model .text {
@@ -357,7 +361,7 @@ select:active {
 
 .pr {
     padding: 10px 0 10px 0;
-    border-bottom: 1px solid #555;
+    border-bottom: 1px dotted #ccc;
 }
 .pr .cond, .pr .i {
     margin-left:50px;
@@ -425,7 +429,6 @@ select:active {
     width: 100%;
     left: 0;
     top: 80px;
-    border-bottom: 1px solid #333;
     padding-bottom:15px;
 }
 
@@ -480,7 +483,7 @@ select:active {
 
 }
 
-#info-panel h3 { padding-top: 8px; border-top: 1px solid #fff; }
+#info-panel h3 { padding-top: 8px; border-top: 1px dotted #ccc; }
 /*#info-panel*/
 .related-panel, .delete-panel, .logs-panel {
 padding-top: 20px;

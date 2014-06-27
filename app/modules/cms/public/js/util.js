@@ -232,10 +232,19 @@ function find_thumb2(c){
   var f = find_obj_by_attr(c, 'meta.job_name', 'image thumb');
   if (f)
     return media_path(f);
-  f = find_obj_by_attr(c, 'meta.url');
-  if (f)
-    return media_path(f.meta.url);
-  return media_path(f);
+  //
+  f = find_obj_by_attr(c, 'meta.public_id');
+  if (f) {
+    console.log(f.meta);
+    var x = f.meta.url.indexOf(f.meta.public_id);
+    var bp = f.meta.url.substring(0, x - 1);
+    x = bp.lastIndexOf('/');
+    bp = bp.substring(0, x);
+    var s = bp +  "/w_206,h_106,c_fill/" +f.meta.public_id + ".jpg";
+    console.log(s);
+    return s;
+  }
+  return c;
 }
 
 function media_path(resource)

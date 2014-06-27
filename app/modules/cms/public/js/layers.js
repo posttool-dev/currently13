@@ -4,6 +4,7 @@ function layers_layers(){
   self.$el = function(){
     return $el;
   }
+  var $user = $(".user");
   var $x = $("#extra-options");
   var $control_bar = $("#control-bar");
   var $info_panel = $("#info-panel");
@@ -190,6 +191,7 @@ function layers_layers(){
       var $c = $(c[i]);
       $c[f]({width:cw});
     }
+    $user[f]({right: iw});
     $control_bar[f]({width:cw});
     $info_panel[f]({right:r, width: iw});
     $info_content[f]({opacity: info_open ? 1 : 0})
