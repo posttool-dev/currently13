@@ -28,8 +28,7 @@ You can test out your environment by ssh'ing into your environment and running t
     npm install
     node server1.js
 
-If you map 'hackettmill' to 10.11.12.23 in /etc/hosts, you can open http://hackettmill:43556/cms in your web browser.
-Otherwise, change server.js so that it doesnt use the vhost and you can browse on the IP address.
+In your browser, http://localhost:3001
 
 
 
