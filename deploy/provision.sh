@@ -18,4 +18,5 @@ apt-get install -y graphicsmagick
 apt-get install -y mongodb-10gen
 apt-get install -y nodejs
 npm install -g forever
-# app
+# env
+cp provision/nodejs.sh /etc/profile.d/nodejs.sh
