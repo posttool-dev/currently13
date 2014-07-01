@@ -1,5 +1,4 @@
 <% var title = "Todd Hido: "+ page.title.toUpperCase(); %>
-<% var bp = "http://res.cloudinary.com/posttool/image/upload/"; %>
 <% include head.ejs %>
 
 <% if (!page.template || page.template == "portfolio") {%>
@@ -25,7 +24,7 @@
 <% if (!page.template || page.template == "portfolio") {%>
 <script src="/js/slideshow.js"></script>
 <script>
-    var bp = "<%= bp %>";
+    var bp = "<%= resource_basepath %>";
     slideshow($(".slides"), $(".info"), <%- JSON.stringify(page.resources) %>);
     function navigate_next(){
         document.location.href = "<%= next_page.url %>";

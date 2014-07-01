@@ -1,5 +1,4 @@
 <% var title = "Todd Hido" %>
-<% var bp = "http://res.cloudinary.com/posttool/image/upload/"; %>
 <% include head.ejs %>
 <div class="slides"></div>
 <% include menu.ejs %>
@@ -7,7 +6,7 @@
 
 <script src="/js/layout.js"></script>
 <script>
-    var bp = "<%= bp %>";
+    var bp = "<%= resource_basepath %>";
     layout($(".slides"), <%- JSON.stringify(images) %>);
     function navigate_next(){
         document.location.href = "<%= next_page.url %>";

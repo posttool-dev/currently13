@@ -85,6 +85,9 @@ exports = module.exports = function(meta) {
     return resources;
   }
 
+  function get_res_bp(){
+    return "http://res.cloudinary.com/"+config.cloudinaryConfig.cloud_name+"/image/upload";
+  }
 
   // endpoints
 
@@ -94,7 +97,7 @@ exports = module.exports = function(meta) {
       var resources = getResources(site);
       News.find({}, function (err, news) {
         if (err) return next(err);
-        res.render('index', {site: site, news: news, images: resources, next_page: site.pages[0].pages[0]});
+        res.render('index', {site: site, news: news, images: resources, next_page: site.pages[0].pages[0], resource_basepath: get_res_bp()});
       });
     });
   });
@@ -107,7 +110,7 @@ exports = module.exports = function(meta) {
         if (!page) return next(new Error('no such page'));
         page = util.findById(site, page.id);
         var next_page = util.getNextNode(page);
-        res.render('page', {page: page, site: site, next_page: next_page});
+        res.render('page', {page: page, site: site, next_page: next_page, resource_basepath: get_res_bp()});
       });
     });
   });
