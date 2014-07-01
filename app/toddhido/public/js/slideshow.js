@@ -22,7 +22,7 @@ function slideshow($el, $info, resources) {
       load_next();
     });
     $img.hide();
-    $img.attr("src", bp + "w_950,h_950,c_fit/" + resource.meta.public_id + ".jpg");
+    $img.attr("src", bp + "/w_950,h_950,c_fit/" + resource.meta.public_id + ".jpg");
     imgs.push($img);
     $el.append($img);
   }

@@ -16,7 +16,7 @@ function layout($el, list) {
       load_next();
     });
     $img.hide();
-    $img.attr("src", bp + "h_150,c_fit/" + resource.meta.public_id + ".jpg");
+    $img.attr("src", bp + "/h_150,c_fit/" + resource.meta.public_id + ".jpg");
     imgs.push($img);
     $el.append($img);
   }
