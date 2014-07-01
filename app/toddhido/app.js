@@ -1,9 +1,9 @@
 var express = require('express');
 var mongoose = require('mongoose');
 
-var th = require('./'),
-    PUBLISHED = th.workflow.PUBLISHED,
-    config = th.config,
+var workflow = require('./workflow'),
+    PUBLISHED = workflow.PUBLISHED,
+    config = require('./config'),
     util = require('./util');
 
 // serve express app

@@ -1,5 +1,5 @@
 var fs = require('fs');
-var logger = require('winston')
+var logger = require('winston');
 var cluster = require('cluster');
 var express = require('express');
 var mongoose = require('mongoose');
@@ -18,11 +18,13 @@ if (useCluster && cluster.isMaster) {
   });
 
 } else {
+  var domain = require('./' + process.argv[2]);
+
   var server = express();
-  var cms = new current.Cms(require('./toddhido'));
+  var cms = new current.Cms(domain);
   server.use(cms.app);
-  server.use(require('./toddhido/app')(cms.meta));
-  server.listen(3001);
+  server.use(domain.app(cms.meta));
+  server.listen(domain.config.serverPort);
 }
 
 

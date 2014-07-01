@@ -1,13 +1,21 @@
 var config = {
   development: {
     name: 'Todd Hido',
-    serverPort: 8080,
+    serverPort: 3001,
     mongoConnectString: 'mongodb://localhost/hido',
     sessionSecret: 'fnidsi7 54kuhsh,ngf',
 
-    /* storage */
     storage: "cloudinary",
-    cloudinaryConfig: { cloud_name: 'posttool', api_key: '681946288916643', api_secret: 'L08_8W3noETBoKaMk9CV8paLlx8' }
+    cloudinaryConfig: { cloud_name: 'dou2a3991', api_key: '966862466779654', api_secret: 'GResRYM8Q3zUD_CGwtvxfsB16ek' }
+  },
+  production: {
+    name: 'Todd Hido',
+    serverPort: 80,
+    mongoConnectString: 'mongodb://localhost/hido',
+    sessionSecret: 'fnidsi7 54kuhsh,ngf',
+
+    storage: "cloudinary",
+    cloudinaryConfig: { cloud_name: 'dou2a3991', api_key: '966862466779654', api_secret: 'GResRYM8Q3zUD_CGwtvxfsB16ek' }
   }
 }
 
