@@ -19,5 +19,5 @@ apt-get install -y mongodb-10gen
 apt-get install -y nodejs
 npm install -g forever
 # env
-cp $cwd/provision/nodejs.sh /etc/profile.d/nodejs.sh
-source /etc/profile.d/nodejs.sh
+DIR="$( cd "$( dirname "$0" )" && pwd )"
+cp $DIR/provision/nodejs.sh /etc/profile.d/nodejs.sh
