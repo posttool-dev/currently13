@@ -1,6 +1,6 @@
 #!/bin/sh
-git clone https://github.com/posttool/currently13.git
-cd currently13/app
+git pull origin master
+cd app
 npm install
 forever stopall
-forever start server1 toddhido
+forever start server1.js toddhido
