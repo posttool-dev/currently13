@@ -627,6 +627,12 @@ Cms.prototype.save_resource = function (name, path, mimetype, size, creator_id, 
   r.size = size;
   r.creator = creator_id;
   r.meta = info ? info : {};
+  if (info && info.title)
+    r.title = info.title;
+  if (info && info.subtitle)
+    r.subtitle = info.subtitle;
+  if (info && info.description)
+    r.description = info.description;
   //self.emit('resource pre save');
   r.save(function (err, s) {
     if (err) throw err;

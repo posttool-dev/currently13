@@ -16,12 +16,12 @@ exports.forEach = function(list, target, complete, concurrent)
     var item = list[i];
     target(item, function(){
       k++;
+      i++;
       if (k < list.length)
         ff();
       else
         complete();
     });
-    i++;
   }
   ff();
 }

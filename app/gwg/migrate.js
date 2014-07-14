@@ -12,17 +12,19 @@ var Page = cms.meta.model('Page');
 var Resource = cms.meta.model('Resource');
 
 Page.find({}).remove(function (err, c) {
-  console.log("removed ", c);
-  http.get(url2, function (res) {
-    var body = '';
-    res.on('data', function (chunk) {
-      body += chunk;
+  Resource.find({}).remove(function (err, d) {
+    console.log("removed ", c, d);
+    http.get(url2, function (res) {
+      var body = '';
+      res.on('data', function (chunk) {
+        body += chunk;
+      });
+      res.on('end', function () {
+        process_site(JSON.parse(body));
+      });
+    }).on('error', function (e) {
+      console.log("Got error: ", e);
     });
-    res.on('end', function () {
-      process_site(JSON.parse(body));
-    });
-  }).on('error', function (e) {
-    console.log("Got error: ", e);
   });
 });
 
@@ -37,14 +39,15 @@ function process_site(site) {
 
 function process_node(node, next) {
   var page = new Page({
-    name: node.attributes.data.attributes.title,
-    description: node.attributes.data.attributes.description
+    title: node.attributes.data.attributes.title,
+    body: node.attributes.data.attributes.description,
+    url: node.attributes.node_id
   });
   utils.forEach(node.attributes.data.attributes.images, function (o, n) {
     //console.log(o.attributes.description);
     //console.log(o.attributes.resource.attributes.title);
     //console.log(o.attributes.resource.attributes['path-token']);
-    create_resource(o.attributes.resource.attributes, o.attributes.description, function(r){
+    create_resource(o.attributes.resource.attributes, o.attributes.description, function (r) {
       page.resources.push(r);
       return n();
     });
@@ -56,7 +59,7 @@ function process_node(node, next) {
       });
     }, function () {
       page.save(function (err, p) {
-      console.log(p);
+        console.log(p);
         return next(page);
       })
     });
@@ -69,15 +72,17 @@ function create_resource(rd, descr, next) {
   var url = bp + p;
   Resource.findOne({path: p}, function (err, r) {
     if (r) {
-      r.meta = {description: descr};
-      r.save(function(err,r){
-        return next(r);
-      })
+//      r.meta = {description: descr};
+//      r.save(function(err,r){
+      return next(r);
+//      })
     }
     else {
       http.get(url, function (response) {
-        cms.write(response, p, function (err) {
-          cms.save_resource(rd['filename'], p, rd['content-type'], rd['filesize'], null, {description: descr}, function (r) {
+        cms.write(response, p, function (meta) {
+          meta.description = descr;
+          cms.save_resource(rd['filename'], p, rd['content-type'], rd['filesize'], null, meta, function (r) {
+            console.log(r);
             return next(r);
           });
         });

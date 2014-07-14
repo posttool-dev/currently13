@@ -3,11 +3,10 @@ var mongoose = require('mongoose');
 
 var workflow = require('./workflow'),
     PUBLISHED = workflow.PUBLISHED,
-    config = require('./config'),
     util = require('./util');
 
 // serve express app
-exports = module.exports = function(meta) {
+exports = module.exports = function(config, meta) {
   var app = express();
   app.set('view engine', 'ejs');
   app.set('views',__dirname + '/views');
@@ -18,7 +17,6 @@ exports = module.exports = function(meta) {
 
   var Page = meta.model('Page');
   var News = meta.model('News');
-
 
   // utils
   var site = null;

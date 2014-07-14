@@ -250,7 +250,7 @@ var form_fields = {
           return _s;
         },
         set: function (n) {
-          _s = n;
+          _s = n.replace(/<[\/]{0,1}(root|ROOT)[^><]*>/g,"");;
           update_ui();
         }
       });

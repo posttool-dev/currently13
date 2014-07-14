@@ -16,14 +16,12 @@ if (useCluster && cluster.isMaster) {
     console.log('Worker ' + worker.id + ' died');
     cluster.fork();
   });
-
 } else {
-  var domain = require('./' + process.argv[2]);
-
   var server = express();
+  var domain = require('./' + process.argv[2]);
   var cms = new current.Cms(domain);
   server.use(cms.app);
-  server.use(domain.app(cms.meta));
+  server.use(domain.app(cms.config, cms.meta));
   server.listen(domain.config.serverPort);
 }
 

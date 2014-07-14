@@ -74,34 +74,7 @@ exports = module.exports = {
     ]
   },
 
-  Resource:  {
-    meta: {
-      plural: 'Resources',
-      workflow: true,
-      dashboard: true
-    },
-    schema: {
-      name: String,
-      path: String,
-      size: Number,
-      mime: String,
-      meta: mongoose.Schema.Types.Mixed,
-      title: String,
-      subtitle: String,
-      description: String
-    },
-    browse: [
-      {name: "path", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
-      {name: "size", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
-      {name: "mime", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
-    ],
-    form: [
-      {name: "path", widget: "resource_path"},
-      {name: "title", widget: "input", options: {className: "large"}},
-      {name: "subtitle", widget: "input"},
-      {name: "description", widget: "rich_text"}
-    ]
-  },
+  Resource:  cms_models.ResourceInfo(),
   User: cms_models.UserInfo()
 
 }
