@@ -11,9 +11,36 @@ var cms = new current.Cms(require('./index'));
 var Page = cms.meta.model('Page');
 var Resource = cms.meta.model('Resource');
 
-Page.find({}).remove(function (err, c) {
+if (process.argv[2] == 'delete') {
+  var cloudinary = require('cloudinary');
+  var opts = {max_results: 100};
+
+  function rdel() {
+    cloudinary.api.resources(function (result) {
+      if (result.resources.length == 0) {
+        init();
+        return;
+      }
+      opts.next_cursor = result.next_cursor;
+      var r = [];
+      for (var i = 0; i < result.resources.length; i++)
+        r.push(result.resources[i].public_id);
+      cloudinary.api.delete_resources(r, function (e) {
+        console.log("deleted", e);
+        rdel();
+      }, {all: true});
+    }, opts);
+  };
   Resource.find({}).remove(function (err, d) {
-    console.log("removed ", c, d);
+    rdel();
+  });
+} else {
+  init();
+}
+
+function init() {
+  Page.find({}).remove(function (err, c) {
+    console.log("removed ", c);
     http.get(url2, function (res) {
       var body = '';
       res.on('data', function (chunk) {
@@ -26,12 +53,10 @@ Page.find({}).remove(function (err, c) {
       console.log("Got error: ", e);
     });
   });
-});
+}
 
 function process_site(site) {
-  utils.forEach(site.value.attributes.children, function (o, n) {
-    process_node(o, n)
-  }, function () {
+  process_node(site.value, function () {
     console.log("OK");
     process.exit(0);
   });

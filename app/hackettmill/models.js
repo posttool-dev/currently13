@@ -378,8 +378,7 @@ exports = module.exports = {
   },
 
   Resource:  cms_models.ResourceInfo(),
-  User: cms_models.UserInfo(),
-  Message: cms_models.MessageInfo(),
+  User: cms_models.UserInfo()
 
 }
 

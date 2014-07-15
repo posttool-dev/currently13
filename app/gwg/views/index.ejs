@@ -1,24 +1,63 @@
-<% var title = "Todd Hido" %>
-<% include head.ejs %>
-<div class="slides"></div>
-<% include menu.ejs %>
-<% include foot.ejs %>
+<html>
 
-<script src="/js/layout.js"></script>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="viewport" content="width=1200, height=800">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+<script src="/js/lib/vjet_vjo.js"></script>
+
+<script src="/js/com/pagesociety/persistence/Entity.js"></script>
+<script src="/js/com/pagesociety/web/ModuleConnection.js"></script>
+<script src="/js/com/pagesociety/web/ResourcePathProvider.js"></script>
+<script src="/js/com/pagesociety/web/ResourceModuleProvider.js"></script>
+<script src="/js/com/pagesociety/web/ResourceModule.js"></script>
+<script src="/js/com/pagesociety/web/PosteraSystemsModule.js"></script>
+<script src="/js/com/pagesociety/ui/Root.js"></script>
+<script src="/js/com/pagesociety/ui/Component.js"></script>
+<script src="/js/com/pagesociety/ui/ComponentDimension.js"></script>
+<script src="/js/com/pagesociety/ui/component/Image.js"></script>
+<script src="/js/com/pagesociety/ui/component/EndlessTiles.js"></script>
+<script src="/js/com/pagesociety/ui/component/ExpandingMenu.js"></script>
+<script src="/js/com/pagesociety/ui/component/SimpleTile.js"></script>
+<script src="/js/com/pagesociety/ui/component/Slideshow.js"></script>
+<script src="/js/com/pagesociety/ui/component/Form.js"></script>
+<script src="/js/com/pagesociety/ui/component/Label.js"></script>
+<script src="/js/com/pagesociety/ui/component/Input.js"></script>
+<script src="/js/com/pagesociety/ui/component/Select.js"></script>
+<script src="/js/com/pagesociety/util/StringUtil.js"></script>
+<script src="/js/com/pagesociety/util/NodeDict.js"></script>
+<script src="/js/com/pagesociety/util/TreeUtil.js"></script>
+
+<script src="/js/com/postera/component/MainMenu.js"></script>
+<script src="/js/com/postera/component/ProgressiveImage.js"></script>
+<script src="/js/com/postera/component/ResourceView.js"></script>
+<script src="/js/com/postera/component/BasicSystem.js"></script>
+
+<script src="/js/com/gwg/site/GWG.js"></script>
+<script src="/js/com/gwg/site/StyleProps.js"></script>
+<script src="/js/com/gwg/site/Contact.js"></script>
+<script src="/js/com/gwg/site/CV.js"></script>
+<script src="/js/com/gwg/site/InformationPage.js"></script>
+<script src="/js/com/gwg/site/LandingPage.js"></script>
+<script src="/js/com/gwg/site/Home.js"></script>
+<script src="/js/com/gwg/site/Portfolio.js"></script>
+<script src="/js/com/gwg/site/PortfolioTile.js"></script>
+<script src="/js/com/gwg/site/SocialButtons.js"></script>
+<script src="/js/com/gwg/site/Logo.js"></script>
+
+<link rel="stylesheet" href="/js/font/stylesheet.css" type="text/css" charset="utf-8" />
+<link rel="stylesheet" href="/css/postera_gwg.css" type="text/css" charset="utf-8" />
+
+<body>
+
+<div id="system_root"></div>
 <script>
-    var bp = "<%= resource_basepath %>";
-    layout($(".slides"), <%- JSON.stringify(images) %>);
-    function navigate_next(){
-        document.location.href = "<%= next_page.url %>";
-    }
+var s = new com.gwg.site.GWG("http://postera.com","",false);
+s.init("UserName", "gwg");
 </script>
 
-
-
-
-
-
-
+</body>
+</html>
 
 
 

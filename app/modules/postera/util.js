@@ -98,3 +98,76 @@ function getAncestorsSibling(node)
 //
 //		return {node: prev, idx:sel_idx};
 //	}
+
+
+
+
+
+// utils
+var site = null;
+var lastTime = null;
+
+exports.getSiteMapData = function(Page, next) {
+  if (!site || !lastTime || lastTime.getTime() + 60000 < Date.now()) {
+    Page.find({})//state: PUBLISHED
+      .populate('resources')
+      .exec(function (err, pages) {
+        if (err) return next(err);
+        var pages_view = [];
+        for (var i=0; i<pages.length; i++){
+          var p = pages[i];
+          pages_view.push({
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            url: p.url,
+            pages: p.pages,
+            resources: p.resources,
+            template: p.template
+          });
+        }
+        site = exports.getSiteMap(pages_view);
+        next(null, site);
+      });
+  } else {
+    next(null, site);
+  }
+}
+
+exports.getSiteMap = function(pages) {
+  var m = {};
+  for (var i = 0; i < pages.length; i++)
+    m[pages[i].id] = pages[i];
+  var root = null;
+  for (var i = 0; i < pages.length; i++) {
+    var p = pages[i];
+    if (p.url == "/")
+      root = p;
+    for (var j = 0; j < p.pages.length; j++) {
+      p.pages[j] = m[p.pages[j]];
+      //p.pages[j].parent = p;
+    }
+  }
+  // s/could go through and delete nulls (the result of unpublished children)
+  return root;
+}
+
+exports.getResources = function(page, resources) {
+  if (resources == null)
+    resources = [];
+  if (page.resources) {
+    for (var i = 0; i < page.resources.length; i++) {
+      resources.push(page.resources[i]);
+    }
+  }
+  if (page.pages) {
+    for (var i = 0; i < page.pages.length; i++) {
+      exports.getResources(page.pages[i], resources);
+    }
+  }
+  return resources;
+}
+
+exports.get_res_bp = function(config){
+  return "http://res.cloudinary.com/"+config.cloudinaryConfig.cloud_name+"/image/upload";
+}
