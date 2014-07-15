@@ -26,7 +26,18 @@ You can test out your environment by ssh'ing into your environment and running t
     vagrant ssh
     cd app
     npm install
-    node createadminuser
+    node create_admin
+
+It will ask you for the details like "app" that you would like to setup. Choose any any form "peter, toddhido, hackettmill, tabithasoren". After this it will ask for user name that you want to create, email id for that user, password and confirm password. This would look something like 
+    
+    create admin > app toddhido
+    create admin > name USER_NAME
+    create admin > email EMAIL
+    create admin > password ******
+    create admin > confirm ******
+    
+Press CTRL+C to exit and type following 
+    
     node server1
 
 In your browser, ```http://localhost:3001/cms```
