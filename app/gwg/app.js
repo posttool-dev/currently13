@@ -11,6 +11,7 @@ exports = module.exports = function(config, meta) {
   //app.use(favicon(__dirname + '/public/favicon.ico'));
   app.use(express.urlencoded());
   app.use(express.json());
+  app.use(express.compress());
 
   var Page = meta.model('Page');
   var News = meta.model('News');

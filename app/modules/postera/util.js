@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 var PNAME = "parent";
 var CNAME = "pages";
 
@@ -122,7 +124,9 @@ exports.getSiteMapData = function(Page, next) {
             description: p.description,
             url: p.url,
             pages: p.pages,
-            resources: p.resources,
+            resources: _.map(p.resources, function (o) {
+              return {description: o.description, public_id: o.meta.public_id}
+            }),
             template: p.template
           });
         }
