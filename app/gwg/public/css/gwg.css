@@ -5,7 +5,7 @@ body {
 	padding: 0;
 }
 
-#system_root
+#root
 {
 	position:absolute;
 	top:0;left:0;
@@ -174,6 +174,7 @@ pre {
 	z-index: 22;
 	width:264px;
 	background: #fff;
+    display: none;
 }
 
 .main_menu nav ul {
@@ -188,12 +189,14 @@ pre {
 	text-transform: none;
 	font-size: 1em;
 	letting-spacing: .03em;
+    display: none;
 }
 .main_menu nav ul[depth='2']
 {
 	text-transform: none;
 	font-size: .9em;
 	letting-spacing: .03em;
+    display: none;
 }
 
 .main_menu nav li[depth="0"]  {

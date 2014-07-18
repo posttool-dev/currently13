@@ -16,23 +16,28 @@ exports = module.exports = function(config, meta) {
   var Page = meta.model('Page');
   var News = meta.model('News');
 
-  app.get('/', function (req, res, next) {
-    util.getSiteMapData(Page, function (err, site) {
-      if (err) return next(err);
-      var resources = util.getResources(site);
-      News.find({}, function (err, news) {
-        if (err) return next(err);
-        res.render('index', {site: site, news: news, images: resources, next_page: site.pages[0].pages[0], resource_basepath: util.get_res_bp(config)});
-      });
-    });
-  });
-
-  app.get('/page', function(req, res, next) {
+   app.get('/page', function(req, res, next) {
     util.getSiteMapData(Page, function (err, site) {
       if (err) return next(err);
       res.json(site);
     });
   });
+
+  app.get('/*', function (req, res, next) {
+    util.getSiteMapData(Page, function (err, site) {
+      if (err) return next(err);
+      Page.findOne({url: req.path}).populate("resources").exec(function (err, page) { //state: PUBLISHED
+        if (!err && !page) return next(new Error("No such page "+req.path));
+        if (err) return next(err);
+        News.find({}, function (err, news) {
+          if (err) return next(err);
+          res.render('index', {site: site, news: news, page: page, resource_basepath: util.get_res_bp(config)});
+        });
+      });
+    });
+  });
+
+
 
 //  app.get('/*', function (req, res, next) {
 //    util.getSiteMapData(Page, function (err, site) {
