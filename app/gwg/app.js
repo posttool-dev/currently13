@@ -31,27 +31,12 @@ exports = module.exports = function(config, meta) {
         if (err) return next(err);
         News.find({}, function (err, news) {
           if (err) return next(err);
-         var next_page = util.getNextNode(page);
+         var next_page = util.getNextNode(util.findById(site, page.id));
          res.render('index', {site: site, news: news, page: page, resource_basepath: util.get_res_bp(config), next_page: next_page});
         });
       });
     });
   });
-
-
-
-//  app.get('/*', function (req, res, next) {
-//    util.getSiteMapData(Page, function (err, site) {
-//      if (err) return next(err);
-//      Page.findOne({url: req.path}).populate("resources").exec(function (err, page) { //state: PUBLISHED
-//        if (err) return next(err);
-//        if (!page) return next(new Error('no such page'));
-//        page = util.findById(site, page.id);
-//        var next_page = util.getNextNode(page);
-//        res.render('page', {page: page, site: site, next_page: next_page, resource_basepath: util.get_res_bp(config)});
-//      });
-//    });
-//  });
 
   return app;
 

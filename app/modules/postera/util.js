@@ -149,7 +149,7 @@ exports.getSiteMap = function(pages) {
       root = p;
     for (var j = 0; j < p.pages.length; j++) {
       p.pages[j] = m[p.pages[j]];
-      //p.pages[j].parent = p;
+      p.pages[j].parent = p;
     }
   }
   // s/could go through and delete nulls (the result of unpublished children)
