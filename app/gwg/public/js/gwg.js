@@ -1,6 +1,5 @@
 
 
-add_p($("#logo"));
 
 
 
@@ -115,17 +114,17 @@ function add_p($el) {
       toggle_menu();
     })
   }
-
 }
 
 function toggle_menu(){
   $(".main_menu").toggle();
 }
-console.log($(".main_menu nav li[depth='1']"))
+
 $(".main_menu nav li[depth='1']").click(function(evt){
   evt.preventDefault();
   var $li = $(this);
-  console.log($li.next())
   $li.next().show();
   return false;
-})
+});
+
+add_p($("#logo"));

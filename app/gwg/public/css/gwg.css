@@ -152,17 +152,14 @@ pre {
 
 .debug{ position:absolute; top: 0; left: 0; display: none;}
 
-.logo 
+
+.gwg
 {
-	width: 224px;
 	position: absolute;
-	top: 13px;
+	top: 10px;
 	left: 72px;
 	z-index: 33;
 	cursor:pointer;
-}
-.logo .type
-{
 	font-family: 'Akzidenz-GroteskBQRegular', sans;
 	font-size: 12px;
 }
@@ -241,7 +238,23 @@ ul li:last-child
 	height:40px;
 }
 
+.slides {
+    position: absolute;
+    margin: 74px 0 0 72px;
+    z-index: 21;
+    background-color: #fff;
+    width: 100%;
+}
 
+.slides img {
+-webkit-box-shadow: 0px 0px 42px rgba(0, 0, 0, 0.24);
+-moz-box-shadow:    0px 0px 42px rgba(0, 0, 0, 0.24);
+box-shadow:         0px 0px 42px rgba(0, 0, 0, 0.24);
+}
+
+.info {
+    padding-top: 10px;
+}
 
 .footer nav {
 	padding: 20px 0 15px 0;
@@ -267,28 +280,8 @@ ul li:last-child
 	color: #86C2E3;
 }
 
-.content {
-	position:absolute;
-	top:0;
-	left:0;
-	z-index:10;
-}
-
-.ps_image_wrap {
-	position: absolute !important;
-	z-index: 50;
-	top: 0px; 
-	left: 0px;
--webkit-box-shadow: 0px 0px 42px rgba(0, 0, 0, 0.24);
--moz-box-shadow:    0px 0px 42px rgba(0, 0, 0, 0.24);
-box-shadow:         0px 0px 42px rgba(0, 0, 0, 0.24);
-}
 
 
-.ps_image_loading {
-
-	
-}
 
 .ps_text {
 	margin: 10px 0px 10px 285px;
@@ -497,82 +490,6 @@ input:focus {
 	color: #999;
 }
 
-.takeover {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	z-index: 65536; /* stay lower than this for everything else! */
-}
-
-.takeover .gauze {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: #D5D8DB;
-}
-
-.dialog {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	background-color: #F4F5F5;
-	width: 400px;
-	height: 250px;
-	margin: -155px 0 0 -200px;
-	padding: 20px 20px 0 15px;
-	-moz-border-radius: 15px;
-	border-radius: 15px;
-	-moz-box-shadow: 0 0 111px 50px #c3c6c9;
-	-webkit-box-shadow: 0 0 111px 50px #c3c6c9;
-	box-shadow: 0 0 111px 50px #c3c6c9;
-}
-
-.dialog .title {
-	font-family: 'Akzidenz-GroteskBQRegular', sans;
-	font-size: 1em;
-	text-transform: uppercase;
-	letter-spacing: .1em;
-	color: #111;
-}
-
-.dialog .message {
-	padding: 15px 20px 5px 0;
-	font-family: 'Akzidenz-GroteskBQRegular', sans;
-	font-size: 1.6em;
-}
-
-.dialog .confirm {
-	position: absolute;
-	bottom: 15px;
-	left: 15px;
-	font-family: 'Akzidenz-GroteskBQRegular', sans;
-	font-size: 1em;
-	cursor: pointer;
-}
-
-.dialog .button_bar {
-	position: absolute;
-	bottom: 15px;
-	left: 15px;
-	font-family: 'Akzidenz-GroteskBQRegular', sans;
-	font-size: 1em;
-	cursor: pointer;
-}
-
-.dialog input {
-	width: 90%;
-	-moz-box-shadow: 0 0 15px 1px #eee;
-	-webkit-box-shadow: 0 0 15px 1px #eee;
-	box-shadow: 0 0 15px 1px #eee;
-}
-
-.dialog button {
-	margin: 0 15px 0 0;
-}
 
 #design {
 	margin-top: 30px;

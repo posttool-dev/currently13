@@ -31,7 +31,8 @@ exports = module.exports = function(config, meta) {
         if (err) return next(err);
         News.find({}, function (err, news) {
           if (err) return next(err);
-          res.render('index', {site: site, news: news, page: page, resource_basepath: util.get_res_bp(config)});
+         var next_page = util.getNextNode(page);
+         res.render('index', {site: site, news: news, page: page, resource_basepath: util.get_res_bp(config), next_page: next_page});
         });
       });
     });
