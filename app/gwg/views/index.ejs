@@ -6,7 +6,7 @@
 <div class="slides">
 <div class="images">
    <% if (page.resources && page.resources.length != 0) { %>
-        <img src="<%=resource_basepath%>/w_50,h_50,c_fit/<%= page.resources[0].meta.public_id%>.jpg"/><br>
+        <!-- <img src="<%=resource_basepath%>/w_50,h_50,c_fit/<%= page.resources[0].meta.public_id%>.jpg"/><br> -->
    <% }%>
 </div>
 <div class="info"><% if (page.resources && page.resources.length != 0) { %><%- page.resources[0].description %><% }%></div>
@@ -20,9 +20,11 @@
 <script src="/js/gwg.js"></script>
 <script>
     var bp = "<%= resource_basepath %>";
-    slideshow($(".images"),
-            <%- JSON.stringify(page.resources) %>,
-            {xOffset: 20, yOffset: 20, widthDelta: 100, heightDelta: 200});
+    if (document.location.pathname != '/') {
+        slideshow($(".images"),
+                <%- JSON.stringify(page.resources) %>,
+                {xOffset: 20, yOffset: 20, widthDelta: 100, heightDelta: 200, $info: $(".info")});
+    }
     function navigate_next(){
         document.location.href = "<%=next_page.url%>";
     }

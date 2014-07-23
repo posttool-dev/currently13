@@ -94,9 +94,11 @@ function add_p($el) {
   }
   over_el.hide();
 
-  var $text = $("<div></div>").css({'position': 'absolute', 'top': '80px', 'left': '72px'}).text('178 Amber Drive San Francisco, California 94131');
-  var $email = $("<div></div>").css({'position': 'absolute', 'top': '80px', 'left': '676px'}).html('<a href="mailto:worker@generalworkinggroup.com">worker(at)generalworkinggroup.com</a>');
-  $el.append($text, $email);
+  if (document.location.pathname == '/') {
+    var $text = $("<div></div>").css({'position': 'absolute', 'top': '80px', 'left': '72px'}).text('178 Amber Drive San Francisco, California 94131');
+    var $email = $("<div></div>").css({'position': 'absolute', 'top': '80px', 'left': '676px'}).html('<a href="mailto:worker@generalworkinggroup.com">worker(at)generalworkinggroup.com</a>');
+    $el.append($text, $email);
+  }
 
   var click_area_0 = $("<div></div>").css({'position': 'absolute', 'top': '30px', 'left': 0, 'width': '100px', 'height': '260px', 'z-index': '20', 'background-color': 'rgba(1,0,0,0)'});
   var click_area_1 = $("<div></div>").css({'position': 'absolute', 'top': '30px', 'left': '100px', 'width': '600px', 'height': '70px', 'z-index': '20', 'background-color': 'rgba(1,0,0,0)'});
