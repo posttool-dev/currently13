@@ -3,6 +3,9 @@ var logger = require('winston');
 var cluster = require('cluster');
 var express = require('express');
 var mongoose = require('mongoose');
+var bugsnag = require("bugsnag");
+bugsnag.register("5c77895342af431a53b6070d90ea6280");
+bugsnag.notify(new Error("Non-fatal"));
 
 var current = require('./modules/cms');
 var useCluster = false;
