@@ -34,7 +34,6 @@ exports = module.exports = {
       {name: "title", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
       {name: "url", cell: "char", filters: ["$regex", "="], order: "asc,desc,default"},
       {name: "resources", cell: "image" },
-      {name: "year", cell: "string", filters: ["$regex"], order: "asc,desc"},
       {name: "modified", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
       {name: "state", cell: "int", filters: ["="], order: "asc,desc"},
     ],

@@ -34,7 +34,9 @@ CKEDITOR.editorConfig = function (config) {
 
   config.extraPlugins = 'table';
   config.extraPlugins = 'tabletools';
-
+  config.extraPlugins = 'sourcedialog';
   config.height = '350px';
+
+  config.allowedContent = true;
 
 };

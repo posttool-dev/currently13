@@ -235,7 +235,6 @@ function find_thumb2(c){
   //
   f = find_obj_by_attr(c, 'meta.public_id');
   if (f) {
-    console.log(f.meta);
     var x = f.meta.url.indexOf(f.meta.public_id);
     var bp = f.meta.url.substring(0, x - 1);
     x = bp.lastIndexOf('/');
@@ -244,7 +243,7 @@ function find_thumb2(c){
     console.log(s);
     return s;
   }
-  return c;
+  return null;
 }
 
 function media_path(resource)

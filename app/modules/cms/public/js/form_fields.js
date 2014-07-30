@@ -522,15 +522,9 @@ var form_fields = {
   {
     var mime = data.mime ? data.mime : data.meta && data.meta.mime ? data.meta.mime : null;
     if (mime && mime.indexOf('image') == 0){
-//      var thumb = find_thumb(data);
-//      if (thumb)
-//        return $('<img src="'+thumb+'">');
-//      else if (data.children)
-//      {
         var thumb = find_thumb2(data);
-        if (thumb)
+       if (thumb)
           return $('<img src="'+thumb+'">');
-//      }
       return $('<img src="'+media_path(data) +'">');
     } else if (mime && mime.indexOf('audio') == 0) {
       return $('<audio controls><source src="'+media_path(data)+'" type="'+data.mime+'"></audio>');

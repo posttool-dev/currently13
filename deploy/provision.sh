@@ -15,7 +15,7 @@ add-apt-repository -y ppa:dhor/myway
 # install
 apt-get update
 apt-get install -y graphicsmagick
-apt-get install -y mongodb-10gen
+apt-get install -y mongodb-org
 apt-get install -y nodejs
 npm install -g forever
 # env
