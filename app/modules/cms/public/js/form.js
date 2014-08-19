@@ -391,7 +391,6 @@ function indicated_field(d)//, settings_callback)
   form_make_listener(self);
 
   var $label = $('<label></label>').addClass('control-label').attr('for', name);
-  label_update_ui();
   if (!form_fields[type + "_field"])
     throw Error("no field for " + type);
   var field = new form_fields[type + "_field"](d.options);
@@ -400,6 +399,7 @@ function indicated_field(d)//, settings_callback)
   self.field = field;
   $el.append($label, field.$el());
   field.$el().addClass('controls');
+  label_update_ui();
 
   Object.defineProperty(this, "data", {
     get: function () {
@@ -431,16 +431,24 @@ function indicated_field(d)//, settings_callback)
     console.log(showLabel, options)
     if (options && options.collapsable) {
       $label.empty();
-      var $c = $("<span class='field_collapse'><i class='fa fa-check-circle-o'></i></span>");
-      var v = true;
-      $c.click(function(){
-        if (v)
+      var $c = $("<span class='field_collapse'>x</span>");
+      function tgl(v){
+        if (v) {
+          $c.empty().append("<i class='fa fa-chevron-down'></i>");
           field.$el().hide();
-        else
+        }
+        else {
+          $c.empty().append("<i class='fa fa-chevron-up'></i>");
           field.$el().show();
+        }
+      }
+      var v = true;
+      tgl(v);
+      $c.click(function(){
         v = !v;
-      })
-      $label.append("<span>"+label+"</span>", $c);
+        tgl(v);
+      });
+      $label.append($c, "<span style='padding-left:5px;'>"+label+"</span>");
     } else {
       $label.text(label);
     }
