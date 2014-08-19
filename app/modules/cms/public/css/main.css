@@ -25,6 +25,7 @@ Having flickering problems in Webkit? Use -webkit-backface-visibility. See this 
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
+
 .rich-text { padding-right: 10px; } /* to account for being un able to implement boxsizing for ck editor thanks */
 
 

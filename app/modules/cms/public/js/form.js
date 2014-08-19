@@ -428,7 +428,6 @@ function indicated_field(d)//, settings_callback)
 
 
   function label_update_ui() {
-    console.log(showLabel, options)
     if (options && options.collapsable) {
       $label.empty();
       var $c = $("<span class='field_collapse'>x</span>");
@@ -442,7 +441,7 @@ function indicated_field(d)//, settings_callback)
           field.$el().show();
         }
       }
-      var v = true;
+      var v = true; // options.collapsed
       tgl(v);
       $c.click(function(){
         v = !v;
