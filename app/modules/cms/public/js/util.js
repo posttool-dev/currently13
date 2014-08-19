@@ -240,7 +240,6 @@ function find_thumb2(c){
     x = bp.lastIndexOf('/');
     bp = bp.substring(0, x);
     var s = bp +  "/w_206,h_106,c_fill/" +f.meta.public_id + ".jpg";
-    console.log(s);
     return s;
   }
   return null;

@@ -5,7 +5,7 @@ function form_form(app, type, id) {
   var self = this;
   self.app = app;
   self.type = type;
-  self.toString = function(){ return 'Edit '+type; }
+  self.toString = function(){ return type; }
 
   var _meta = null;
   var _related = null;

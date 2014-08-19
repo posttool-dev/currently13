@@ -32,13 +32,10 @@ exports.ResourceInfo = function(){
       {name: "mime", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
     ],
     form: [
-      {name: "path", widget: "resource_path"},
       {name: "title", widget: "input", options: {className: "large"}},
       {name: "subtitle", widget: "input"},
+      {name: "meta", widget: "resource_meta"},
       {name: "description", widget: "rich_text"},
-      {name: "size", widget: "number"},
-      {name: "mime", widget: "input"},
-      {name: "meta", widget: "json"},
       {name: "children", widget: "choose_create", options: {type: "Resource", array: true, readonly: true}}
     ]
   }

@@ -385,7 +385,7 @@ var form_fields = {
     var $content = $$('');
     var $info = $$('multi-drop-area').text('Drop file here or click Upload.');
     var $btn = $$('btn btn-small file-input-button', {
-      children: [ $('<span><i class="fa fa-arrow-circle-o-up"></i> Upload file...</span>') ] });
+      children: [ $('<button><i class="fa fa-arrow-circle-o-up"></i> Upload file...</button>') ] });
     var $fileupload = $$('multi_upload', { el: 'input', parent: $btn,
       data: { url: upload_url },
       attributes: { type: 'file', name: 'file', multiple: 'multiple' }});
@@ -541,7 +541,7 @@ var form_fields = {
   // /cms/download/id
   // http...cloudacity...
 
-  resource_path_field: function(options) {
+  resource_meta_field: function(options) {
     var self = this;
     var $el = $$('resource-path');
     self.$el = function () {
@@ -562,7 +562,7 @@ var form_fields = {
       $el.empty();
       console.log(_d)
       if (_d)
-        $el.append(form_fields.resource(self.form.data));
+        $el.append("<img src='"+find_thumb2(self.form.data)+"'><br>Original: <a href='"+ _d.url+"'>"+_d.url+"</a><br>Width: "+_d.width+"px Height: "+_d.height+"px Bytes: "+_d.bytes);
     }
   },
 
@@ -653,8 +653,8 @@ var form_fields = {
     if (options.add || options.browse)
     {
       var $actions = $("<div style='clear:both;'></div>");
-      var $add = $("<span><i class='fa fa-plus-circle'></i> create</span>").css({'cursor': 'pointer'});
-      var $browse = $("<span><i class='fa fa-play-circle'></i> browse</span>").css({'cursor': 'pointer'});
+      var $add = $("<button><i class='fa fa-plus-circle'></i> Create "+options.type+"</button>").css({'cursor': 'pointer'});
+      var $browse = $("<button><i class='fa fa-play-circle'></i> Browse</button>").css({'cursor': 'pointer'});
       if (options.add)
         $actions.append($add, '&nbsp;');
       if (options.browse)
