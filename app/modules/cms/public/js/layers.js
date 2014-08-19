@@ -185,13 +185,14 @@ function layers_layers(){
     available_width = info_open ? $(window).width() - info_width : $(window).width() - info_off;
     var cw = available_width + 'px';
     var iw = info_width + 'px';
+    var uw = info_open ? (info_width + 20) + 'px' : '50px';
     var r = info_open ? '0' : (info_off-info_width) + 'px';
     var c = $el.children();
     for (var i = 0; i < c.length; i++) {
       var $c = $(c[i]);
       $c[f]({width:cw});
     }
-    $user[f]({right: iw});
+    $user[f]({right: uw});
     $control_bar[f]({width:cw});
     $info_panel[f]({right:r, width: iw});
     $info_content[f]({opacity: info_open ? 1 : 0})
@@ -200,6 +201,7 @@ function layers_layers(){
   function update_widths(){
     update_info('css');
   }
+
 
 
 

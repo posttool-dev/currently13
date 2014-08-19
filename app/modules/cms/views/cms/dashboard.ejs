@@ -61,6 +61,9 @@
 
 <script>
 $("#control-bar").hide();
+$("#info-cog").hide();
+
+
 
 var $info_logs = $("#info-panel");
 var seen = {}
@@ -76,7 +79,6 @@ $$ajax('/cms/logs').done(function (logs) {
         $info_logs.append(get_log_row(logs[i]));
     }
 });
-
 
 function get_log_row(log) {
     var $r = $$('log-row');
