@@ -115,8 +115,13 @@ function slideshow($el, resources, options) {
       var $a = $("<a href='#'>"+(at_idx+1)+" of "+loading.length+"</a>");
       $a.click(next);
       options.$info.append($a);
-      options.$info.css({top: ($img.find("img").height()+10)+'px', position: 'absolute'});
-      options.$info.fadeIn(150);
+      var ih = $img.find("img").height();
+      if (ih > 50) {
+        options.$info.css({top: (ih + 10) + 'px', position: 'absolute'});
+        options.$info.fadeIn(150);
+      } else {
+        options.$info.hide();
+      }
     }
   }
 
