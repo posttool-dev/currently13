@@ -251,6 +251,7 @@ ul li:last-child
 -webkit-box-shadow: 0px 0px 42px rgba(0, 0, 0, 0.24);
 -moz-box-shadow:    0px 0px 42px rgba(0, 0, 0, 0.24);
 box-shadow:         0px 0px 42px rgba(0, 0, 0, 0.24);
+  image-rendering:-moz-crisp-edges; image-rendering: -o-crisp-edges; image-rendering:-webkit-optimize-contrast; -ms-interpolation-mode:nearest-neighbor;
 }
 
 .info {

@@ -1,8 +1,5 @@
 
 
-
-
-
 function add_p($el) {
   $el.empty();
   var normal_el = $("<div></div>");

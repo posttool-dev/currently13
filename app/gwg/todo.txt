@@ -1,9 +1,12 @@
 menu: auto expand to last open category / last highlighted page
 menu: type styles submenu grey
-menu: should collapse last submenu if you open anotgher
+menu: should collapse last submenu if you open another
+menu: include in scrollability
 menu: click above/around to get it
 
 images: load low res / then high
-images: is 1200x900 high enough? or do we need bigger? 
+images: is 1200x900 high enough? or do we need bigger?
 
 video: doesn't size with browser
+
+mobile: *
