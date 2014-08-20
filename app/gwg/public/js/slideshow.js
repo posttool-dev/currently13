@@ -63,6 +63,8 @@ function slideshow($el, resources, options) {
 
   function goto(idx){
     console.log("GOTO "+idx);
+    if (idx != 0)
+      window.location.hash = idx;
     load(idx);
     if (idx != at_idx) {
       // move old one out
@@ -108,11 +110,12 @@ function slideshow($el, resources, options) {
     var $img = loading[at_idx].$img;
     $img.fadeIn(200);
     if (options.$info){
+      options.$info.empty();
       options.$info.html($img.data("description"));//todo callback
       var $a = $("<a href='#'>"+(at_idx+1)+" of "+loading.length+"</a>");
       $a.click(next);
       options.$info.append($a);
-      options.$info.css({top: ($img.height()+10)+'px', position: 'absolute'});
+      options.$info.css({top: ($img.find("img").height()+10)+'px', position: 'absolute'});
       options.$info.fadeIn(150);
     }
   }
@@ -156,30 +159,30 @@ function slideshow($el, resources, options) {
   }
 
   function cimage(resource, complete) {
-  function imgel(sz, cb) {
-    var $img = $("<img/>");
-    $img_wrap.append($img);
-    if (cb)
-      $img.load(cb);
-    $img.attr("src", bp + "/" + sz + "/" + resource.meta.public_id + ".jpg");
-    $img.hide();
-    return $img;
-  }
+    function imgel(sz, cb) {
+      var $img = $("<img/>");
+      $img_wrap.append($img);
+      if (cb)
+        $img.load(cb);
+      $img.attr("src", bp + "/" + sz + "/" + resource.meta.public_id + ".jpg");
+      $img.hide();
+      return $img;
+    }
 
-  var $img_wrap = $("<div></div>");
+    var $img_wrap = $("<div></div>");
 
-  function load() {
-    var $img_high;
-    var $img_low = imgel("w_120,h_90,c_fit", function () {
-      $img_low.show();
-      resize();
-      $img_high = imgel("w_1200,h_900,c_fit", function () {
-        $img_low.remove();
-        $img_high.show();
-        complete();
+    function load() {
+      var $img_high;
+      var $img_low = imgel("w_120,h_90,c_fit", function () {
+        $img_low.show();
+        resize();
+        $img_high = imgel("w_1200,h_900,c_fit", function () {
+          $img_low.remove();
+          $img_high.show();
+          complete();
+        });
       });
-    });
-  }
+    }
 
   return {$el: $img_wrap, load: load};
 
