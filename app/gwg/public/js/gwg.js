@@ -119,11 +119,27 @@ function toggle_menu(){
   $(".main_menu").toggle();
 }
 
+var $last = null;
 $(".main_menu nav li[depth='1']").click(function(evt){
   evt.preventDefault();
+  if ($last) $last.hide();
   var $li = $(this);
-  $li.next().show();
+  var $ul = $li.next();
+  $ul.show();
+  $last = $ul;
   return false;
 });
+
+$(".main_menu nav li[depth='2']").click(function(evt){
+  evt.preventDefault();
+  var url = $(evt.currentTarget).find("a").attr("href");
+  location.href = url;
+  return false;
+});
+
+var $sel = $(".main_menu nav li a[href='"+window.location.pathname+"']");
+$sel.parent().addClass('selected');
+$sel.parent().parent().show();
+$last = $sel.parent().parent();
 
 add_p($("#logo"));
