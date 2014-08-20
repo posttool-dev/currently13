@@ -1,64 +1,115 @@
 function slideshow($el, resources, options) {
+  var INIT = -1;
+  var LOADING = 0;
+  var LOADED = 1;
   $el.empty();
   $el.click(next);
   if (options.$info)
     options.$info.hide();
-  var imgs = [];
-  var load_idx = 0;
-  var idx = -1;
+  var loading = new Array();
+  for (var i=0; i<resources.length; i++)
+    loading.push({$img:null, state: INIT});
+  var at_idx = options.index ? Math.min(resources.length-1, Math.max(0, Number(options.index))) : 0;
 
-  function load(resource) {
-    var $img = $("<img/>");
-    $img.data("description", resource.description);
-    $img.load(function () {
+  if (resources.length) {
+    goto(at_idx);
+    $(window).resize(render);
+  }
+
+  return {
+    goto: goto,
+    get_data: function(){ return imgs; }
+  }
+
+  function load(idx) {
+    if (loading[idx].state != INIT)
+      return;
+    console.log("LOADING "+idx);
+    loading[idx].state = LOADING;
+    var resource = resources[idx];
+    var cimg = cimage(resource, function () {
+      loading[idx].state = LOADED;
       render();
-      load_idx++;
       load_next();
     });
+    var $img = cimg.$el;
+    $img.data("description", resource.description);
     $img.hide();
-    $img.attr("src", bp + "/w_1200,h_900,c_fit/" + resource.meta.public_id + ".jpg");
-    imgs.push($img);
+    loading[idx].$img = $img;
     $el.append($img);
+    cimg.load();
   }
 
-  function load_next() {
-    if (load_idx == resources.length) {
-      //comspl
-    } else {
-      load(resources[load_idx]);
-    }
+  function is_loading(){
+    for (var i=0; i<loading.length; i++)
+      if (loading[i].state == LOADING)
+        return true;
+    return false;
   }
 
-  function next(){
-    if (idx >= load_idx - 1) {
-      if (idx == imgs.length - 1)
-      {
-        navigate_next();
-        return;
-      } else {
-        idx = load_idx -1;
-        return;
-      }
+  function get_next_loading_idx(state){
+    for (var i=0; i<loading.length; i++)
+      if (loading[i].state == state)
+        return i;
+    return null;
+  }
+
+  function is_loaded() {
+    for (var i=0; i<loading.length; i++)
+      if (loading[i].state != LOADED)
+        return false;
+    return true;
+  }
+
+  function goto(idx){
+    console.log("GOTO "+idx);
+    load(idx);
+    if (idx != at_idx) {
+      // move old one out
+      move(loading[at_idx].$img.get(0))
+        .to(-$(window).width(), 0)
+        .duration(500)
+        .end();
+      // new one in
+      at_idx = idx;
+      loading[at_idx].$img.fadeIn(100);
+      loading[at_idx].$img.css({left: $(window).width()})
+      move(loading[at_idx].$img.get(0))
+        .to(0, 0)
+        .duration(500)
+        .end();
     }
-    //imgs[idx].fadeOut(200);
-    move(imgs[idx].get(0)).to(-$(window).width(),0).duration(500).end();
-    idx++;
-    imgs[idx].fadeIn(100);
-    imgs[idx].css({left: $(window).width()})
-    move(imgs[idx].get(0)).to(0,0).duration(500).end();
     render();
   }
 
-  function render() {
-    if (load_idx == 0 && idx == -1) {
-      idx = 0;
-      imgs[0].fadeIn(200);
+  function load_next() {
+    if (is_loading())
+      return;
+    if (is_loaded())
+      return;
+    var idx = get_next_loading_idx(INIT);
+    load(idx);
+  }
+
+  function next() {
+    if (at_idx == loading.length - 1) {
+      navigate_next();
+    }  else {
+      goto(at_idx + 1);
     }
+  }
+
+  function render() {
+//    if (load_idx == 0 && idx == -1) {
+//      idx = 0;
+//      loading[0].fadeIn(200);
+//    }
     resize();
-    var $img = imgs[idx];
+    var $img = loading[at_idx].$img;
+    $img.fadeIn(200);
     if (options.$info){
       options.$info.html($img.data("description"));//todo callback
-      var $a = $("<a href='#'>"+(idx+1)+" of "+imgs.length+"</a>");
+      var $a = $("<a href='#'>"+(at_idx+1)+" of "+loading.length+"</a>");
       $a.click(next);
       options.$info.append($a);
       options.$info.css({top: ($img.height()+10)+'px', position: 'absolute'});
@@ -69,7 +120,7 @@ function slideshow($el, resources, options) {
 
 
   function resize() {
-    var $img = imgs[idx];
+    var $img = loading[at_idx].$img.find("img");
     var w = $(window).width() - options.widthDelta;
     var h = $(window).height() - options.heightDelta;
     var iw = $img.width();
@@ -104,8 +155,37 @@ function slideshow($el, resources, options) {
     }
   }
 
-  if (resources.length) {
-    load_next();
-    $(window).resize(render);
+  function cimage(resource, complete) {
+  function imgel(sz, cb) {
+    var $img = $("<img/>");
+    $img_wrap.append($img);
+    if (cb)
+      $img.load(cb);
+    $img.attr("src", bp + "/" + sz + "/" + resource.meta.public_id + ".jpg");
+    $img.hide();
+    return $img;
   }
+
+  var $img_wrap = $("<div></div>");
+
+  function load() {
+    var $img_high;
+    var $img_low = imgel("w_120,h_90,c_fit", function () {
+      $img_low.show();
+      resize();
+      $img_high = imgel("w_1200,h_900,c_fit", function () {
+        $img_low.remove();
+        $img_high.show();
+        complete();
+      });
+    });
+  }
+
+  return {$el: $img_wrap, load: load};
+
 }
+
+
+}
+
+
