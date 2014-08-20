@@ -21,12 +21,18 @@
 <script>
     var bp = "<%= resource_basepath %>";
     if (document.location.pathname != '/') {
-        var idx = Number(window.location.hash.substring(1));
-        if (isNaN(idx)) idx = 0;
-        slideshow($(".images"),
+        var idx = function () {
+            var i = Number(window.location.hash.substring(1));
+            if (isNaN(i)) i = 0;
+            return i;
+        };
+        var ss = slideshow($(".images"),
                 <%- JSON.stringify(page.resources) %>,
                 {xOffset: 20, yOffset: 20, widthDelta: 100, heightDelta: 200,
-                    $info: $(".info"), index: idx});
+                    $info: $(".info"), index: idx()});
+        $(window).on('hashchange', function() {
+          ss.goto(idx())
+        });
     }
     function navigate_next(){
         document.location.href = "<%=next_page.url%>";
