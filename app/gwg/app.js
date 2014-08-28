@@ -16,7 +16,11 @@ exports = module.exports = function(config, meta) {
   var Page = meta.model('Page');
   var News = meta.model('News');
 
-   app.get('/page', function(req, res, next) {
+  app.get('/favicon.ico', function(req, res, next){
+    res.status(404).send('Not found');
+  });
+
+  app.get('/page', function (req, res, next) {
     util.getSiteMapData(Page, function (err, site) {
       if (err) return next(err);
       res.json(site);
@@ -27,12 +31,12 @@ exports = module.exports = function(config, meta) {
     util.getSiteMapData(Page, function (err, site) {
       if (err) return next(err);
       Page.findOne({url: req.path}).populate("resources").exec(function (err, page) { //state: PUBLISHED
-        if (!err && !page) return next(new Error("No such page "+req.path));
+        if (!err && !page) return next(new Error("No such page " + req.path));
         if (err) return next(err);
         News.find({}, function (err, news) {
           if (err) return next(err);
-         var next_page = util.getNextNode(util.findById(site, page.id));
-         res.render('index', {site: site, news: news, page: page, resource_basepath: util.get_res_bp(config), next_page: next_page});
+          var next_page = util.getNextNode(util.findById(site, page.id));
+          res.render('index', {site: site, news: news, page: page, resource_basepath: util.get_res_bp(config), next_page: next_page});
         });
       });
     });

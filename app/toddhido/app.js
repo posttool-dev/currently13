@@ -89,6 +89,10 @@ exports = module.exports = function(config, meta) {
 
   // endpoints
 
+  app.get('/favicon.ico', function(req, res, next){
+    res.status(404).send('Not found');
+  });
+
   app.get('/', function (req, res, next) {
     getSiteMapData(function (err, site) {
       if (err) return next(err);
