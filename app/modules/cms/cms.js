@@ -233,12 +233,14 @@ Cms.prototype.add_meta = function (req, res, next) {
   if (user.admin)
   {
     req.models = res.locals.models = this.guard.get_admin_models(this.meta);
+    req.form_includes = [];
     if (type) {
       req.type = type;
       req.schema = this.meta.schema(type);
       req.model = this.meta.model(type);
       req.browse = this.meta.browse(type);
       req.form = utils.expand_functions(this, this.meta.form(type));
+      req.form_includes = this.meta.formIncludes(type) || [];
     }
   }
   else
@@ -263,6 +265,7 @@ Cms.prototype.add_meta = function (req, res, next) {
         req.form_permission = this.guard.form_permission(user, type);
         req.form_create = this.guard.can_create(type, form_type);
         req.form_delete = this.guard.can_delete(type, form_type);
+        req.form_includes = this.meta.formIncludes(type) || [];
       }
     }
   }
@@ -326,7 +329,8 @@ Cms.prototype.show_dashboard = function (req, res) {
   var title = this.config.name;
   res.render('cms/dashboard', {
     title: title,
-    models: req.models
+    models: req.models,
+    jsIncludes: req.form_includes
   });
 };
 
@@ -342,7 +346,8 @@ Cms.prototype.browse_get = function (req, res) {
       title: 'CMS Dashboard ',
       browser: req.browse,
       type: req.type,
-      total: count
+      total: count,
+      jsIncludes: req.form_includes
     });
   });
 };
@@ -380,7 +385,9 @@ Cms.prototype.form_get = function (req, res) {
     title: (req.object ? 'Editing' : 'Creating') + ' ' + req.type,
     type: req.type,
     id: req.id ? req.id : null,
-    form: req.form});
+    form: req.form,
+    jsIncludes: req.form_includes
+  });
 };
 
 

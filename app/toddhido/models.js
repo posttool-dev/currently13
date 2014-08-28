@@ -88,7 +88,12 @@ exports = module.exports = {
       meta: mongoose.Schema.Types.Mixed,
       title: String,
       subtitle: String,
-      description: String
+      description: String,
+      sizes_and_prices: mongoose.Schema.Types.Mixed,
+      edition_number: String,
+      quantity: Number,
+      year: Number,
+      for_home_page: Boolean
     },
     browse: [
       {name: "path", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
@@ -96,11 +101,15 @@ exports = module.exports = {
       {name: "mime", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
     ],
     form: [
-      {name: "path", widget: "resource_path"},
+      {name: "meta", widget: "resource_meta"},
       {name: "title", widget: "input", options: {className: "large"}},
-      {name: "subtitle", widget: "input"},
-      {name: "description", widget: "rich_text"}
-    ]
+      {name: "sizes_and_prices", widget: "sizes_and_prices"},
+      {name: "edition_number", widget: "input"},
+      {name: "quantity", widget: "input"},
+      {name: "year", widget: "input"},
+      {name: "for_home_page", widget: "boolean"}
+    ],
+    formIncludes: ["/js/field_sizes_and_prices.js"]
   },
   User: cms_models.UserInfo()
 

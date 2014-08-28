@@ -1,0 +1,28 @@
+each "available" image has
+
+list of size/price
+20x24 $4000
+30x38 $7500
+38x48 $10000
+60x76 TDB
+
+edition number
+quantity
+
+year
+mark image for home page
+
+auto save
+make background white
+
+/.....
+
+upload pdf/docs whatever to news
+
+each i,age has owm url . click from home page
+
+why are the images in a strange order when uploading?
+
+D1D1CD
+
+add page for background color change

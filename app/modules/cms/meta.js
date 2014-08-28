@@ -69,6 +69,12 @@ Meta.prototype.form = function(type, sub_type)
     return this.info[type].form;
 };
 
+Meta.prototype.formIncludes = function(type)
+{
+  if (!this.info[type])
+    throw new Error('no '+type);
+  return this.info[type].formIncludes;
+};
 
 Meta.prototype.schema = function(type)
 {
