@@ -81,13 +81,16 @@ function form_form(app, type, id) {
     });
     // for reference fields
     f.add_listener('add', function (f) {
-      self.emit('create', {type: d.options.type, field: f.field});
+      if (d.options && d.options.type)
+        self.emit('create', {type: d.options.type, field: f.field});
     });
     f.add_listener('browse', function (f) {
-      self.emit('browse', {type: d.options.type, field: f.field})
+      if (d.options && d.options.type)
+        self.emit('browse', {type: d.options.type, field: f.field})
     });
     f.add_listener('select', function(f, o){
-      self.emit('select', {type: d.options.type, id: o._id, field: f.field});
+      if (d.options && d.options.type)
+        self.emit('select', {type: d.options.type, id: o._id, field: f.field});
     })
     return f;
   }

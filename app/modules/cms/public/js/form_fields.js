@@ -560,9 +560,8 @@ var form_fields = {
     });
     function update_ui() {
       $el.empty();
-      console.log(_d)
       if (_d)
-        $el.append("<img src='"+find_thumb2(self.form.data)+"'><br>Original: <a href='"+ _d.url+"'>"+_d.url+"</a><br>Width: "+_d.width+"px Height: "+_d.height+"px Bytes: "+_d.bytes);
+        $el.append("<img src='"+find_thumb2(self.form.data)+"'><br><a href='"+ _d.url+"'>"+_d.url.substring(0,55)+"...</a><br>"+_d.width+"x"+_d.height+"px "+(_d.bytes/1024).toFixed(2)+"k");
     }
   },
 
@@ -642,7 +641,7 @@ var form_fields = {
       return $el;
     };
 
-    options = $.extend({add: true, browse: true, array: true}, options);
+    options = $.extend({add: true, addText: "Create", browse: true, browseText: "Browse", array: true}, options);
 
     var $list = $("<div></div>");
     $el.append($list);
@@ -653,8 +652,8 @@ var form_fields = {
     if (options.add || options.browse)
     {
       var $actions = $("<div style='clear:both;'></div>");
-      var $add = $("<button><i class='fa fa-plus-circle'></i> Create "+options.type+"</button>").css({'cursor': 'pointer'});
-      var $browse = $("<button><i class='fa fa-play-circle'></i> Browse</button>").css({'cursor': 'pointer'});
+      var $add = $("<button><i class='fa fa-plus-circle'></i> "+options.addText+" "+options.type+"</button>").css({'cursor': 'pointer'});
+      var $browse = $("<button><i class='fa fa-play-circle'></i> "+options.browseText+"</button>").css({'cursor': 'pointer'});
       if (options.add)
         $actions.append($add, '&nbsp;');
       if (options.browse)
@@ -715,13 +714,18 @@ var form_fields = {
     var self = this;
     form_make_listener(self);
 
-    var $el = $$('deletable-row').data("__obj__", this);
+    options = $.extend({deletableRowClassName: 'deletable-row'}, options);
+
+    var $el = $$(options.deletableRowClassName).data("__obj__", this);
     this.$el = function () {
       return $el;
     }
 
+
     var $c = $$('comp');
     var c = new clazz(options);
+    if (!c.bubble_listener)
+      form_make_listener(c);
     c.bubble_listener(self);
     var $x = $$('del').addClass("fa fa-times-circle");
     $el.append($c, $x, $('<br clear="both">'));
