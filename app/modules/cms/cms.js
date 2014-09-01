@@ -233,14 +233,13 @@ Cms.prototype.add_meta = function (req, res, next) {
   if (user.admin)
   {
     req.models = res.locals.models = this.guard.get_admin_models(this.meta);
-    req.form_includes = [];
+    req.form_includes = this.meta.jsIncludes();
     if (type) {
       req.type = type;
       req.schema = this.meta.schema(type);
       req.model = this.meta.model(type);
       req.browse = this.meta.browse(type);
       req.form = utils.expand_functions(this, this.meta.form(type));
-      req.form_includes = this.meta.formIncludes(type) || [];
     }
   }
   else
@@ -265,7 +264,6 @@ Cms.prototype.add_meta = function (req, res, next) {
         req.form_permission = this.guard.form_permission(user, type);
         req.form_create = this.guard.can_create(type, form_type);
         req.form_delete = this.guard.can_delete(type, form_type);
-        req.form_includes = this.meta.formIncludes(type) || [];
       }
     }
   }
