@@ -379,6 +379,10 @@ var form_fields = {
     this.$el = function () {
       return $el;
     }
+    var $cel = $$('controls resource');
+    this.$cel = function () {
+      return $cel;
+    }
 
     var $progress = $$('progress');
     var $progressbar = $$('bar', { css: { width: '0%' }, parent: $progress });
@@ -389,7 +393,8 @@ var form_fields = {
     var $fileupload = $$('multi_upload', { el: 'input', parent: $btn,
       data: { url: upload_url },
       attributes: { type: 'file', name: 'file', multiple: 'multiple' }});
-    $el.append($progress, $content, '<br clear="both">', $btn);
+    $el.append($progress, $content);
+    $cel.append($btn)
 
     var o = $.extend({add: false, browse: false}, options);
     var f = new form_fields.add_remove(form_fields.model_field, o);
@@ -592,14 +597,19 @@ var form_fields = {
 
   choose_create_field: function (options) {
     var self = this;
-    var $el = $$();
+    var $el = $$('field choose_create');
     this.$el = function () {
       return $el;
+    };
+    var $cel = $$('controls choose_create');
+    this.$cel = function () {
+      return $cel;
     };
 
     var f = new form_fields.add_remove(form_fields.model_field, options);
     f.bubble_listener(self);
     $el.append(f.$el());
+    $cel.append(f.$cel());
 
     Object.defineProperty(this, "data", {
       get: function () {
@@ -640,11 +650,17 @@ var form_fields = {
     this.$el = function () {
       return $el;
     };
+    var $cel = $$();
+    this.$cel = function () {
+      return $cel;
+    };
 
-    options = $.extend({add: true, addText: "Create", browse: true, browseText: "Browse", array: true}, options);
+    options = $.extend({add: true, addText: "Create", browse: true, browseText: "Browse", array: true, floats: true}, options);
 
     var $list = $("<div></div>");
     $el.append($list);
+    if (options.floats)
+      $el.append('<br clear="both">');
     $list.sortable({change: function (event, ui) {
       self.emit('change');
     }});
@@ -658,7 +674,7 @@ var form_fields = {
         $actions.append($add, '&nbsp;');
       if (options.browse)
         $actions.append($browse, '&nbsp;');
-      $el.append($actions);
+      $cel.append($actions);
       $add.click(function () {
         self.emit('add');
       });

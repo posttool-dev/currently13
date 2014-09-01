@@ -314,7 +314,8 @@ function get_state(type, code) {
 /// random stylin'
 
 function bg_w_grad($el, url){
-  var s = 'linear-gradient(-90deg, rgba(231,229,224,1) 10%, rgba(231,229,224,.85) 30%, rgba(231,229,224,0) 50%, rgba(231,229,224,0) 100%)';
+  var c = '230,230,230';//'231,229,224';
+  var s = 'linear-gradient(-90deg, rgba('+c+',1) 10%, rgba('+c+',.55) 70%, rgba('+c+',0) 90%, rgba('+c+',0) 100%)';
   $el.css({'background-image': vendor_prefix.css+s+', url('+url+')', 'background-repeat':'no-repeat'});
 }
 //http://davidwalsh.name/vendor-prefix

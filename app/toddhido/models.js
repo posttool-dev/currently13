@@ -109,7 +109,7 @@ exports = module.exports = {
       {name: "year", widget: "input"},
       {name: "for_home_page", widget: "boolean"}
     ],
-    formIncludes: ["/js/field_sizes_and_prices.js"]
+    includes: ["/js/field_sizes_and_prices.js"]
   },
   User: cms_models.UserInfo()
 

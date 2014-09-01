@@ -1,10 +1,12 @@
 form_fields["sizes_and_prices_field"] = function () {
+  console.log("LOADED sizes and prices field")
   var self = this;
   var $el = $$("sizes_and_prices").data("__obj__", self);;
   self.$el = function () { return $el; };
+  self.$cel = function () { return f.$cel(); };
 
   var f = new form_fields.add_remove(sp_input_field, {
-    addText: "Add", type: "info", browse: false, deletableRowClassName: 'x',
+    addText: "Add", type: "info", browse: false, deletableRowClassName: 'x', floats: false,
     placeholders: ['20x24','$4000','12']});
   $el.append(f.$el());
   f.add_listener("add", function (f) { f.push(["","", ""]); });

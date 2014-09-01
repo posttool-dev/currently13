@@ -378,12 +378,15 @@ function form_form(app, type, id) {
 
 function indicated_field(d)//, settings_callback)
 {
+  if (!form_fields[d.widget + "_field"])
+    throw Error("no field for " + d.widget);
+
   var self = this;
   var name = d.name;
   var label = d.label ? d.label : d.name;
   var type = d.widget;
   var options = d.options;
-  var $el = $$('control-group');
+  var $el = $$('control-group '+type+' '+label);
   var showLabel = true;
   var lastCols = null;
   var cols = null;
@@ -394,15 +397,19 @@ function indicated_field(d)//, settings_callback)
   form_make_listener(self);
 
   var $label = $('<label></label>').addClass('control-label').attr('for', name);
-  if (!form_fields[type + "_field"])
-    throw Error("no field for " + type);
   var field = new form_fields[type + "_field"](d.options);
   form_make_listener(field);
   field.bubble_listener(self);
   self.field = field;
   $el.append($label, field.$el());
-  field.$el().addClass('controls');
   label_update_ui();
+
+  var $controls = null;
+  if (field.$cel) {
+    $controls = $$('controls '+type);
+    $controls.append(field.$cel());
+    $el.append($controls);
+  }
 
   Object.defineProperty(this, "data", {
     get: function () {
@@ -429,7 +436,6 @@ function indicated_field(d)//, settings_callback)
     }
   });
 
-
   function label_update_ui() {
     if (options && options.collapsable) {
       $label.empty();
@@ -444,7 +450,7 @@ function indicated_field(d)//, settings_callback)
           field.$el().show();
         }
       }
-      var v = true; // options.collapsed
+      var v = options.collapsed ? options.collapsed : true;
       tgl(v);
       $c.click(function(){
         v = !v;
@@ -469,15 +475,7 @@ function indicated_field(d)//, settings_callback)
       label_update_ui();
     }
   });
-//  Object.defineProperty(this, "showLabel", {
-//    get: function () {
-//      return  showLabel;
-//    },
-//    set: function (n) {
-//      showLabel = n;
-//      label_update_ui();
-//    }
-//  });
+
   Object.defineProperty(this, "field", {
     get: function () {
       return field;

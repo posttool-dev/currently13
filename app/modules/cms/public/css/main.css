@@ -26,6 +26,8 @@ Having flickering problems in Webkit? Use -webkit-backface-visibility. See this 
     box-sizing: border-box;
 }
 
+
+
 .rich-text { padding-right: 10px; } /* to account for being un able to implement boxsizing for ck editor thanks */
 
 
@@ -43,6 +45,7 @@ label {
     text-transform: uppercase;
     font-size: 10px;
     letter-spacing: 1px;
+    line-height: 22px;
 }
 
 input {
@@ -101,6 +104,17 @@ button.delete:hover:enabled {
     background-color: #aa0700;
 }
 
+.controls button {
+    background-color: #fff;
+    border: 1px solid #999;
+    color: #333;
+    border-radius: 4px;
+    margin-top: 7px;
+}
+.controls button:hover:enabled {
+    background-color: #f0f0f0;
+}
+
 
 select {
     width: 100px;
@@ -121,7 +135,21 @@ select {
 select:active {
     border: 1px solid #000;
 }
+select.form-control {
+    font-size:22px;
+    color: #555;
+    border: 1px solid #f0f0f0;
+     background-color: #f0f0f0;
+    padding: 7px;
+    width: 300px;
 
+}
+
+.field.resource, .field.choose_create {
+    background-color:#f0f0f0;
+    padding: 10px 0 0 10px;
+    margin: 2px 0 0 0;
+}
 
 
 .btn-right {
@@ -223,7 +251,7 @@ select:active {
 }
 
 #info-panel-content {
-    padding: 30px 0px 0px 1px;
+    padding: 37px 0px 0px 1px;
 }
 
 #info-panel input {
@@ -245,8 +273,13 @@ select:active {
 
 
 .control-group {
-    padding-top: 20px;
+    margin: 0 0 42px 0;
+    padding-top: 0;
     clear:both;
+    border-top: 1px dotted #e0e0e0;
+}
+.control-group:focus {
+    background-color: #f00;
 }
 
 
@@ -270,7 +303,7 @@ select:active {
     background-color: #e7e5e0;
     color: #335;
     cursor: move;
-    margin: 0px 0 6px 0;
+    margin: 0px 0 12px 0;
 }
 
 .model .text {
@@ -337,7 +370,7 @@ select:active {
 
 
 
-.title {
+.browser .title {
     float: left;
     padding: 6px 5px 2px 4px;
     font-size: 11px;
@@ -485,9 +518,9 @@ select:active {
     position:relative;
     padding: 80px 20px 40px 20px;
     background-color: #fff;
-    -webkit-box-shadow: 0px 0px 138px 67px rgba(255, 255, 255, 0.7);
-    -moz-box-shadow: 0px 0px 138px 67px rgba(255, 255, 255, 0.7);
-    box-shadow: 0px 0px 138px 67px rgba(255, 255, 255, 0.7);
+    -webkit-box-shadow: 0px 0px 138px 67px rgba(120, 120, 120, 0.4);
+    -moz-box-shadow: 0px 0px 138px 67px rgba(120, 120, 120, 0.4);
+    box-shadow: 0px 0px 138px 67px rgba(120, 120, 120, 0.4);
 
 }
 
