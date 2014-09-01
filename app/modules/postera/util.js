@@ -161,7 +161,9 @@ exports.getResources = function(page, resources) {
     resources = [];
   if (page.resources) {
     for (var i = 0; i < page.resources.length; i++) {
-      resources.push(page.resources[i]);
+      var r = page.resources[i];
+      r.source = {page: page._id, url: page.url, index: i};
+      resources.push(r);
     }
   }
   if (page.pages) {
