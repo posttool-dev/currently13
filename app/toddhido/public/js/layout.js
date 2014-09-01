@@ -1,7 +1,5 @@
 function layout($el, list) {
-  $el.click(function(){
-    navigate_next();
-  });
+
   list.shuffle();
 
   var imgs = [];
@@ -15,8 +13,15 @@ function layout($el, list) {
       load_idx++;
       load_next();
     });
+    $img.error(function(){
+      load_idx++;
+      load_next();
+    })
     $img.hide();
-    $img.attr("src", bp + "/h_150,c_fit/" + resource.meta.public_id + ".jpg");
+    $img.attr("src", bp + "/h_150,c_fit/" + resource.public_id + ".jpg");
+    $img.click(function(){
+      location.href = resource.source.url + "#" +resource.source.index;
+    });
     imgs.push($img);
     $el.append($img);
   }
@@ -31,7 +36,7 @@ function layout($el, list) {
 
   function render() {
     var x = 0;
-    var y = 80;
+    var y = 0;
     for (var i=0; i<imgs.length; i++) {
       var $img = imgs[i];
       $img.css({position: "absolute", top: y+"px", left: x+"px"});

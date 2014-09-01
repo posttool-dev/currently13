@@ -4,7 +4,7 @@
 <% if (!page.template || page.template == "portfolio") {%>
 <div class="slides">
    <% if (page.resources) { %>
-        <img src="<%=resource_basepath%>/w_350,h_350,c_fit/<%= page.resources[0].meta.public_id%>.jpg"/><br>
+        <img src="<%=resource_basepath%>/w_350,h_350,c_fit/<%= page.resources[0].public_id%>.jpg"/><br>
    <% }%>
 </div>
 <div class="info"><% if (page.resources) { %><%= page.resources[0].name %><% }%></div>
@@ -22,12 +22,25 @@
 <% include foot.ejs %>
 
 <% if (!page.template || page.template == "portfolio") {%>
-<script src="/js/slideshow.js"></script>
+<script src="/js/slideshow1.js"></script>
 <script>
     var bp = "<%= resource_basepath %>";
-    slideshow($(".slides"), $(".info"), <%- JSON.stringify(page.resources) %>);
+    if (document.location.pathname != '/') {
+        var idx = function () {
+            var i = Number(window.location.hash.substring(1));
+            if (isNaN(i)) i = 0;
+            return i;
+        };
+        var ss = slideshow($(".slides"),
+                <%- JSON.stringify(page.resources) %>,
+                {xOffset: 20, yOffset: 20, widthDelta: 100, heightDelta: 200,
+                    $info: $(".info"), index: idx()});
+        $(window).on('hashchange', function() {
+          ss.goto(idx())
+        });
+    }
     function navigate_next(){
-        document.location.href = "<%= next_page.url %>";
+        document.location.href = "<%=next_page.url%>";
     }
 </script>
 <% } %>
