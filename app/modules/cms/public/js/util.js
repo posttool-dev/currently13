@@ -272,7 +272,7 @@ function confirm_inline($el, message, next) {
     $p.show();
   });
   $b.click(function(){
-    $el.show();
+    $p.hide();
     next();
   });
   $c.click(function(){
@@ -316,7 +316,7 @@ function get_state(type, code) {
 function bg_w_grad($el, url){
   var c = '230,230,230';//'231,229,224';
   var s = 'linear-gradient(-90deg, rgba('+c+',1) 10%, rgba('+c+',.55) 70%, rgba('+c+',0) 90%, rgba('+c+',0) 100%)';
-  $el.css({'background-image': vendor_prefix.css+s+', url('+url+')', 'background-repeat':'no-repeat'});
+  $el.css({'background-image': vendor_prefix.css+s+'', 'background-repeat':'no-repeat'}); //, url('+url+')
 }
 //http://davidwalsh.name/vendor-prefix
 var vendor_prefix = (function () {

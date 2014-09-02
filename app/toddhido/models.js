@@ -96,9 +96,10 @@ exports = module.exports = {
       for_home_page: Boolean
     },
     browse: [
-      {name: "path", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
+      {name: "path", cell: "image", filters: ["$regex", "="], order: "asc,desc"},
       {name: "size", cell: "int", filters: ["$gt", "$lt", "$gte", "$lte"], order: "asc,desc"},
       {name: "mime", cell: "char", filters: ["$regex", "="], order: "asc,desc"},
+      {name: "for_home_page", cell: "bool", filters: ["$regex", "="], order: "asc,desc"},
     ],
     form: [
       {name: "meta", widget: "resource_meta"},
@@ -107,7 +108,7 @@ exports = module.exports = {
       {name: "edition_number", widget: "input"},
       {name: "quantity", widget: "input"},
       {name: "year", widget: "input"},
-      {name: "for_home_page", widget: "boolean"}
+      {name: "for_home_page", widget: "boolean", options: {text: "Image might appear on home page if checked"}}
     ],
     includes: ["/js/field_sizes_and_prices.js"]
   },

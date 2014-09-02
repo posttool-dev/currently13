@@ -81,7 +81,7 @@ function layers_layers(){
     var x = $el.children().length - i - 1;
     for (var i=0; i<x; i++)
       pop_child();
-    //history_push();
+    history_push();
     update_ui();
     refresh_last();
   }

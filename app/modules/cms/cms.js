@@ -485,9 +485,17 @@ Cms.prototype.form_delete_references = function (req, res) {
 
 // form (json): delete
 Cms.prototype.form_delete = function (req, res) {
-  req.object.remove(function (err, m) {
-    res.json(m);
-  });
+  var self = this;
+  var remove_obj = function(){
+    req.object.remove(function (err, m) {
+      res.json(m);
+    });
+  };
+  if (req.model == self.meta.Resource) {
+    self.delete_resource(req.object._id, remove_obj);
+  } else {
+    remove_obj();
+  }
 };
 
 
@@ -758,27 +766,35 @@ Cms.prototype.write = function (stream, path, next) {
 }
 
 
-Cms.prototype.resource_delete = function (req, res) {
+Cms.prototype.resource_delete = function (req, res, next) {
+  var self = this;
+  self.delete_resource(req.params.id, function(err, r) {
+    if (err) return next(err);
+    res.json(r);
+  });
+};
+
+Cms.prototype.delete_resource = function (id, complete) {
   var self = this;
   var Resource = self.meta.Resource;
-  var q = Resource.findOne({_id: req.params.id});
+  var q = Resource.findOne({_id: id});
   q.exec(function (err, r) {
-    if (err) throw err;
+    if (err) return complete(err);
     if (r) {
-      switch (config.storage) {
+      switch (self.config.storage) {
         case "pkgcloud":
           self.client.removeFile(config.container, r.path, function (err) {
-            if (err) logger.error(err);
+            if (err) return complete(err);
             r.remove(function (err, r) {
-              if (err) throw err;
+              if (err) return complete(err);
               logger.info('resource ' + JSON.stringify(r) + ' deleted')
-              res.json({message: 'Resource deleted'});
+              complete(null, {message: 'Resource deleted'});
             });
           });
           break
         case "cloudinary":
           self.cloudinary.uploader.destroy(r.meta.public_id, function (result) {
-            res.json(result);
+            complete(null, result);
           });
           break
         case "gfs":
@@ -787,7 +803,7 @@ Cms.prototype.resource_delete = function (req, res) {
       }
     }
     else {
-      res.send('ERR');
+      complete('ERR no such resource '+id);
     }
   });
 };

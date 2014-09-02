@@ -9,8 +9,12 @@ var form_fields = {
     }
 
     var $c = $("<i class='fa fa-check-square-o'></i>");
-    var $d = $("<span>description</span>");
-    $el.append($c, $d);
+    $el.append($c);
+    if (options && options.text)
+    {
+      var $d = $("<span>"+options.text+"</span>");
+      $el.append($d);
+    }
 
     var _b = false;
     Object.defineProperty(self, "data",

@@ -222,6 +222,7 @@ function form_form(app, type, id) {
       var $delete = $$('delete', {el:'button'}).text('DELETE '+type.toUpperCase()+'...');
       $info_del.append($delete);
       confirm_inline($delete, 'Really delete?', function(){
+        $delete.hide();
         $$ajax(self.app.base_url + '/delete/'+type+'/'+id, null, 'post').done(function(r){
           self.emit('close');
         });
