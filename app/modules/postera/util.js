@@ -109,7 +109,9 @@ function getAncestorsSibling(node)
 var site = null;
 var lastTime = null;
 
-exports.getSiteMapData = function(Page, next) {
+exports.getSiteMapData = function(Page, f0, f1) {
+  var next = f1 ? f1 : f0;
+  var page_view = f0 && f1 ? f0 : default_page_view;
   if (!site || !lastTime || lastTime.getTime() + 60000 < Date.now()) {
     Page.find({})//state: PUBLISHED
       .populate('resources')
@@ -118,17 +120,7 @@ exports.getSiteMapData = function(Page, next) {
         var pages_view = [];
         for (var i=0; i<pages.length; i++){
           var p = pages[i];
-          pages_view.push({
-            id: p.id,
-            title: p.title,
-            description: p.description,
-            url: p.url,
-            pages: p.pages,
-            resources: _.map(p.resources, function (o) {
-              return {description: o.description, public_id: o.meta.public_id}
-            }),
-            template: p.template
-          });
+          pages_view.push(page_view(p));
         }
         site = exports.getSiteMap(pages_view);
         next(null, site);
@@ -136,6 +128,20 @@ exports.getSiteMapData = function(Page, next) {
   } else {
     next(null, site);
   }
+}
+
+function default_page_view(p) {
+  return {
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    url: p.url,
+    pages: p.pages,
+    resources: _.map(p.resources, function (o) {
+      return {description: o.description, public_id: o.meta.public_id}
+    }),
+    template: p.template
+  };
 }
 
 exports.getSiteMap = function(pages) {
