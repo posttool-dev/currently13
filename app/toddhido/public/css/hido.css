@@ -89,7 +89,7 @@ a.selected {
 
 .info {
     position: absolute;
-    top: 80px;
+    top: 100px;
     left: 31px;
     width: 150px;
     font-size: 9px;
@@ -97,6 +97,20 @@ a.selected {
 
 .text {
     margin: 80px 80px 30px 230px;
-    font-size: 9px;
+}
+.text * {
+        font-family: UniversLTStd45Light, sans-serif;
+    font-size: 13px;
+    line-height: 19px;
     color: #777;
+    max-width: 809px;
+    letter-spacing: .005em;
+    font-weight: normal;
+}
+.text table {
+    border-collapse: collapse;
+}
+
+.text table, th, td {
+    border: 0;
 }

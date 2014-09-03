@@ -105,10 +105,17 @@ exports = module.exports = {
       {name: "meta", widget: "resource_meta"},
       {name: "title", widget: "input", options: {className: "large"}},
       {name: "sizes_and_prices", widget: "sizes_and_prices"},
-      {name: "edition_number", widget: "input"},
-      {name: "quantity", widget: "input"},
-      {name: "year", widget: "input"},
-      {name: "for_home_page", widget: "boolean", options: {text: "Image might appear on home page if checked"}}
+
+      {begin: "row"},
+        {begin: "col", options: {className: "two-col"}},
+          {name: "edition_number", widget: "input"},
+          {name: "quantity", widget: "input"},
+        {end: "col" },
+        {begin: "col", options: {className: "two-col"}},
+          {name: "year", widget: "input"},
+          {name: "for_home_page", widget: "boolean", options: {text: " display on home page"}},
+        {end: "col" },
+      {end: "row" }
     ],
     includes: ["/js/field_sizes_and_prices.js"]
   },

@@ -1,5 +1,6 @@
 var express = require('express');
 var mongoose = require('mongoose');
+var _ = require('lodash');
 var postera = require('../modules/postera/util');
 
 var workflow = require('./workflow'),
@@ -22,13 +23,14 @@ exports = module.exports = function(config, meta) {
 
 //
 //  var getResources = function (complete) {
-//    Resource.find({for_home_page: true}, function (err, r) {
+//    Resource.find({for_home_page: true}, function (err, results) {
+//      var r = _.map(results, function(r, i){ return {page: r._id, url: null/*resolve page?*/, index: i}});
 //      console.log(err,r)
 //      complete(err, r);
 //    });
 //  }
 
-  var getResources = function (page, resources) {
+  var getResources = function (page, complete, resources) {
     if (resources == null)
       resources = [];
     if (page.resources) {
@@ -42,15 +44,40 @@ exports = module.exports = function(config, meta) {
     }
     if (page.pages) {
       for (var i = 0; i < page.pages.length; i++) {
-        getResources(page.pages[i], resources);
+        getResources(page.pages[i], complete, resources);
       }
     }
-    return resources;
+    complete(null, resources);
   }
 
   function get_res_bp(){
     return "http://res.cloudinary.com/"+config.cloudinaryConfig.cloud_name+"/image/upload";
   }
+
+  function th_page_view(p) {
+  return {
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    url: p.url,
+    pages: p.pages,
+    resources: _.map(p.resources, function (o) {
+      var title = o.title;
+      if (!title)
+      {
+        var path = require('path');
+        var fn = path.basename(o.path);
+        var ex = path.extname(fn);
+        title = fn.substring(0, fn.length - ex.length);
+      }
+      return {title: title, description: o.description,
+        public_id: o.meta.public_id, url: o.meta.url,
+        for_home_page: o.for_home_page, sizes_and_prices: o.sizes_and_prices,
+      edition_number: o.edition_number, quantity: o.quantity, year: o.year }
+    }),
+    template: p.template
+  };
+}
 
   // endpoints
 
@@ -59,21 +86,22 @@ exports = module.exports = function(config, meta) {
   });
 
   app.get('/', function (req, res, next) {
-    postera.getSiteMapData(Page, function (err, site) {
+    postera.getSiteMapData(Page, th_page_view, function (err, site) {
       if (err) return next(err);
-      var resources = getResources(site.pages[0]);
-      if (err) return next(err);
-      News.find({}, function (err, news) {
+      getResources(site.pages[0], function (err, resources) {
         if (err) return next(err);
-        res.render('index', {site: site, news: news, images: resources, next_page: site.pages[0].pages[0], resource_basepath: get_res_bp()});
+        News.find({}, function (err, news) {
+          if (err) return next(err);
+          res.render('index', {site: site, news: news, images: resources, next_page: site.pages[0].pages[0], resource_basepath: get_res_bp()});
+        });
       });
     });
   });
 
   app.get('/*', function (req, res, next) {
-    postera.getSiteMapData(Page, function (err, site) {
+    postera.getSiteMapData(Page, th_page_view, function (err, site) {
       if (err) return next(err);
-      Page.findOne({url: req.path}).populate("resources").exec(function (err, page) { //state: PUBLISHED
+      Page.findOne({url: req.path}).exec(function (err, page) { //state: PUBLISHED
         if (err) return next(err);
         if (!page) return next(new Error('no such page'));
         page = util.findById(site, page.id);
