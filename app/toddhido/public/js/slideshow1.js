@@ -4,8 +4,8 @@ function slideshow($el, resources, options) {
   var LOADED = 1;
   $el.empty();
   $el.click(next);
-  if (options.$info)
-    options.$info.hide();
+//  if (options.$info)
+//    options.$info.hide();
   var loading = new Array();
   for (var i=0; i<resources.length; i++)
     loading.push({$img:null, state: INIT});
@@ -33,7 +33,7 @@ function slideshow($el, resources, options) {
       load_next();
     });
     var $img = cimg.$el;
-    $img.data("description", resource.description);
+    $img.data("resource", resource);
     $img.hide();
     loading[idx].$img = $img;
     $el.append($img);
@@ -107,20 +107,26 @@ function slideshow($el, resources, options) {
     resize();
     var $img = loading[at_idx].$img;
     $img.fadeIn(200);
-    if (options.$info){
-      options.$info.empty();
-      options.$info.html($img.data("description"));//todo callback
-      var $a = $("<a href='#'>"+(at_idx+1)+" of "+loading.length+"</a>");
-      $a.click(next);
-      options.$info.append($a);
-      var ih = $img.find("img").height();
-      if (ih > 50) {
-        options.$info.css({top: (ih + 10) + 'px', position: 'absolute'});
-        options.$info.fadeIn(150);
-      } else {
-        options.$info.hide();
-      }
-    }
+    update_info($img);
+  }
+
+  function update_info($img) {
+    if (!options.$info)
+      return;
+    if (options.infoCallback)
+      return options.infoCallback($img.data("resource"));
+    options.$info.empty();
+    options.$info.html($img.data("resource").description);//todo callback
+    var $a = $("<a href='#'>"+(at_idx+1)+" of "+loading.length+"</a>");
+    $a.click(next);
+    options.$info.append($a);
+    var ih = $img.find("img").height();
+//    if (ih > 50) {
+//      options.$info.css({top: (ih + 10) + 'px', position: 'absolute'});
+//      options.$info.fadeIn(150);
+//    } else {
+//      options.$info.hide();
+//    }
   }
 
 
