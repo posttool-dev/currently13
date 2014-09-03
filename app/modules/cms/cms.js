@@ -76,6 +76,7 @@ Cms.prototype._init = function () {
     logger.error(e);
     self.emit('error', {type: 'connection error', exception: e});
   });
+  logger.info('cms connected to db...');
 
   // model helper
   self.meta = new meta.Meta(self.module.models, self.connection);
@@ -99,7 +100,7 @@ Cms.prototype._init = function () {
     case "cloudinary":
       self.cloudinary = require('cloudinary');
       self.cloudinary.config(self.config.cloudinaryConfig);
-      //logger.info('cms established cloudinary '+self.config.cloudinaryConfig.user);
+      logger.info('cms established cloudinary '+self.config.cloudinaryConfig.cloud_name);
       break
     case "gfs":
     default:

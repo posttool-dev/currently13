@@ -300,8 +300,8 @@ select.form-control {
 
 .model {
     font-size: 13px;
-    background-color: #e7e5e0;
-    color: #335;
+    background-color: #636260;
+    color: #fff;
     cursor: move;
     margin: 0px 0 12px 0;
 }

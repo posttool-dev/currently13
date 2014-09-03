@@ -31,6 +31,7 @@ var form_fields = {
       if (_b) $c.removeClass('fa-square-o').addClass('fa-check-square-o');
       else $c.removeClass('fa-check-square-o').addClass('fa-square-o');
     }
+    update_ui();
 
     $c.click(function () {
       self.data = !self.data;
@@ -517,9 +518,9 @@ var form_fields = {
         $el.append('<div class="text">'+t+'</div>');
       if (is_resource)
         $el.append(form_fields.resource(_d));
-      var thumb = find_thumb2(_d);
-      if (thumb)
-        bg_w_grad($el, thumb);
+//      var thumb = find_thumb2(_d);
+//      if (thumb)
+//        bg_w_grad($el, thumb);
     }
 
     $el.dblclick(function () {
