@@ -99,7 +99,7 @@ a.selected {
     margin: 140px 80px 30px 230px;
 }
 .text * {
-        font-family: UniversLTStd45Light, sans-serif;
+    font-family: UniversLTStd45Light, sans-serif;
     font-size: 13px;
     line-height: 19px;
     color: #777;
@@ -113,4 +113,8 @@ a.selected {
 
 .text table, th, td {
     border: 0;
+}
+
+.text a {
+    font-family: UniversLTStd55Roman, sans-serif;
 }
