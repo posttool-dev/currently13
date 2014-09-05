@@ -151,7 +151,7 @@ function $$modal(title)
 // component mixin
 
 
-function form_make_listener(c) {
+function form_make_listener(c) { //todo change to "mixin_emitter"
   if (c.add_listener)
     return;
   var listeners = {};
@@ -175,8 +175,12 @@ function form_make_listener(c) {
     bubbler = p;
   }
 }
-
-
+var mixin_emitter = form_make_listener;
+function mixin_basic_component(c, cssClassName) {
+  var $el = $$(cssClassName).data("__obj__", c);
+  c.$el = function () { return $el; };
+  return $el;
+}
 
 
 // find a property named 'thumb' within the provided object
