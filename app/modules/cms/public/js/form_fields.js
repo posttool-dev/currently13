@@ -255,6 +255,7 @@ var form_fields = {
           return _s;
         },
         set: function (n) {
+          if (!n) n = "";
           _s = n.replace(/<[\/]{0,1}(root|ROOT)[^><]*>/g,"");;
           update_ui();
         }

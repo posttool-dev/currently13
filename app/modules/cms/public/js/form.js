@@ -74,6 +74,8 @@ function form_form(app, type, id) {
   function create_field(d) {
     var f = new indicated_field(d);
     f.field.form = self;
+    if (f.field.init)
+      f.field.init();
     f.add_listener('change', function () {
       _dirty = true;
       self.$save.prop('disabled', false);
@@ -306,7 +308,7 @@ function form_form(app, type, id) {
       _created = n.created;
       _modified = n.modified;
       _state = n.state;
-      for (var p in n) {
+      for (var p in _idx) {
         if (_idx[p])
           _idx[p].data = n[p];
       }

@@ -17,9 +17,13 @@
 <script src="/js/layers.js"></script>
 <script src="/js/form.js"></script>
 <script src="/js/form_fields.js"></script>
-<% for (var i=0; i<jsIncludes.length; i++) { %>
+<% for (var i=0; i<jsIncludes.length; i++) {
+    var isJs = jsIncludes[i].indexOf(".js") != -1;
+    if (isJs) { %>
 <script src="<%= jsIncludes[i] %>"></script>
-<% } %>
+<% } else { %>
+<link href="<%= jsIncludes[i] %>" rel="stylesheet"/>
+<% } } %>
 <script src="/js/browse.js"></script>
 <script src="/js/app.js"></script>
 
