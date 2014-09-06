@@ -1,11 +1,11 @@
-
+var form_auto_save = true;
 
 
 function form_form(app, type, id) {
   var self = this;
   self.app = app;
   self.type = type;
-  self.toString = function(){ return type; }
+  self.toString = function(){ return type; };
 
   var _meta = null;
   var _related = null;
@@ -22,19 +22,19 @@ function form_form(app, type, id) {
   var $el = $$('form');
   self.$el = function () {
     return $el;
-  }
+  };
 
   var $controls = $$('form-controls');
   self.$controls = function () {
     update_controls();
     return $controls;
-  }
+  };
 
   var $info = $$('form-info');
   self.$info = function(){
     update_info();
     return $info;
-  }
+  };
 
   var $form = $$('form', {parent: $el});
 
@@ -80,6 +80,8 @@ function form_form(app, type, id) {
       _dirty = true;
       self.$save.prop('disabled', false);
       self.emit('change');
+      if (form_auto_save)
+        save(1000);
     });
     // for reference fields
     f.add_listener('add', function (f) {
@@ -110,6 +112,20 @@ function form_form(app, type, id) {
       self.$save.prop('disabled', true);
     self.$time = $$('time', {el: 'span', parent: $controls});
     self.$save.click(function () {
+      save(0, true);
+    });
+    if (_modified)
+      self.$time.text(' Last modified ' + timeSince(new Date(_modified)) + '.');
+    else
+      self.$time.text(' New record.');
+  }
+
+  var save_delayed = -1;
+  function save(delay, do_update) {
+    if (!_dirty) return;
+
+    function do_save() {
+      console.log(Date.now(), "save", self.type);
       $.ajax({
         url: self.url(),
         data: { val: JSON.stringify(self.data) },
@@ -126,12 +142,18 @@ function form_form(app, type, id) {
         error: function (o) {
           console.error(o);
         }
-      })
-    });
-    if (_modified)
-      self.$time.text(' Last modified ' + timeSince(new Date(_modified)) + '.');
-    else
-      self.$time.text(' New record.');
+      });
+    }
+
+    if (delay == 0)
+      return do_save();
+    if (save_delayed != -1)
+      clearTimeout(save_delayed);
+    save_delayed = setTimeout(function () {
+      save_delayed = -1;
+      do_save();
+    }, delay);
+
   }
 
   function update_info() {
