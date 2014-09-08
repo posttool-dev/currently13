@@ -299,7 +299,7 @@ function form_form(app, type, id) {
       return;
     $$ajax(self.app.base_url + '/logs/'+type+'/'+_id).done(function(r){
       _logs = r;
-      update_info();
+      // TODO do this just for logs update_info();
     });
   }
 }
