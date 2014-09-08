@@ -8,6 +8,7 @@ function form_form(app, type, id) {
   self.toString = function(){ return type; };
 
   var _meta = null;
+  var _modules = null;
   var _related = null;
   var _id = id;
   var _created = null;
@@ -81,7 +82,7 @@ function form_form(app, type, id) {
       self.$save.prop('disabled', false);
       self.emit('change');
       if (form_auto_save)
-        save(1000);
+        save(2000);
     });
     // for reference fields
     f.add_listener('add', function (f) {
@@ -112,7 +113,7 @@ function form_form(app, type, id) {
       self.$save.prop('disabled', true);
     self.$time = $$('time', {el: 'span', parent: $controls});
     self.$save.click(function () {
-      save(0, true);
+      save(0);
     });
     if (_modified)
       self.$time.text(' Last modified ' + timeSince(new Date(_modified)) + '.');
@@ -121,10 +122,10 @@ function form_form(app, type, id) {
   }
 
   var save_delayed = -1;
-  function save(delay, do_update) {
-    if (!_dirty) return;
+  function save(delay) {
 
     function do_save() {
+      if (!_dirty) return;
       console.log(Date.now(), "save", self.type);
       $.ajax({
         url: self.url(),
@@ -153,168 +154,8 @@ function form_form(app, type, id) {
       save_delayed = -1;
       do_save();
     }, delay);
-
   }
-
-  function update_info() {
-    $info.empty();
-    if (_state)
-    {
-      var stype = {text: 'CHANGE STATE', api: '/status'};
-      var st = get_state('transitions', _state);
-      if (!st) {
-        stype = {text: 'REQUEST CHANGE', api: '/request_status'};
-        st = get_state('requests', _state);
-      }
-
-      var selected = -1;
-      var $last = $$();
-      var $info_state = $$('state-panel', {parent: $info});
-      $info_state.append('<h3>Status</h3>');
-      var $state_is = $("<div class='state-change-choice'><i class='fa fa-check-circle-o'></i> "+get_state_name(_state)+"</b></div>");
-      $state_is.click(function(){
-        $last.removeClass('selected');
-        $last.find('i').removeClass('fa-check-circle-o');
-        $last.find('i').addClass('fa-circle-o');
-        selected = -1;
-        $last = $$();
-        $state_change_ok_btn.prop('disabled', true);
-      });
-      $info_state.append($state_is);
-      var $state_change_btn = $("<button>"+stype.text+"...</button>");
-      $info_state.append($state_change_btn);
-      var $state_change = $$('state-change', {parent:$info_state}).css({display:'none'});
-      if (st)
-      {
-        function add_choice(state)
-        {
-          var ss = get_state_name(state);
-          var $ssc = $("<div class='state-change-choice'><i class='fa fa-circle-o'></i> "+ss+"</div>");
-          $ssc.click(function(){
-            selected = state;
-            $last.removeClass('selected');
-            $last.find('i').removeClass('fa-check-circle-o');
-            $last.find('i').addClass('fa-circle-o');
-            $ssc.addClass('selected');
-            $ssc.find('i').removeClass('fa-circle-o');
-            $ssc.find('i').addClass('fa-check-circle-o');
-            $last = $ssc;
-            $state_change_ok_btn.prop('disabled', false);
-          });
-          $state_change.append($ssc);
-        }
-        for (var i=0; i<st.length; i++)
-          add_choice(st[i]);
-        var $text = $("<textarea></textarea>");
-        $state_change.append($text);
-        var $state_change_ok_btn = $("<button>"+stype.text+"</button>").prop('disabled',true);
-        var $state_change_cancel_btn = $("<button>CANCEL</button>");
-        $state_change.append($state_change_ok_btn, " ", $state_change_cancel_btn);
-        $state_change_btn.click(function(){
-          $state_change.show();
-          $state_change_btn.hide();
-        });
-        $state_change_cancel_btn.click(function(){
-          $state_change.hide();
-          $state_change_btn.show();
-        });
-        $state_change_ok_btn.click(function(){
-          $$ajax(self.app.base_url + stype.api + '/' + type + '/' + _id, JSON.stringify({state:selected, reason:$text.val()}), 'post').done(function(r){
-            _state = selected;
-            update_info();
-            refresh_logs();
-          });
-        })
-      }
-    }
-
-    var $info_rel = $$('related-panel', {parent: $info});
-    var $info_del = $$('delete-panel', {parent: $info});
-    var c = 0;
-    function add_related_btn(type, r) {
-      var f = new form_fields.model_field({type:type});
-      f.data = r;
-      var $m = f.$el();
-      $m.dblclick(function () {
-        self.emit('select', {type: type, id: r._id});
-      });
-      $info_rel.append($m);
-      c++;
-    }
-    function add_delete_btn()
-    {
-      var $delete = $$('delete', {el:'button'}).text('DELETE '+type.toUpperCase()+'...');
-      $info_del.append($delete);
-      confirm_inline($delete, 'Really delete?', function(){
-        $delete.hide();
-        $$ajax(self.app.base_url + '/delete/'+type+'/'+id, null, 'post').done(function(r){
-          self.emit('close');
-        });
-      });
-    }
-    function add_reference_btn() {
-      var $delete = $$('delete', {el:'button'}).text('REMOVE REFERENCES');
-      $delete.click(function(){
-        $$ajax(self.app.base_url + '/delete_references/'+type+'/'+id, null, 'post').done(function(r){
-          _related = {};
-          $info_rel.empty();
-          for (var i=0; i< r.length; i++)
-            $info_rel.append(r[i]+"<br>");
-          $info_del.empty();
-          refresh_logs();
-          add_delete_btn();
-        });
-      });
-      $info_del.append($delete);
-    }
-    for (var p in _related)
-      for (var i=0; i<_related[p].length; i++)
-        add_related_btn(p, _related[p][i]);
-    if (_id)
-    {
-      if (c == 0)
-      {
-        add_delete_btn();
-        $info_del.prepend("<h3>Careful</h3>");
-      }
-      else
-      {
-        add_reference_btn();
-        $info_rel.prepend("<h3>References</h3>");
-      }
-    }
-
-    // logs
-    var $info_logs = $$('logs-panel', {parent: $info});
-    $info_logs.empty();
-    if (_logs.length!=0)
-    {
-      $info_logs.append("<h3>Logs</h3>");
-      var $c = $$('logs-panel-c', {parent: $info_logs});
-      for (var i=0; i<_logs.length; i++)
-       $c.append(get_log_row(_logs[i]));
-    }
-  }
-
-  function get_log_row(log)
-  {
-    var $r = $$('log-row');
-    $$('action', {parent: $r}).text(log.action);
-    if (log.info.diffs) {
-      for (var p in log.info.diffs)
-      {
-        $$('diff', {el:'span', parent: $r}).text(p+": ");
-        log.info.diffs[p].forEach(function(part){
-          var color = part.added ? 'added' :
-            part.removed ? 'removed' : 'unchanged';
-          $$('diff-'+color, {el:'span', parent: $r}).text(part.value);
-        });
-        $r.append('<br clear="both">');
-     }
-    }
-    $$('time', {parent: $r}).html(timeSince(log.time)+" by <i>"+log.user.email+"</i>");
-    return $r;
-  }
+  self.save = save;
 
   Object.defineProperty(self, "data", {
     get: function () {
@@ -338,10 +179,72 @@ function form_form(app, type, id) {
     }
   });
 
+  Object.defineProperty(self, "state", {
+    get: function () {
+     return _state;
+    }
+  });
+
+  Object.defineProperty(self, "related", {
+    get: function () {
+     return _related;
+    },
+    set: function (r) {
+      _related = r;
+    }
+  });
+
+  Object.defineProperty(self, "id", {
+    get: function () {
+     return _id;
+    }
+  });
+
+  Object.defineProperty(self, "logs", {
+    get: function () {
+     return _logs;
+    }
+  });
+
   function update_ui()
   {
     update_controls();
     update_info();
+  }
+
+
+  function update_info() {
+    $info.empty();
+
+    if (_modules) {
+      for (var i=0; i<_modules.length; i++) {
+        var m = new form_modules[_modules[i].widget](self);
+        //m.add_listener?
+        $info.append(m.$el());
+      }
+    }
+
+    if (_state)
+    {
+      var sm = new form_modules.state(self);
+      $info.append(sm.$el());
+      sm.add_listener('save', function () {
+        $$ajax(self.app.base_url + sm.api + '/' + type + '/' + _id,
+          JSON.stringify({state: sm.selected, reason: sm.text}), 'post').done(function (r) {
+            _state = sm.selected;
+            update_info();
+            refresh_logs();
+        });
+      });
+    }
+
+    var rd = new form_modules.ref_delete(self);
+    rd.add_listener('select', function () { self.emit('select'); });
+    rd.add_listener('close', function () { self.emit('close'); });
+    $info.append(rd.$el());
+
+    var l = new form_modules.logs(self);
+    $info.append(l.$el());
   }
 
 
@@ -379,6 +282,7 @@ function form_form(app, type, id) {
       url += '/' + _id;
     $$ajax(url).done(function (o) {
       _meta = o.form;
+      _modules = o.modules;
       _related =  o.related;
       _idx = {};
       update_form();

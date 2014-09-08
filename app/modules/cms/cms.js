@@ -231,6 +231,7 @@ Cms.prototype.add_workflow = function (req, res, next) {
 Cms.prototype.add_meta = function (req, res, next) {
   var user = req.session.user;
   var type = req.params.type;
+  req.form_modules = [];
   if (user.admin)
   {
     req.models = res.locals.models = this.guard.get_admin_models(this.meta);
@@ -241,11 +242,13 @@ Cms.prototype.add_meta = function (req, res, next) {
       req.model = this.meta.model(type);
       req.browse = this.meta.browse(type);
       req.form = utils.expand_functions(this, this.meta.form(type));
+      req.form_modules = this.meta.formModules(type);
     }
   }
   else
   {
     req.models = res.locals.models = this.guard.get_models(req.session.user, this.meta);
+    req.form_includes = this.meta.jsIncludes();
     if (type) {
       req.type = type;
       req.schema = this.meta.schema(type);
@@ -265,6 +268,7 @@ Cms.prototype.add_meta = function (req, res, next) {
         req.form_permission = this.guard.form_permission(user, type);
         req.form_create = this.guard.can_create(type, form_type);
         req.form_delete = this.guard.can_delete(type, form_type);
+        req.form_modules = this.meta.formModules(type); // need to add subtype stuff
       }
     }
   }
@@ -385,6 +389,7 @@ Cms.prototype.form_get = function (req, res) {
     type: req.type,
     id: req.id ? req.id : null,
     form: req.form,
+    modules: req.form_modules,
     jsIncludes: req.form_includes
   });
 };
@@ -404,6 +409,7 @@ Cms.prototype.form_get_json = function (req, res) {
     type: req.type,
     object: object,
     related: related,
+    modules: req.form_modules,
     form: req.form});
 };
 

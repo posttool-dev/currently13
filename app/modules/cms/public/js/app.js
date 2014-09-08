@@ -58,18 +58,20 @@ function init_cms(base_url) {
       bb.add_listener('select', function (e, r) {
         o.field.push(r);
         o.field.emit('change');
+        ff.save(0);
         app.layers.pop_layer();
       });
       app.layers.add_layer(bb);
     });
     ff.add_listener('create', function (f, o) {
-      var ff = form(o.type);
+      var fff = form(o.type);
       var once = false;
-      ff.add_listener('save', function (e, r) {
+      fff.add_listener('save', function (e, r) {
         if (!once && r.created)
         {
           o.field.push(r);
           o.field.emit('change');
+          ff.save(0);
           once = true;
         }
       });

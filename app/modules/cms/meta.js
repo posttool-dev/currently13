@@ -69,6 +69,13 @@ Meta.prototype.form = function(type, sub_type)
     return this.info[type].form;
 };
 
+Meta.prototype.formModules = function(type)
+{
+  if (!this.info[type])
+    throw new Error('no '+type);
+  return this.info[type].formModules || [];
+};
+
 Meta.prototype.jsIncludes = function()
 {
   var includes = [];
