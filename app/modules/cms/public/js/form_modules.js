@@ -1,4 +1,5 @@
-form_modules = {
+var form_modules = {
+
   state: function (form) {
     var self = this;
     var $el = mixin_basic_component(self, 'state-panel');

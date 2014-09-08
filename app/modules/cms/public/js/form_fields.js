@@ -1,4 +1,3 @@
-
 var form_fields = {
 
   boolean_field: function (options) {
