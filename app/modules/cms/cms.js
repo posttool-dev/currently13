@@ -103,9 +103,10 @@ Cms.prototype._init = function () {
       logger.info('cms established cloudinary '+self.config.cloudinaryConfig.cloud_name);
       break
     case "gfs":
-    default:
       self.gfs = new Grid(self.connection.db);
       logger.info('cms initialized gfs storage');
+      break;
+    default:
       break;
   }
 

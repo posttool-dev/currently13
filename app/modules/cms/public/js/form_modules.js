@@ -92,7 +92,7 @@ var form_modules = {
       $info_del.append($delete);
       confirm_inline($delete, 'Really delete?', function(){
         $delete.hide();
-        $$ajax(self.app.base_url + '/delete/'+form.type+'/'+id, null, 'post').done(function(r){
+        $$ajax(form.app.base_url + '/delete/'+form.type+'/'+form.id, null, 'post').done(function(r){
           self.emit('close');
         });
       });
@@ -100,7 +100,7 @@ var form_modules = {
     function add_reference_btn() {
       var $delete = $$('delete', {el:'button'}).text('REMOVE REFERENCES');
       $delete.click(function(){
-        $$ajax(form.app.base_url + '/delete_references/'+form.type+'/'+id, null, 'post').done(function(r){
+        $$ajax(form.app.base_url + '/delete_references/'+form.type+'/'+form.id, null, 'post').done(function(r){
           form.related = {};
           $info_rel.empty();
           for (var i=0; i< r.length; i++)
