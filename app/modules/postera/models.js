@@ -41,7 +41,7 @@ exports = module.exports = {
       {name: "title", widget: "input", options: {className: "large"}},
       {name: "url", widget: "input"},
       {name: "template", widget: "select", options: {options: ['portfolio','text1','text2']}},
-      {name: "resources", label: "images", widget: "upload", options: {type: "Resource", array: true, collapsable: true, collapsed: true}},
+      {name: "resources", label: "images", widget: "upload", options: {type: "Resource", array: true}},
       {name: "description", widget: "rich_text", options: {collapsable: true, collapsed: true}},
       {name: "pages", widget: "choose_create", options: {type: "Page", array: true}},
     ]

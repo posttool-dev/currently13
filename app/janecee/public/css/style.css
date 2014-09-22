@@ -1,0 +1,170 @@
+html, body {
+	margin: 0px;
+	font-family: 'Arial', sans-serif;
+	font-size: 11px; color : #000;
+	letter-spacing: 0.05em;
+	line-height: 17px;
+}
+
+input {
+	border: 1px solid #999;
+	width: 150px;	
+	font-family: 'Arial', sans-serif;
+	font-size: 11px; color : #000;
+}
+
+.logo {
+	cursor: pointer;
+	position: fixed;
+	top: 10px;
+	left: 5px;
+	height: 100px;
+	width: 400px;
+	background: #fff url(../assets/logo.png) no-repeat left top;
+}
+a{
+	text-decoration: none;	
+}
+
+a:hover{
+	text-decoration: underline;	
+}
+.blank {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	width:100%;
+	height:225px;
+	background-color: #ff0;
+}
+
+.pattern2 {
+	position: fixed;
+	top: 215px;
+	left: 415px;
+	width:100%;
+	height:100%;
+	margin:10px;
+	background: #ccc url(../assets/pattern1-gray.png);
+}
+
+.col0 {
+	position:absolute;
+	top:225px; left: 5px;
+	width: 415px;
+	background-color: #eee;	
+}
+
+.col1 {
+	position:absolute;
+	top: 225px;
+	left:425px;
+	width: 405px;
+	background-color: #fff;	
+	padding-right: 20px;
+	padding-top: 5px;
+}
+
+
+
+
+.loading {
+	
+	width: 50px; height: 50px; background: url(../assets/ajax-loader.gif) no-repeat;
+}
+
+
+/* menu */
+
+.menu_bg
+{
+	position: fixed; top:0px; left:0px; height: 225px; width: 100%; background-color: #fff;	
+}
+.menu_container
+{
+	position: fixed;
+	top: 108px;
+	left: 5px;
+	height: 110px;
+	width: 400px;
+	background-color: #fff;
+}
+
+.menu_item { border-bottom:1px solid #fff;	cursor: pointer; }
+.menu_item:hover{border-bottom:1px solid #ccc;}
+.menu_item.selected { border-bottom:1px solid #999;}
+.menu_l0a { position: absolute; top: 0px; left: 0px; width: 90px; }
+.menu_l0b { position: absolute; top: 54px; left: 0px; width: 90px; }
+.menu_l0c { position: absolute; top: 90px; left: 108px; width: 137px; }
+.menu_l0d { position: absolute; top: 90px; left: 250px; width: 137px; }
+
+.menu_l1a { position: absolute; top: 0px; left: 108px; width: 137px; }
+.menu_l1b { position: absolute; top: 0px; left: 250px; width: 137px; }
+
+.menu_l2 { position: absolute; top: 0px; left: 400px; width: 320px; background-color: #fff; padding-left: 20px; }
+
+.menu_item_next { position:absolute; top: 90px; left: 240px; width:100px;  border-bottom:none; color: #aaa;}
+.menu_item_prev {position:absolute; top: 90px; left: 140px;  width:100px;  border-bottom:none; color: #aaa;}
+
+/* end menu */
+
+
+
+
+
+/* home */
+
+.home1 { position: fixed; width: 100%; height: 220px; top: 225px; left: 5px; overflow: hidden; }
+.home2 { position: fixed; width: 100%; height: 110px; top: 450px; left: 5px; overflow: hidden; }
+.pattern0 {
+	position: fixed;
+	top: -7px;
+	left: 0px;
+	width:100%;
+	height:100%;
+	margin:5px;
+	background: url(../assets/pattern0-white.png);
+}
+
+.pattern1 {
+	position: fixed;
+	top: -7px;
+	left: 412px;
+	width:100%;
+	height:440px;
+	margin:10px;
+	background: url(../assets/pattern1-black.png);
+}
+/* end home */
+
+
+/* landing */
+
+.landing_container { position: absolute; width: 900px; top: 225px; left: 5px; }
+
+/* end landing */
+
+
+
+/* map */
+.world_map {position: fixed; top: 235px; left: 5px;}
+.map_bg {position: fixed; top: 225px; width: 100%; height: 100%; 
+	background: #e6e6e6 url(../assets/worldmap.png) no-repeat left top;
+}
+.pattern3 {
+	position: fixed;
+	top: 215px;
+	left: 815px;
+	width:100%;
+	height:100%;
+	margin:10px;
+	background: #e6e6e6 url(../assets/pattern1-gray.png) ;
+}
+.city { background-color: #f00; }
+
+/* end map */
+
+
+/* form*/
+#contact_submit { cursor: pointer; }
+#contact_submit:hover { color: #ccc; }
