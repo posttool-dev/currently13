@@ -59,6 +59,7 @@ function Cms(module) {
   // workflow provides state transition info to view
   this.workflow = null;
 
+  logger.info('cms init');
   this._init();
 }
 

@@ -109,9 +109,23 @@ function getAncestorsSibling(node)
 var site = null;
 var lastTime = null;
 
-exports.getSiteMapData = function(Page, f0, f1) {
-  var next = f1 ? f1 : f0;
-  var page_view = f0 && f1 ? f0 : default_page_view;
+exports.getSiteMapData = function(Page, add_parents, page_view, next) {
+  if (arguments.length == 1) {
+    next = function(){}
+    add_parents = false;
+    page_view = default_page_view;
+  }
+  else if (arguments.length == 2) {
+    next = add_parents;
+    add_parents = false;
+    page_view = default_page_view;
+  }
+  else if (arguments.length == 3) {
+    next = page_view;
+    add_parents = false;
+    page_view = add_parents;
+  }
+
   if (!site || !lastTime || lastTime.getTime() + 60000 < Date.now()) {
     Page.find({})//state: PUBLISHED
       .populate('resources')
@@ -122,7 +136,7 @@ exports.getSiteMapData = function(Page, f0, f1) {
           var p = pages[i];
           pages_view.push(page_view(p));
         }
-        site = exports.getSiteMap(pages_view);
+        site = exports.getSiteMap(pages_view, add_parents);
         next(null, site);
       });
   } else {
@@ -144,7 +158,7 @@ function default_page_view(p) {
   };
 }
 
-exports.getSiteMap = function(pages) {
+exports.getSiteMap = function(pages, add_parents) {
   var m = {};
   for (var i = 0; i < pages.length; i++)
     m[pages[i].id] = pages[i];
@@ -155,7 +169,8 @@ exports.getSiteMap = function(pages) {
       root = p;
     for (var j = 0; j < p.pages.length; j++) {
       p.pages[j] = m[p.pages[j]];
-      p.pages[j].parent = p;
+      if (add_parents)
+        p.pages[j].parent = p;
     }
   }
   // s/could go through and delete nulls (the result of unpublished children)

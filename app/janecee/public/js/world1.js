@@ -225,7 +225,7 @@ function get_locations(node,map)
 {
 	if (map==null)
 		map = {};
-	var d = node._attributes.data._attributes.description;
+	var d = node.body;
 	if (d!=null)
 	{
 		var b = d.indexOf("[");
@@ -243,8 +243,8 @@ function get_locations(node,map)
 	    	}
 	    }
 	}
-	for (var i=0; i<node._attributes.children.length; i++)
-		get_locations(node._attributes.children[i],map);
+	for (var i=0; i<node.pages.length; i++)
+		get_locations(node.pages[i],map);
 	return map;
 }
 function get_min_max(map)

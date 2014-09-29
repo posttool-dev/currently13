@@ -64,8 +64,9 @@ function process_site(site) {
 function process_node(node, next) {
   var page = new Page({
     title: node.attributes.data.attributes.title,
-    body: node.attributes.data.attributes.description,
-    url: node.attributes.node_id
+    body: node.attributes.data.attributes.description ? node.attributes.data.attributes.description : node.attributes.data.attributes.sections,
+    url: '/'+node.attributes.node_id,
+    template: node.attributes.node_class
   });
   utils.forEach(node.attributes.data.attributes.images, function (o, n) {
     //console.log(o.attributes.description);

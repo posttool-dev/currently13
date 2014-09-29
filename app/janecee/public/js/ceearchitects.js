@@ -28,7 +28,7 @@ janecee =
 		self.world_map  = $$div(parent).attr('id','world_map');
 		self.menu_bg    = $$div(parent, "menu_bg");
 		self.menu_el    = $$div(parent, "menu_container");
-		self.logo       = $$div(parent, "logo", function(){ com_postera_system_navigate(_root_node,true); });
+		self.logo       = $$div(parent, "logo", function(){ navigate(self.root,true); });
 		self.logo.mouseover(function(){ self.logo.css('opacity',.3)});
 		self.logo.mouseout(function(){ self.logo.css('opacity',1)});
 
@@ -37,29 +37,31 @@ janecee =
 
 		self.set_value = function(value)
 		{
+      self.root = value;
+
 			self.menu_el.empty();
 			self.content.empty();
 			self.world_map.empty();
 
-			var colors = com_postera_system_find_node_by_node_id("site_data/site_colors",value);
-			var cities = com_postera_system_find_node_by_node_id("site_data/site_geo_data",value);
+			var colors = find_node_by_id("/site_data/site_colors",value);
+			var cities = find_node_by_id("/site_data/site_geo_data",value);
 			if (colors!=null)
 			{
 				try {
-				var c = com_pagesociety_util_StringUtil.stripTags( colors._attributes.data._attributes.sections[2] );
+				var c = strip_tags( colors.body[2] );
 				c = JSON.parse('['+c+']');
 				janecee.palette.colors = c;
-				} catch(e){Logger.log(":ERROR",e);}
+				} catch(e){console.log(":ERROR",e);}
 			}
 			if (cities!=null)
 			{
 				try {
-				var c = com_pagesociety_util_StringUtil.stripTags( cities._attributes.data._attributes.sections[2] );
+				var c = strip_tags( cities.body[2] );
 
 				c = JSON.parse('{'+c+'}');
 
 				world_map_cities = c;
-				} catch(e){Logger.log(":ERROR",e);}
+				} catch(e){console.log(":ERROR",e);}
 			}
 
 			self.menu = new janecee.menu(self.menu_el, value);
@@ -86,12 +88,12 @@ janecee =
 				self.content.empty();
 				self.menu_bg.show();
 				self.menu_bg.css({'width':'420px'});
-				if (node == _root_node)
+				if (node == self.root)
 					return new janecee.home(self.bg, node);
 
 				self.menu_bg.css({'width':'100%'});
 
-				var type = node._attributes.node_class;
+				var type = node.template;
 				switch (type)
 				{
 					case "LandingPage":
@@ -101,7 +103,7 @@ janecee =
 					case "Contact":
 						return new janecee.contact(self.content, node);
 					case "InformationPage":
-						var st = node._attributes.data._attributes.sections[0].toLowerCase();
+						var st = node.body[0].toLowerCase();
 						switch (st)
 						{
 							case "map":
@@ -147,21 +149,21 @@ janecee =
 			var a = [];
 			if (node != null)
 			{
-				a = com_postera_system_tree_ancestors(node);
+				a = ancestors(node);
 				a.unshift(node);
 			}
 
 			//get level 0
-			var level0 = tree_root._attributes.children;
+			var level0 = tree_root.pages;
 			var work_children = null;
 			for (var i=0; i<level0.length; i++)
 			{
 				var n = level0[i];
-				var title = n._attributes.data._attributes.title;
-				if (title.toLowerCase() == "work") { work_children = n._attributes.children; continue; } //grab 'work'
+				var title = n.title;
+				if (title.toLowerCase() == "work") { work_children = n.pages; continue; } //grab 'work'
 				if (i>=self.l0.length)
 					continue;
-				var mb = $$button(self.l0[i], title, n, function(e){  com_postera_system_navigate(e.data); }, "menu_item");
+				var mb = $$button(self.l0[i], title, n, function(e){  navigate(e.data); }, "menu_item");
 				if (index_of(a,n)!=-1)
 				{
 					mb.addClass('selected');
@@ -176,9 +178,9 @@ janecee =
 			for (var i=0; i<wcl; i++)
 			{
 				var n = work_children[i];
-				var title = n._attributes.data._attributes.title;
+				var title = n.title;
 				var c = Math.floor(i/(wcl/2));
-				var wb = $$button(self.l1[c], "<b>"+title+"</b>", n, function(e){ com_postera_system_navigate(e.data,true); }, "menu_item");
+				var wb = $$button(self.l1[c], "<b>"+title+"</b>", n, function(e){ navigate(e.data,true); }, "menu_item");
 				if (a.length==2)
 					wb.css('color','#ccc');
 				else
@@ -198,7 +200,7 @@ janecee =
 				self.l2.empty();
 				return;
 			}
-			var node_list = node._attributes.children;
+			var node_list = node.pages;
 			var idx = index_of(node_list,ancestors[0]);
 			if (idx==-1)
 				self.at = 0;
@@ -218,14 +220,14 @@ janecee =
 			for (i=self.at; i<self.at+self.max && i<self.subnav_size; i++)
 			{
 				var n = node_list[i];
-				var title = n._attributes.data._attributes.title;
+				var title = n.title;
 				if($.inArray(title, seen) != -1)
 					continue;
 
 				//if (seen.indexOf(title)!=-1)
 				//	continue;
 				seen.push(title);
-				var sb = $$button(self.l2, title, n, function(e){ com_postera_system_navigate(e.data); }, "menu_item");
+				var sb = $$button(self.l2, title, n, function(e){ navigate(e.data); }, "menu_item");
 				if (ancestors!=null && index_of(ancestors,n)!=-1)
 					sb.addClass('selected');
 			}
@@ -253,8 +255,8 @@ janecee =
 		self.pattern1 	= $$div(parent, "pattern1");
 		//
 		var imgs = [];
-		for (var i=0; i<node._attributes.data._attributes.images.length; i++)
-			imgs[i] = node._attributes.data._attributes.images[i]._attributes.resource;
+		for (var i=0; i<node.resources.length; i++)
+			imgs[i] = node.resources[i];
 		var s0 = Math.round(Math.random()*(imgs.length-1));
 		var s1 = s0;
 		while (s1 == s0)
@@ -294,11 +296,9 @@ janecee =
 	{
 		var self        = this;
 
-		var data = node._attributes.data._attributes;
-		var type = node._attributes.node_class;//data._type;
-		var title 		= data.title;
-		var description = data.description.replace(/<P> *\[.*\] *<\/P>/g,'');
-		var images 		= data.images;
+		var title 		= node.title;
+		var description = node.body.replace(/<P> *\[.*\] *<\/P>/g,'');
+		var images 		= node.resources;
 
 		self.pattern 	= $$div(parent, "pattern2");
 		self.col0 	= $$div(parent, "col0");
@@ -307,8 +307,8 @@ janecee =
 		for (var i=0; i<images.length; i++)
 		{
 			var img = images[i];
-			$$image(self.col0, img._attributes.resource, {preview_width: 415, preview_height: 1000});
-			self.col0.append(img._attributes.description);
+			$$image(self.col0, img, {preview_width: 415, preview_height: 1000});
+			self.col0.append(img.description);
 			self.col0.append('<br/>');
 		}
 		self.col1.html("<b>"+title+"</b><br/>"+description+"<br/>")
@@ -318,10 +318,9 @@ janecee =
 	{
 		var self        = this;
 
-		var data = node._attributes.data._attributes;
 		var d = "";
-		for (var i=0; i<data.sections.length; i++)
-			d += data.sections[i]+"<br/>";
+		for (var i=0; i<node.body.length; i++)
+			d += node.body[i]+"<br/>";
 
 		var title = show_title ? data.title : null;
 		janecee.render_info(self,parent,title,d,data.images);
@@ -342,33 +341,32 @@ janecee =
 	{
 		var self        = this;
 
-		var data = node._attributes.data._attributes;
-		var d = "";
-		if (!empty(data.overview))
-			d += ""+data.overview;
-		if (!empty(data.directions))
-			d += ""+data.directions;
-		if (!empty(data.address_line_1))
-			d += data.address_line_1+"/><br/>";
-		if (!empty(data.address_line_2))
-			d += data.address_line_2+"<br/>";
-		if (!empty(data.city))
-			d += data.city+" ";
-		if (!empty(data.state))
-			d += data.state;
-		if (!empty(data.city) || !empty(data.state))
-			d += "<br/>";
-		if (!empty(data.country))
-			d += data.country;
-		if (!empty(data.phone_no))
-			d += "Phone "+data.phone_no+"<br/>";
-		if (!empty(data.fax_no))
-			d += "Fax "+data.fax_no+"<br/>";
-		if (!empty(data.mobile_no))
-			d += "Mobile "+data.mobile_no+"<br/>";
+//		var d = "";
+//		if (!empty(data.overview))
+//			d += ""+data.overview;
+//		if (!empty(data.directions))
+//			d += ""+data.directions;
+//		if (!empty(data.address_line_1))
+//			d += data.address_line_1+"/><br/>";
+//		if (!empty(data.address_line_2))
+//			d += data.address_line_2+"<br/>";
+//		if (!empty(data.city))
+//			d += data.city+" ";
+//		if (!empty(data.state))
+//			d += data.state;
+//		if (!empty(data.city) || !empty(data.state))
+//			d += "<br/>";
+//		if (!empty(data.country))
+//			d += data.country;
+//		if (!empty(data.phone_no))
+//			d += "Phone "+data.phone_no+"<br/>";
+//		if (!empty(data.fax_no))
+//			d += "Fax "+data.fax_no+"<br/>";
+//		if (!empty(data.mobile_no))
+//			d += "Mobile "+data.mobile_no+"<br/>";
 
-		if (!empty(data.email))
-			d += "<a href='mailto:"+data.email+"'>"+data.email+"</a>";
+//		if (!empty(data.email))
+//			d += "<a href='mailto:"+data.email+"'>"+data.email+"</a>";
 
 		janecee.render_info(self,parent,data.title,d,data.images);
 
@@ -406,8 +404,7 @@ janecee =
 				return;
 			}
 			self.col1.html("<b>Working...</b><br/><br/><br/><br/><br/>");
-			var args = [_site._attributes.creator.id,ev,nv+" wants info about "+escape(data.title)];
-			com_postera_do_module("PosteraSystems/SendMessageToSystemOwner",[_site.getId(),ev,"Contact Cee Architects",nv+" "+ev+" wants info about "+escape(data.title)], function(){
+			send_message([ev,"Contact Cee Architects",nv+" "+ev+" wants info about "+escape(data.title)], function(){
 				self.col1.html("<b>Thanks</b><br/>We will be in touch.<br/><br/><br/><br/><br/><br/>");
 			})
 		});
@@ -429,7 +426,7 @@ janecee =
 			var bb = $$box(self.col0,i*bg,0,b,b+15,janecee.palette.selected[i]);
 			if (images.length>i)
 			{
-				var res = images[i]._attributes.resource;
+				var res = images[i];
 				$$image(bb, res, {preview_width: 500, preview_height: 500,
 					width: 206, height: 221, scale: 'full_bleed' })
 			}
@@ -466,7 +463,7 @@ function empty(o)
 {
 	if (o == null) return true;
 	if (o instanceof Array && o.length==0) return true;
-	if (o == "" || com_pagesociety_util_StringUtil.stripTags(o) == "") return true;
+	if (o == "" || strip_tags(o) == "") return true;
 	return false;
 }
 function get_resources(images)
@@ -475,12 +472,8 @@ function get_resources(images)
 	if (images==null)
 		return res;
 	for (var i=0; i<images.length; i++)
-		res.push(images[i]._attributes.resource);
+		res.push(images[i]);
 	return res;
-}
-function get_path(res,w,h)
-{
-	return com_pagesociety_web_ResourceUtil.getPath(res,w,h);
 }
 function index_of(a,t)
 {

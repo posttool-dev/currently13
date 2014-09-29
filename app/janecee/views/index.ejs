@@ -1,23 +1,36 @@
-<% var title = page && page.title ? "Cee Architects:" +page.title : "Cee Architects" %>
+<% var title = page && page.title ? "Cee Architects:" + page.title : "Cee Architects" %>
 <% include head.ejs %>
-<% include menu.ejs %>
-
-<div id="logo"></div>
-<div class="slides">
-<div class="images">
-   <% if (page.resources && page.resources.length != 0) { %>
-        <!-- <img src="<%=resource_basepath%>/w_50,h_50,c_fit/<%= page.resources[0].meta.public_id%>.jpg"/><br> -->
-   <% }%>
-</div>
-<div class="info"><% if (page.resources && page.resources.length != 0) { %><%- page.resources[0].description %><% }%></div>
-<div class="text">
-    <%- page.description %>
-</div>
+<!--% include menu.ejs %-->
+<div id="root">
+    <div id="logo"></div>
+    <div class="slides">
+        <div class="images">
+            <% if (page.resources && page.resources.length != 0) { %>
+            <!-- <img src="<%= resource_basepath %>/w_50,h_50,c_fit/<%= page.resources[0].meta.public_id %>.jpg"/><br> -->
+            <% } %>
+        </div>
+        <div class="info">
+            <% if (page.resources && page.resources.length != 0) { %>
+            <%- page.resources[0].description %>
+            <% } %>
+        </div>
+        <div class="text">
+            <%- page.description %>
+        </div>
+    </div>
 </div>
 <script>
     var app = new janecee.application();
-</script>
+    $.ajax('/page').done(function (r) {
+        console.log(r);
+        app.root.set_value(r);
+        // navigate(node, true)
 
+    });
+    function navigate(node) {
+        app.root.navigate(node);
+    }
+</script>
 <% include foot.ejs %>
 
 

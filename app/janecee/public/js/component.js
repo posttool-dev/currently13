@@ -51,12 +51,12 @@ $$image = function($parent,res,props)
 		if (c!=0)
 			throw new Error("cannot get preview for resource!")
 		c++;
-		com_pagesociety_web_ResourceUtil.getPreviewUrl(res, w, h, function(p)
+		get_preview_url(res, w, h, function(p)
 		{
 			$img.attr('src', p)
 		})
 	});
-	$img.attr('src', com_pagesociety_web_ResourceUtil.getPath(res,w,h));
+	$img.attr('src', get_path(res,w,h));
 	return $wrap;
 }
 

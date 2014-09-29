@@ -1,4 +1,5 @@
 var express = require('express');
+var _ = require('lodash');
 var util = require('../modules/postera/util');
 
 
@@ -21,7 +22,7 @@ exports = module.exports = function(config, meta) {
   });
 
   app.get('/page', function (req, res, next) {
-    util.getSiteMapData(Page, function (err, site) {
+    util.getSiteMapData(Page, false, th_page_view, function (err, site) {
       if (err) return next(err);
       res.json(site);
     });
@@ -45,5 +46,21 @@ exports = module.exports = function(config, meta) {
   return app;
 
 
+
+  function th_page_view(p) {
+    return {
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      url: p.url,
+      pages: p.pages,
+      body: p.body,
+      resources: _.map(p.resources, function (o) {
+        return {title: o.title, description: o.description,
+          public_id: o.meta.public_id, url: o.meta.url}
+      }),
+      template: p.template
+    };
+  }
 
 }
