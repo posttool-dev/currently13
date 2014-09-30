@@ -22,14 +22,19 @@
 <script>
     var app = new janecee.application();
     $.ajax('/page').done(function (r) {
-        console.log(r);
+        add_parents(r);
         app.root.set_value(r);
-        // navigate(node, true)
+        app.root.navigate(document.location.pathname);
 
     });
     function navigate(node) {
         app.root.navigate(node);
+        window.history.pushState({url: node.url}, node.title, node.url);
     }
+    window.onpopstate = function(e){
+        app.root.navigate(e.state.url);
+    };
+
 </script>
 <% include foot.ejs %>
 

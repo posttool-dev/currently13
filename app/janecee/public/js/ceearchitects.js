@@ -28,7 +28,7 @@ janecee =
 		self.world_map  = $$div(parent).attr('id','world_map');
 		self.menu_bg    = $$div(parent, "menu_bg");
 		self.menu_el    = $$div(parent, "menu_container");
-		self.logo       = $$div(parent, "logo", function(){ navigate(self.root,true); });
+		self.logo       = $$div(parent, "logo", function(){ navigate(self.tree_root,true); });
 		self.logo.mouseover(function(){ self.logo.css('opacity',.3)});
 		self.logo.mouseout(function(){ self.logo.css('opacity',1)});
 
@@ -37,7 +37,7 @@ janecee =
 
 		self.set_value = function(value)
 		{
-      self.root = value;
+      self.tree_root = value;
 
 			self.menu_el.empty();
 			self.content.empty();
@@ -56,12 +56,16 @@ janecee =
 			if (cities!=null)
 			{
 				try {
-				var c = strip_tags( cities.body[2] );
-
-				c = JSON.parse('{'+c+'}');
-
+				var c = '{'+$(cities.body[2]).text()+'}';
+          var c2 = '';
+          for (var i=0; i< c.length; i++) {
+            var cca = c.charCodeAt(i);
+            if (cca>31 && cca<128)
+              c2 += c.charAt(i);
+          }
+				c = JSON.parse(c2);
 				world_map_cities = c;
-				} catch(e){console.log(":ERROR",e);}
+				} catch(e){console.log(":ERROR",e,c);}
 			}
 
 			self.menu = new janecee.menu(self.menu_el, value);
@@ -74,6 +78,8 @@ janecee =
 
 		self.navigate = function(node)
 		{
+      if ($.type(node) === "string")
+        node = find_node_by_id(node, self.tree_root);
 			janecee.palette.selected = janecee.palette.colors[ Math.floor(Math.random()*janecee.palette.colors.length) ];
 
 			self.menu.navigate(node);
@@ -88,7 +94,7 @@ janecee =
 				self.content.empty();
 				self.menu_bg.show();
 				self.menu_bg.css({'width':'420px'});
-				if (node == self.root)
+				if (node == self.tree_root)
 					return new janecee.home(self.bg, node);
 
 				self.menu_bg.css({'width':'100%'});
@@ -322,8 +328,8 @@ janecee =
 		for (var i=0; i<node.body.length; i++)
 			d += node.body[i]+"<br/>";
 
-		var title = show_title ? data.title : null;
-		janecee.render_info(self,parent,title,d,data.images);
+		var title = show_title ? node.title : null;
+		janecee.render_info(self,parent,title,d,node.resources);
 
 	},
 

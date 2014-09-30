@@ -15,10 +15,10 @@ exports = module.exports = function(config, meta) {
   app.use(express.compress());
 
   var Page = meta.model('Page');
-  var News = meta.model('News');
+  //var News = meta.model('News');
 
   app.get('/favicon.ico', function(req, res, next){
-    res.status(404).send('Not found');
+    res.sendfile(__dirname + '/public/assets/favicon.ico');
   });
 
   app.get('/page', function (req, res, next) {
@@ -34,12 +34,12 @@ exports = module.exports = function(config, meta) {
       Page.findOne({url: req.path}).populate("resources").exec(function (err, page) { //state: PUBLISHED
         if (!err && !page) return next(new Error("No such page " + req.path));
         if (err) return next(err);
-        News.find({}, function (err, news) {
-          if (err) return next(err);
+//        News.find({}, function (err, news) {
+//          if (err) return next(err);
           var next_page = util.getNextNode(util.findById(site, page.id));
-          res.render('index', {site: site, news: news, page: page, resource_basepath: util.get_res_bp(config), next_page: next_page});
+          res.render('index', {site: site, page: page, resource_basepath: util.get_res_bp(config), next_page: next_page});
         });
-      });
+//      });
     });
   });
 

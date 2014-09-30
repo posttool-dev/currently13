@@ -379,7 +379,7 @@ function indicated_field(d)//, settings_callback)
           field.$el().show();
         }
       }
-      var v = options.collapsed ? options.collapsed : true;
+      var v = options.collapsed != null ? options.collapsed : true;
       tgl(v);
       $c.click(function(){
         v = !v;

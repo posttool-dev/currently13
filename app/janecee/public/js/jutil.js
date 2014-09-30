@@ -13,6 +13,16 @@ function find_node_by_id(id, node) {
   }
   return null;
 }
+
+function add_parents(node){
+  for (var i=0; i<node.pages.length; i++)
+  {
+    var c = node.pages[i];
+    c.parent = node;
+    add_parents(c);
+  }
+}
+
 // ancestors(node)
 function ancestors(node){
   var p = node;
@@ -31,7 +41,7 @@ function send_message(title,body,complete){
 
 // get_path(resource, w, h)
 function get_path(resource, w, h) {
-
+  return resource.url;
 }
 
 // get_preview_url(res, w, h, cb)
