@@ -41,7 +41,10 @@ function send_message(title,body,complete){
 
 // get_path(resource, w, h)
 function get_path(resource, w, h) {
-  return resource.url;
+  return "http://res.cloudinary.com/ceearchitects/image/upload/w_"+w+",c_fit/" + resource.public_id + ".jpg";
+
+
+
 }
 
 // get_preview_url(res, w, h, cb)

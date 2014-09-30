@@ -124,7 +124,10 @@ janecee =
 			var a = function()
 			{
 				self.content.empty();
-				$$div(self.content,'pattern1').css({'top': '0px','left':'-5px', 'height': '100%', 'opacity': .1}).fadeOut(220,c);
+				$$div(self.content,'pattern1').css({'top': '0px','left':'-5px', 'height': '100%', 'opacity': .1}).fadeOut(220,function(){
+          var page_component = c();
+          $(".col1").css({position: node.template == "Portfolio" ? "fixed" : "absolute"});
+        });
 			}
 			a();
 		}
