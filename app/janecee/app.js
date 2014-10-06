@@ -1,4 +1,5 @@
 var express = require('express');
+var nodemailer = require('nodemailer');
 var _ = require('lodash');
 var util = require('../modules/postera/util');
 
@@ -25,6 +26,19 @@ exports = module.exports = function(config, meta) {
     util.getSiteMapData(Page, false, th_page_view, function (err, site) {
       if (err) return next(err);
       res.json(site);
+    });
+  });
+
+  app.post('/contact-email', function (req, res, next) {
+    var transporter = nodemailer.createTransport();
+    transporter.sendMail({
+      from: req.body.from,
+      to: 'david@posttool.com',
+      subject: "[cee-contact]",
+      text: req.body.body
+    }, function(err, r){
+      if (err) return next(err);
+      res.json({msg:'ok'});
     });
   });
 

@@ -348,36 +348,10 @@ janecee =
 
 	contact: function(parent,node)
 	{
-		var self        = this;
-
-//		var d = "";
-//		if (!empty(data.overview))
-//			d += ""+data.overview;
-//		if (!empty(data.directions))
-//			d += ""+data.directions;
-//		if (!empty(data.address_line_1))
-//			d += data.address_line_1+"/><br/>";
-//		if (!empty(data.address_line_2))
-//			d += data.address_line_2+"<br/>";
-//		if (!empty(data.city))
-//			d += data.city+" ";
-//		if (!empty(data.state))
-//			d += data.state;
-//		if (!empty(data.city) || !empty(data.state))
-//			d += "<br/>";
-//		if (!empty(data.country))
-//			d += data.country;
-//		if (!empty(data.phone_no))
-//			d += "Phone "+data.phone_no+"<br/>";
-//		if (!empty(data.fax_no))
-//			d += "Fax "+data.fax_no+"<br/>";
-//		if (!empty(data.mobile_no))
-//			d += "Mobile "+data.mobile_no+"<br/>";
-
-//		if (!empty(data.email))
-//			d += "<a href='mailto:"+data.email+"'>"+data.email+"</a>";
-
-		janecee.render_info(self,parent,data.title,d,data.images);
+		var self = this;
+    var data = node;
+    var d = data.body;
+		janecee.render_info(self,parent,data.title,d,data.resources);
 
 		var email_empty_txt = 'email address';
 		var name_empty_txt = 'name';
@@ -403,20 +377,19 @@ janecee =
 				$(this).val(name_empty_txt);
 		});
 		$("#contact_submit").click(function(){
-			var ev = $('#contact_email').val();
-			var nv = $('#contact_name').val();
+			var from_email = $('#contact_email').val();
+			var from_name = $('#contact_name').val();
 			
 			var email_filter =  /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;			
-			if (ev=='' || ev==email_empty_txt || !email_filter.test(ev))
-			{
-				alert('Please enter a valid email address');
-				return;
-			}
-			self.col1.html("<b>Working...</b><br/><br/><br/><br/><br/>");
-			send_message([ev,"Contact Cee Architects",nv+" "+ev+" wants info about "+escape(data.title)], function(){
-				self.col1.html("<b>Thanks</b><br/>We will be in touch.<br/><br/><br/><br/><br/><br/>");
-			})
-		});
+			if (from_email=='' || from_email == email_empty_txt || !email_filter.test(from_email)) {
+        alert('Please enter a valid email address');
+        return;
+      }
+      self.col1.html("<b>Working...</b><br/><br/><br/><br/><br/>");
+      send_message(from_email, from_name + " " + from_email + " wants info about " + escape(data.title), function () {
+        self.col1.html("<b>Thanks</b><br/>We will be in touch.<br/><br/><br/><br/><br/><br/>");
+      })
+    });
 	},
 
 	render_info: function(self,parent,title,descr,images)

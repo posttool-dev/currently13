@@ -35,13 +35,19 @@ function ancestors(node){
 }
 
 // send_message(title,body,cb)
-function send_message(title,body,complete){
-
+function send_message(from, body,complete){
+  $.ajax({url: "/contact-email", method: "POST", data: { from: from, body: body}}).done(function(r){
+    console.log(r);
+    complete();
+  });
 }
 
 // get_path(resource, w, h)
 function get_path(resource, w, h) {
-  return "http://res.cloudinary.com/ceearchitects/image/upload/w_"+w+",c_fit/" + resource.public_id + ".jpg";
+  if (resource.url.indexOf(".gif") != -1)
+    return resource.url;
+  else
+    return "http://res.cloudinary.com/ceearchitects/image/upload/w_"+w+",c_fit/" + resource.public_id + ".jpg";
 
 
 
