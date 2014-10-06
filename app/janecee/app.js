@@ -33,7 +33,7 @@ exports = module.exports = function(config, meta) {
     var transporter = nodemailer.createTransport();
     transporter.sendMail({
       from: req.body.from,
-      to: 'david@posttool.com',
+      to: 'janecee@ceearchitects.com',
       subject: "[cee-contact]",
       text: req.body.body
     }, function(err, r){
