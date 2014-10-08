@@ -1,4 +1,4 @@
-<% var title = page && page.title ? "Cee Architects:" + page.title : "Cee Architects" %>
+<% var title = page && page.title ? "Cee Architects: " + page.title : "Cee Architects" %>
 <% include head.ejs %>
 <!--% include menu.ejs %-->
 <div id="root">
@@ -15,7 +15,7 @@
             <% } %>
         </div>
         <div class="text">
-            <%- page.description %>
+            <%- page.body %>
         </div>
     </div>
 </div>
