@@ -6,8 +6,8 @@
         <title><%= title %></title>
         <meta name="description" content="">
         <meta name="viewport" content="width=1000">
+        <%try { %><meta property="og:image" content="<%= resource_basepath %>/w_200,c_fit/<%= page.resources[0].meta.public_id %>.jpg"><%} catch (E){} %>
 
-        <!-- Place favicon.ico and apple-touch-icon(s) in the root directory -->
         <link rel="stylesheet" type="text/css" href="/css/style.css">
 
         <script src="/js/vendor/modernizr.js"></script>
